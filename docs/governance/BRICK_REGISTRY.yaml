@@ -1,0 +1,5 @@
+
+NOTIFY-001:
+  name: Notification System (EmailDriver)
+  status: BUILDING
+  description: Complete notification system with EmailDriver

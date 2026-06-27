@@ -1,0 +1,39 @@
+KIN BACKUP MANIFEST
+===================
+Backup Date: $(date)
+Backup Reason: Before proceeding with onboarding flow fix
+
+Files Modified During Debugging:
+1. frontend/src/router.jsx - Added/updated routes
+2. frontend/src/App.jsx - Router configuration
+3. frontend/src/main.jsx - Entry point
+4. frontend/src/index.css - Tailwind configuration
+5. frontend/vite.config.js - Vite configuration
+6. frontend/.env - API URL configuration
+7. frontend/src/services/api.js - API service
+8. frontend/src/services/sosService.js - SOS service
+9. frontend/src/services/secureStorage.js - Secure storage
+10. frontend/src/hooks/useSilentSOS.js - Silent SOS hook
+11. frontend/src/screens/ui-polish/WelcomeScreenV3.jsx - Welcome screen
+12. frontend/src/screens/ui-polish/PhoneEntryScreenV2.jsx - Phone entry
+13. frontend/src/screens/ui-polish/LoginPinScreenV2.jsx - Login PIN
+14. backend/routes/api.php - API routes
+15. backend/app/Http/Controllers/Api/V1/AuthController.php - Auth controller
+16. backend/app/Http/Controllers/Api/V1/SosController.php - SOS controller
+17. backend/app/Http/Controllers/Api/V1/DuressPinController.php - Duress PIN
+18. backend/app/Http/Controllers/Api/V1/IncidentController.php - Incident
+19. backend/app/Models/User.php - User model
+20. backend/app/Services/SafetyScoreService.php - Safety score
+21. backend/app/Jobs/SendSosAlertJob.php - SOS alert job
+22. backend/.env - Backend configuration
+
+Current Status:
+- Backend running on http://localhost:8000
+- Frontend running on http://localhost:5173
+- API working (health, confirm-phone, login-pin)
+- check-phone route needs verification
+
+Next Steps:
+- Verify check-phone route
+- Test full onboarding flow
+- Fix any remaining issues

@@ -1,0 +1,52 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\User;
+use App\Models\CheckIn;
+use App\Models\CheckinSetting;
+
+class SafetyScoreService
+{
+    public function getForUser(User $user): int
+    {
+        return cache()->remember("safety_score_{$user->id}", 3600, function () use ($user) {
+            return $this->calculate($user);
+        });
+    }
+    
+    public function updateForUser(User $user): int
+    {
+        $score = $this->calculate($user);
+        cache()->put("safety_score_{$user->id}", $score, 3600);
+        return $score;
+    }
+    
+    private function calculate(User $user): int
+    {
+        $score = 60;
+        
+        // Weekly check-ins (up to 20 points)
+        $weeklyCheckins = CheckIn::where('user_id', $user->id)
+            ->where('checked_in_at', '>=', now()->subDays(7))
+            ->count();
+        $score += min($weeklyCheckins, 20);
+        
+        // Trusted contacts (up to 10 points)
+        $contactCount = $user->trustedContacts()->count();
+        $score += min($contactCount * 5, 10);
+        
+        // Check-in enabled (5 points)
+        $setting = CheckinSetting::where('user_id', $user->id)->first();
+        if ($setting && $setting->enabled) {
+            $score += 5;
+        }
+        
+        // Duress PIN set (10 points)
+        if (!empty($user->duress_pin_hash)) {
+            $score += 10;
+        }
+        
+        return min($score, 100);
+    }
+}

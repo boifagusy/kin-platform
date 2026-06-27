@@ -1,0 +1,163 @@
+# KIN GOVERNANCE ENTRYPOINT
+
+STATUS: ACTIVE
+
+PURPOSE
+
+This is the mandatory starting point for all AI agents.
+
+Before proposing:
+
+- code
+- architecture
+- debugging
+- refactors
+- migrations
+
+read the governance documents below.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+READ ORDER
+
+1.
+docs/governance/AI_GOVERNANCE.md
+
+2.
+docs/governance/DEBUGGING_WORKFLOW.md
+
+3.
+docs/governance/ARCHITECTURE_RULES.md
+
+4.
+docs/governance/REUSABLE_BLOCKS.yaml
+
+5.
+docs/governance/BRICK_REGISTRY.yaml
+
+6.
+docs/governance/BRICK_DEPENDENCIES.yaml
+
+7.
+docs/governance/IMPLEMENTATION_CHECKLIST.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+MANDATORY QUESTIONS
+
+Before coding answer:
+
+1.
+Which brick is being modified?
+
+2.
+What phase is the brick in?
+
+3.
+What evidence has been collected?
+
+4.
+Can an existing brick be reused?
+
+5.
+Which services already exist?
+
+6.
+Which controllers already exist?
+
+7.
+Which models already exist?
+
+8.
+What is the root cause?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+NO CODE RULE
+
+No implementation before:
+
+✓ Route review
+
+✓ Controller review
+
+✓ Service review
+
+✓ Model review
+
+✓ View review
+
+✓ Database review
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+REUSE ORDER
+
+REUSE
+↓
+EXTEND
+↓
+REFACTOR
+↓
+CREATE
+
+Always prefer existing bricks.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PATCH CONFIDENCE
+
+95-100%
+Root cause proven
+
+80-94%
+Strong evidence
+
+60-79%
+Likely
+
+Below 60%
+
+STOP
+
+Collect more evidence.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OUTPUT FORMAT
+
+CURRENT BRICK:
+
+STATUS:
+
+PHASE:
+
+RISK LEVEL:
+
+NEXT ACTION:
+
+Then provide:
+
+1. Evidence
+
+2. Analysis
+
+3. Recommendation
+
+4. Commands
+
+5. Expected Outcome
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TERMUX RULE
+
+Assume:
+
+Android
+Termux
+Mobile Browser
+
+Do not request desktop-only debugging tools
+unless desktop access is confirmed.
+

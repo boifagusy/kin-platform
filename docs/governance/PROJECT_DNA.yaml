@@ -1,0 +1,19 @@
+project:
+  name: KIN Platform
+  version: 2.3.0
+  status: MVP HARDENING
+
+active_brick: CONCURRENCY-001
+phase: HARDENING
+
+completed_bricks_count: 16
+
+governance:
+  workflow: DISCOVERING → VERIFIED → ARCHITECTURE → BUILD PLAN → BUILDING → PATCHED → TESTING → VALIDATED → FROZEN
+  evidence_required: true
+  patch_confidence_threshold: 80
+
+locations:
+  backend: ~/storage/kin_platform/backend
+  frontend: ~/storage/kin_platform/frontend
+  docs: ~/storage/kin_platform/docs

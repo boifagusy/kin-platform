@@ -1,0 +1,89 @@
+<?php
+
+namespace App\Http\Controllers\Api\V1;
+
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Models\SosEvent;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use App\Events\SOSTriggered;
+
+class SosController extends Controller
+{
+    /**
+     * Trigger SOS event
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required|string',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'accuracy' => 'nullable|numeric',
+            'battery_level' => 'nullable|integer|min:0|max:100',
+        ]);
+
+        $user = User::where('phone', $request->phone)->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'error' => 'User not found',
+            ], 404);
+        }
+
+        // Create SOS event
+        $sos = SosEvent::create([
+            'user_id' => $user->id,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+            'accuracy' => $request->accuracy,
+            'battery_level' => $request->battery_level,
+            'triggered_at' => now(),
+            'resolved_at' => null,
+        ]);
+
+        // Fire event (listeners handle queue dispatch, logs, etc.)
+        event(new SOSTriggered(
+            $user,
+            $sos
+        ));
+
+        // Log for monitoring
+        Log::info('SOS triggered for user: ' . $user->id, [
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+            'accuracy' => $request->accuracy,
+            'battery_level' => $request->battery_level,
+            'sos_id' => $sos->id,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'SOS triggered successfully',
+            'data' => [
+                'sos_id' => $sos->id,
+                'triggered_at' => $sos->triggered_at,
+            ],
+        ], 201);
+    }
+
+    /**
+     * Resolve SOS event
+     */
+    public function resolve(Request $request, $id)
+    {
+        $sos = SosEvent::findOrFail($id);
+
+        $sos->update([
+            'resolved_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'SOS resolved',
+        ]);
+    }
+}
+

@@ -1,0 +1,13 @@
+
+> kin-app@0.0.0 build
+> vite build
+
+vite v8.0.16 building client environment for production...
+[2Ktransforming...✓ 80 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.89 kB │ gzip:   0.47 kB
+dist/assets/index-BGV1H7aF.css   50.65 kB │ gzip:   9.37 kB
+dist/assets/index-CuIY0Bn5.js   394.61 kB │ gzip: 108.48 kB
+
+✓ built in 876ms

@@ -1,0 +1,1148 @@
+===== ./screens/ui-polish/PhoneEntryScreenV2.jsx =====
+import { updatePhone, updateStep, STEPS } from "../../services/onboardingDraftService";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import LoadingScreen from "../../components/ui/LoadingScreen";
+import AccountFoundModal from "../../components/ui-polish/AccountFoundModal";
+import AccountNotFoundModal from "../../components/ui-polish/AccountNotFoundModal";
+
+// Environment variable for API URL
+const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
+function PhoneEntryScreenV2() {
+  const [phone, setPhone] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [maskedPhone, setMaskedPhone] = useState("");
+  const [showAccountFound, setShowAccountFound] = useState(false);
+  const [showAccountNotFound, setShowAccountNotFound] = useState(false);
+  const navigate = useNavigate();
+
+  const isValid = phone.length === 10;
+
+  // Guard double submit
+  async function handleContinue() {
+    if (loading) return;
+    
+    try {
+      setLoading(true);
+    // Save draft
+    updatePhone(`+234${phone}`);
+    updateStep(STEPS.PIN);
+      setError("");
+
+      const response = await fetch(
+        `${API_BASE}/api/v1/auth/confirm-phone`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            phone: `+234${phone}`,
+          }),
+        }
+      );
+
+      const data = await response.json();
+      setMaskedPhone(data.masked_phone);
+
+      if (data.exists) {
+        setShowAccountFound(true);
+      } else {
+        setShowAccountNotFound(true);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Unable to connect to Kin server.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Enter key support
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && isValid && !loading) {
+      handleContinue();
+    }
+  };
+
+  const handleEnterPin = () => {
+    setShowAccountFound(false);
+    navigate("/login-pin", {
+      state: { phone: `+234${phone}` },
+    });
+  };
+
+  const handleChangeNumber = () => {
+    setShowAccountFound(false);
+    setShowAccountNotFound(false);
+  };
+
+  const handleContinueNewUser = () => {
+    setShowAccountNotFound(false);
+    navigate("/create-pin", {
+      state: { phone: `+234${phone}` },
+    });
+  };
+
+  return (
+    <>
+      <LoadingScreen open={loading} message="auth" />
+
+      {/* Fixed to screen - no scrolling */}
+      <div className="fixed inset-0 bg-gradient-to-br from-[#F0F7F2] to-[#E8F3EA] flex items-center justify-center">
+        <div className="absolute top-[-100px] left-[-100px] w-80 h-80 bg-[#1A5632]/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-[-100px] right-[-100px] w-80 h-80 bg-[#D4A017]/10 rounded-full blur-3xl" />
+
+        {/* Content container - fits exactly on screen */}
+        <div className="w-full max-w-md mx-auto px-6 py-6">
+          <div className="flex flex-col h-full">
+            
+            {/* Logo Section */}
+            <div className="text-center">
+              <div className="w-20 h-20 mx-auto mb-3 rounded-full bg-gradient-to-br from-[#1A5632] to-[#0E3A22] shadow-xl shadow-[#1A5632]/15 flex items-center justify-center">
+                <span className="material-symbols-outlined text-white text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  shield
+                </span>
+              </div>
+              <h1 className="text-2xl font-black text-[#1A5632] tracking-[0.2em]">KIN</h1>
+              <p className="text-[#6C757D] text-xs mt-1">Personal Safety Network</p>
+            </div>
+
+            {/* Main Content - Flex grow to fill space */}
+            <div className="flex-1 flex flex-col justify-center">
+              {/* Heading */}
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-[#1A1A1A]">
+                  Enter your phone number
+                </h2>
+                <p className="text-[#6C757D] text-sm mt-2">
+                  Let's securely verify your phone number.
+                </p>
+              </div>
+
+              {/* Premium Phone Number Card */}
+              <div className="mt-6 bg-white rounded-2xl p-2 shadow-sm border border-[#E9ECEF]">
+                <div className="h-14 flex items-center">
+                  <div className="px-4 flex items-center gap-2 border-r border-[#E9ECEF]">
+                    <span className="text-lg">🇳🇬</span>
+                    <span className="font-semibold text-[#1A5632]">+234</span>
+                  </div>
+                  <input
+                    type="tel"
+                    value={phone}
+                    maxLength={10}
+                    placeholder="8012345678"
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                    onKeyDown={handleKeyDown}
+                    className="flex-1 px-4 outline-none bg-transparent text-base"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              {/* Live Validation Feedback */}
+              {phone.length === 10 && !error && (
+                <div className="flex items-center justify-center gap-1 mt-2">
+                  <span className="material-symbols-outlined text-green-600 text-sm">
+                    check_circle
+                  </span>
+                  <span className="text-xs text-green-600 font-medium">
+                    Valid phone number
+                  </span>
+                </div>
+              )}
+              
+              {error && (
+                <p className="text-[#DC3545] text-xs mt-2 text-center">{error}</p>
+              )}
+
+              {/* Contextual Reassurance */}
+              <p className="text-xs text-[#6C757D] text-center mt-3">
+                We never share your phone number with other users.
+              </p>
+
+              {/* Continue Button */}
+              <div className="mt-5">
+                <button
+                  disabled={!isValid || loading}
+                  onClick={handleContinue}
+                  className={`w-full h-14 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 ${
+                    !isValid || loading
+                      ? "bg-[#B7D4BF] text-white cursor-not-allowed"
+                      : "bg-gradient-to-r from-[#1A5632] to-[#0E3A22] text-white shadow-lg shadow-[#1A5632]/20 hover:scale-[1.01] active:scale-[0.98]"
+                  }`}
+                >
+                  {loading ? "Verifying phone number..." : "Continue"}
+                  {!loading && (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+
+              {/* Trust Section */}
+              <div className="mt-5 text-center">
+                <div className="flex items-center justify-center gap-2">
+                  <span className="material-symbols-outlined text-sm text-[#1A5632]">
+                    encryption
+                  </span>
+                  <span className="text-xs text-[#6C757D] font-medium">
+                    Protected with end-to-end encryption
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer - Fixed at bottom */}
+            <div className="pt-4 pb-2">
+              <p className="text-[#6C757D] text-xs text-center">
+                Your location is never shared without your permission.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modals */}
+      <AccountFoundModal
+        open={showAccountFound}
+        phoneNumber={`+234${phone}`}
+        onEnterPin={handleEnterPin}
+        onChangeNumber={handleChangeNumber}
+      />
+
+      <AccountNotFoundModal
+        open={showAccountNotFound}
+        phoneNumber={`+234${phone}`}
+        onContinue={handleContinueNewUser}
+        onChangeNumber={handleChangeNumber}
+      />
+    </>
+  );
+}
+
+export default PhoneEntryScreenV2;
+
+===== ./screens/ui-polish/LoginPinScreenV2.jsx =====
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
+function LoginPinScreenV2() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const phone = location.state?.phone || localStorage.getItem("kin_phone") || "+2348086448522";
+
+  const [pin, setPin] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [shake, setShake] = useState(false);
+
+  const isValid = pin.length === 4;
+
+  const handleNumberClick = (num) => {
+    if (loading) return;
+    if (pin.length < 4) {
+      setPin(prev => prev + num);
+      setError("");
+    }
+  };
+
+  const handleDeleteClick = () => {
+    if (loading) return;
+    if (pin.length > 0) {
+      // FIX: Use functional update to ensure state updates
+      setPin(prev => prev.slice(0, -1));
+      setError("");
+    }
+  };
+
+  const handleClearClick = () => {
+    if (loading) return;
+    setPin("");
+    setError("");
+  };
+
+  const handleLogin = async () => {
+    if (loading || !isValid) return;
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/auth/login-pin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, pin }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Invalid PIN");
+      localStorage.setItem("kin_phone", phone);
+      if (data.onboarding_completed) navigate("/dashboard", { state: { phone }, replace: true });
+      else navigate("/user-details", { state: { phone } });
+    } catch (err) {
+      setError(err.message);
+      setPin("");
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatPhone = (num) => {
+    if (!num) return "";
+    let cleaned = num.replace(/^\+234/, "");
+    if (cleaned.length === 10) return `+234 ${cleaned.slice(0,3)} ${cleaned.slice(3,6)} ${cleaned.slice(6)}`;
+    return num;
+  };
+
+  return (
+    <div className="fixed inset-0 bg-gradient-to-br from-[#F0F7F2] to-[#E8F3EA] flex flex-col">
+      <div className="absolute top-[-100px] left-[-100px] w-80 h-80 bg-[#1A5632]/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-[-100px] right-[-100px] w-80 h-80 bg-[#D4A017]/10 rounded-full blur-3xl" />
+
+      <button onClick={() => navigate("/login")} className="absolute top-6 left-6 z-10 w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm shadow-md flex items-center justify-center">
+        <span className="material-symbols-outlined text-[#1A5632] text-2xl">arrow_back</span>
+      </button>
+
+      <div className="flex-1 flex flex-col items-center justify-center px-6">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-4">
+            <div className="w-14 h-14 mx-auto mb-2 rounded-full bg-gradient-to-br from-[#1A5632] to-[#0E3A22] shadow-lg flex items-center justify-center">
+              <span className="material-symbols-outlined text-white text-2xl">shield</span>
+            </div>
+            <h1 className="text-lg font-black text-[#1A5632] tracking-[0.2em]">KIN</h1>
+            <p className="text-[#6C757D] text-[10px] mt-0.5">Personal Safety Network</p>
+          </div>
+
+          <div className="text-center mb-4">
+            <h2 className="text-xl font-bold text-[#1A1A1A]">Welcome Back</h2>
+            <p className="text-[#1A5632] font-medium text-xs mt-1">{formatPhone(phone)}</p>
+          </div>
+
+          <div className="flex justify-center gap-3 mb-4">
+            {[0,1,2,3].map((i) => (
+              <div key={i} className={`w-12 h-12 rounded-xl bg-white shadow-md border-2 flex items-center justify-center ${pin.length > i ? "border-[#1A5632] bg-[#1A5632]/5" : "border-[#E9ECEF]"} ${shake ? "shake-animation" : ""}`}>
+                {pin.length > i && <div className="w-3 h-3 rounded-full bg-[#1A5632] fill-animation" />}
+              </div>
+            ))}
+          </div>
+          <p className="text-[#6C757D] text-xs text-center mb-3">Enter your 4-digit PIN</p>
+          {error && <p className="text-red-500 text-xs text-center mb-3">{error}</p>}
+
+          <div className="grid grid-cols-3 gap-3 mb-3 relative z-50">
+            <button onClick={() => handleNumberClick("1")} className="h-14 rounded-xl bg-white shadow-md border text-2xl font-semibold active:scale-95 transition-all">1</button>
+            <button onClick={() => handleNumberClick("2")} className="h-14 rounded-xl bg-white shadow-md border text-2xl font-semibold active:scale-95 transition-all">2</button>
+            <button onClick={() => handleNumberClick("3")} className="h-14 rounded-xl bg-white shadow-md border text-2xl font-semibold active:scale-95 transition-all">3</button>
+            <button onClick={() => handleNumberClick("4")} className="h-14 rounded-xl bg-white shadow-md border text-2xl font-semibold active:scale-95 transition-all">4</button>
+            <button onClick={() => handleNumberClick("5")} className="h-14 rounded-xl bg-white shadow-md border text-2xl font-semibold active:scale-95 transition-all">5</button>
+            <button onClick={() => handleNumberClick("6")} className="h-14 rounded-xl bg-white shadow-md border text-2xl font-semibold active:scale-95 transition-all">6</button>
+            <button onClick={() => handleNumberClick("7")} className="h-14 rounded-xl bg-white shadow-md border text-2xl font-semibold active:scale-95 transition-all">7</button>
+            <button onClick={() => handleNumberClick("8")} className="h-14 rounded-xl bg-white shadow-md border text-2xl font-semibold active:scale-95 transition-all">8</button>
+            <button onClick={() => handleNumberClick("9")} className="h-14 rounded-xl bg-white shadow-md border text-2xl font-semibold active:scale-95 transition-all">9</button>
+            <button onClick={handleClearClick} className="h-14 rounded-xl bg-white shadow-md border text-sm font-medium text-[#6C757D] active:scale-95 transition-all">Clear</button>
+            <button onClick={() => handleNumberClick("0")} className="h-14 rounded-xl bg-white shadow-md border text-2xl font-semibold active:scale-95 transition-all">0</button>
+            <button onClick={handleDeleteClick} className="h-14 rounded-xl bg-white shadow-md border text-sm font-medium text-red-600 active:scale-95 transition-all relative z-50">Del</button>
+          </div>
+
+          <button onClick={handleLogin} disabled={!isValid || loading} className={`w-full h-12 rounded-xl font-semibold text-base flex items-center justify-center gap-2 mt-2 ${!isValid || loading ? "bg-[#B7D4BF] text-white" : "bg-gradient-to-r from-[#1A5632] to-[#0E3A22] text-white shadow-lg active:scale-95"}`}>
+            {loading ? "Signing you in..." : "Continue"}
+            {!loading && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>}
+          </button>
+
+          <div className="text-center mt-4">
+            <button onClick={() => navigate("/forgot-pin")} className="text-xs text-[#1A5632] font-semibold hover:underline">Forgot PIN?</button>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        @keyframes fill { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .shake-animation { animation: shake 0.3s ease-in-out; }
+        .fill-animation { animation: fill 0.2s ease-out; }
+      `}</style>
+    </div>
+  );
+}
+
+export default LoginPinScreenV2;
+
+===== ./screens/ui-polish/CreatePinScreenV2.jsx =====
+import { updateStep, STEPS } from "../../services/onboardingDraftService";
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import LoadingScreen from "../../components/ui/LoadingScreen";
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
+function CreatePinScreenV2() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const phone = location.state?.phone || "";
+
+  const [pin, setPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [shake, setShake] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  const canContinue = pin.length === 4 && confirmPin.length === 4 && pin === confirmPin;
+  const isPinComplete = pin.length === 4;
+
+  // Auto-advance to confirm mode when PIN is complete
+  const handleNumberClick = (num) => {
+    if (loading) return;
+    
+    if (!isConfirming) {
+      // Creating PIN
+      if (pin.length < 4) {
+        setPin(prev => prev + num);
+        setError("");
+        // Auto-advance to confirm when 4 digits entered
+        if (pin.length + 1 === 4) {
+          setTimeout(() => setIsConfirming(true), 300);
+        }
+      }
+    } else {
+      // Confirming PIN
+      if (confirmPin.length < 4) {
+        setConfirmPin(prev => prev + num);
+        setError("");
+      }
+    }
+  };
+
+  const handleDeleteClick = () => {
+    if (loading) return;
+    
+    if (!isConfirming) {
+      if (pin.length > 0) {
+        setPin(prev => prev.slice(0, -1));
+        setError("");
+      }
+    } else {
+      if (confirmPin.length > 0) {
+        setConfirmPin(prev => prev.slice(0, -1));
+        setError("");
+      } else {
+        // Go back to creating PIN if confirm is empty
+        setIsConfirming(false);
+      }
+    }
+  };
+
+  const handleClearClick = () => {
+    if (loading) return;
+    if (!isConfirming) {
+      setPin("");
+    } else {
+      setConfirmPin("");
+    }
+    setError("");
+  };
+
+  const handleContinue = async () => {
+    if (loading || !canContinue) return;
+    
+    if (pin !== confirmPin) {
+      setError("PINs do not match");
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+      return;
+    }
+
+    try {
+      setLoading(true);
+    // Save draft
+    updateStep(STEPS.USER_DETAILS);
+      setError("");
+
+      const response = await fetch(`${API_BASE}/api/v1/auth/create-pin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, pin }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to create PIN");
+      }
+
+      navigate("/user-details", { state: { phone } });
+    } catch (error) {
+      setError(error.message || "Unable to create PIN");
+      setPin("");
+      setConfirmPin("");
+      setIsConfirming(false);
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatPhone = (num) => {
+    if (!num) return "";
+    let cleaned = num.replace(/^\+234/, "");
+    if (cleaned.length === 10) return `+234 ${cleaned.slice(0,3)} ${cleaned.slice(3,6)} ${cleaned.slice(6)}`;
+    return num;
+  };
+
+  // Determine which PIN to display
+  const displayPin = isConfirming ? confirmPin : pin;
+  const displayLabel = isConfirming ? "Confirm your PIN" : "Create your PIN";
+  const displaySubtext = isConfirming ? "Re-enter your PIN to confirm" : "Create a 4-digit PIN to secure your account";
+
+  return (
+    <>
+      <LoadingScreen open={loading} message="auth" />
+
+      <div className="fixed inset-0 bg-gradient-to-br from-[#F0F7F2] to-[#E8F3EA] flex flex-col">
+        <div className="absolute top-[-100px] left-[-100px] w-80 h-80 bg-[#1A5632]/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-[-100px] right-[-100px] w-80 h-80 bg-[#D4A017]/10 rounded-full blur-3xl" />
+
+        {/* Back Button */}
+        <button
+          onClick={() => navigate("/login")}
+          className="absolute top-6 left-6 z-10 w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm shadow-md flex items-center justify-center active:scale-95 transition-all"
+        >
+          <span className="material-symbols-outlined text-[#1A5632] text-2xl">arrow_back</span>
+        </button>
+
+        <div className="flex-1 flex flex-col items-center justify-center px-6">
+          <div className="w-full max-w-md">
+            
+            {/* Logo */}
+            <div className="text-center mb-4">
+              <div className="w-14 h-14 mx-auto mb-2 rounded-full bg-gradient-to-br from-[#1A5632] to-[#0E3A22] shadow-lg flex items-center justify-center">
+                <span className="material-symbols-outlined text-white text-2xl">shield</span>
+              </div>
+              <h1 className="text-lg font-black text-[#1A5632] tracking-[0.2em]">KIN</h1>
+              <p className="text-[#6C757D] text-[10px] mt-0.5">Personal Safety Network</p>
+            </div>
+
+            {/* Heading */}
+            <div className="text-center mb-4">
+              <h2 className="text-xl font-bold text-[#1A1A1A]">{displayLabel}</h2>
+              {phone && (
+                <p className="text-[#1A5632] font-medium text-xs mt-1">
+                  {formatPhone(phone)}
+                </p>
+              )}
+            </div>
+
+            {/* Status indicator */}
+            <div className="text-center mb-2">
+              <span className={`text-xs font-medium ${isConfirming ? "text-[#D4A017]" : "text-[#1A5632]"}`}>
+                {isConfirming ? "Confirm PIN" : "Create PIN"}
+              </span>
+            </div>
+
+            {/* PIN Dots - 4 digits */}
+            <div className="flex justify-center gap-3 mb-3">
+              {[0, 1, 2, 3].map((index) => (
+                <div
+                  key={index}
+                  className={`w-12 h-12 rounded-xl bg-white shadow-md border-2 flex items-center justify-center transition-all ${
+                    displayPin.length > index
+                      ? "border-[#1A5632] bg-[#1A5632]/5"
+                      : "border-[#E9ECEF]"
+                  } ${shake ? "shake-animation" : ""}`}
+                >
+                  {displayPin.length > index && (
+                    <div className="w-3 h-3 rounded-full bg-[#1A5632] fill-animation" />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <p className="text-[#6C757D] text-xs text-center mb-3">{displaySubtext}</p>
+
+            {error && (
+              <div className="text-center mb-3">
+                <p className="text-red-500 text-xs font-medium">{error}</p>
+              </div>
+            )}
+
+            {/* Numeric Keypad */}
+            <div className="grid grid-cols-3 gap-3 mb-3 relative z-50">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                <button
+                  key={num}
+                  onClick={() => handleNumberClick(num.toString())}
+                  className="h-14 rounded-xl bg-white shadow-md border text-2xl font-semibold active:scale-95 transition-all"
+                >
+                  {num}
+                </button>
+              ))}
+              <button onClick={handleClearClick} className="h-14 rounded-xl bg-white shadow-md border text-sm font-medium text-[#6C757D] active:scale-95 transition-all">Clear</button>
+              <button onClick={() => handleNumberClick("0")} className="h-14 rounded-xl bg-white shadow-md border text-2xl font-semibold active:scale-95 transition-all">0</button>
+              <button onClick={handleDeleteClick} className="h-14 rounded-xl bg-white shadow-md border text-sm font-medium text-red-600 active:scale-95 transition-all relative z-50">Del</button>
+            </div>
+
+            {/* Continue Button */}
+            <button
+              onClick={handleContinue}
+              disabled={!canContinue || loading}
+              className={`w-full h-12 rounded-xl font-semibold text-base flex items-center justify-center gap-2 mt-2 ${
+                !canContinue || loading
+                  ? "bg-[#B7D4BF] text-white cursor-not-allowed"
+                  : "bg-gradient-to-r from-[#1A5632] to-[#0E3A22] text-white shadow-lg active:scale-95"
+              }`}
+            >
+              {loading ? "Creating PIN..." : "Continue"}
+              {!loading && (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              )}
+            </button>
+
+            {/* Bottom text */}
+            <div className="text-center mt-4">
+              <p className="text-[#6C757D] text-xs">Your PIN protects access to your Kin account.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        @keyframes fill { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .shake-animation { animation: shake 0.3s ease-in-out; }
+        .fill-animation { animation: fill 0.2s ease-out; }
+      `}</style>
+    </>
+  );
+}
+
+export default CreatePinScreenV2;
+
+===== ./screens/ui-polish/UserDetailsScreenV2.jsx =====
+import { updateProfile, updateStep, STEPS } from "../../services/onboardingDraftService";
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import LoadingScreen from "../../components/ui/LoadingScreen";
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
+function UserDetailsScreenV2() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const phone = location.state?.phone || "";
+
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // Email validation function
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // ✅ Name required (>= 3 chars) + Valid email required
+  const canContinue = fullName.trim().length >= 3 && isValidEmail(email);
+
+  async function handleContinue() {
+    if (loading || !canContinue) return;
+
+    try {
+      setLoading(true);
+    // Save draft
+    updateProfile({ name: fullName, email: email });
+    updateStep(STEPS.CHECKIN);
+      setError("");
+
+      const response = await fetch(`${API_BASE}/api/v1/auth/user-details`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone,
+          full_name: fullName.trim(),
+          email: email.trim(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || "Unable to save details");
+      }
+
+      navigate("/trusted-contact", {
+        state: { phone },
+      });
+    } catch (error) {
+      console.error("ERROR:", error);
+      setError(error.message || "Unable to save details");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const formatPhone = (num) => {
+    if (!num) return "";
+    let cleaned = num.replace(/^\+234/, "");
+    if (cleaned.length === 10) return `+234 ${cleaned.slice(0,3)} ${cleaned.slice(3,6)} ${cleaned.slice(6)}`;
+    return num;
+  };
+
+  // Check if email is valid for styling
+  const isEmailValid = email.length > 0 && isValidEmail(email);
+  const isEmailInvalid = email.length > 0 && !isValidEmail(email);
+
+  return (
+    <>
+      <LoadingScreen open={loading} message="auth" />
+
+      <div className="fixed inset-0 bg-gradient-to-br from-[#F0F7F2] to-[#E8F3EA] flex flex-col">
+        <div className="absolute top-[-100px] left-[-100px] w-80 h-80 bg-[#1A5632]/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-[-100px] right-[-100px] w-80 h-80 bg-[#D4A017]/10 rounded-full blur-3xl" />
+
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="absolute top-6 left-6 z-10 w-10 h-10 rounded-full bg-white/80 backdrop-blur-sm shadow-md flex items-center justify-center active:scale-95 transition-all"
+        >
+          <span className="material-symbols-outlined text-[#1A5632] text-2xl">arrow_back</span>
+        </button>
+
+        <div className="flex-1 flex flex-col items-center justify-center px-6">
+          <div className="w-full max-w-md">
+            
+            {/* Logo */}
+            <div className="text-center mb-4">
+              <div className="w-14 h-14 mx-auto mb-2 rounded-full bg-gradient-to-br from-[#1A5632] to-[#0E3A22] shadow-lg flex items-center justify-center">
+                <span className="material-symbols-outlined text-white text-2xl">shield</span>
+              </div>
+              <h1 className="text-lg font-black text-[#1A5632] tracking-[0.2em]">KIN</h1>
+              <p className="text-[#6C757D] text-[10px] mt-0.5">Personal Safety Network</p>
+            </div>
+
+            {/* Progress Steps */}
+            <div className="flex justify-center gap-2 mb-6">
+              {[0, 1, 2, 3].map((index) => (
+                <div
+                  key={index}
+                  className={`w-2 h-2 rounded-full ${
+                    index === 0 ? "bg-[#1A5632]" :
+                    index === 1 ? "bg-[#D4A017]" :
+                    "bg-[#D1D5DB]"
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Heading */}
+            <div className="text-center mb-2">
+              <h2 className="text-xl font-bold text-[#1A1A1A]">Tell us about yourself</h2>
+            </div>
+
+            {/* Phone Display */}
+            <div className="text-center mb-4">
+              <p className="text-[#1A5632] font-medium text-xs">
+                📱 {formatPhone(phone)}
+              </p>
+            </div>
+
+            <p className="text-[#6C757D] text-xs text-center mb-6">
+              This helps us recover your account if you lose access.
+            </p>
+
+            {/* Full Name Input */}
+            <div className="bg-white rounded-xl p-4 shadow-sm border border-[#E9ECEF] flex items-center gap-3 mb-3">
+              <span className="material-symbols-outlined text-[#1A5632] text-xl">person</span>
+              <input
+                type="text"
+                placeholder="Full Name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="flex-1 border-none outline-none bg-transparent text-base placeholder:text-[#6C757D]"
+                autoFocus
+              />
+            </div>
+
+            {/* Email Input - With validation feedback */}
+            <div className={`bg-white rounded-xl p-4 shadow-sm border flex items-center gap-3 mb-1 ${
+              isEmailInvalid ? "border-red-500" : "border-[#E9ECEF]"
+            }`}>
+              <span className={`material-symbols-outlined text-xl ${
+                isEmailInvalid ? "text-red-500" : "text-[#1A5632]"
+              }`}>email</span>
+              <input
+                type="email"
+                placeholder="Email Address *"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="flex-1 border-none outline-none bg-transparent text-base placeholder:text-[#6C757D]"
+              />
+              {isEmailValid && (
+                <span className="material-symbols-outlined text-green-500 text-lg">check_circle</span>
+              )}
+              {isEmailInvalid && (
+                <span className="material-symbols-outlined text-red-500 text-lg">error</span>
+              )}
+            </div>
+
+            {/* Email validation feedback */}
+            {isEmailInvalid && (
+              <p className="text-red-500 text-[10px] text-left pl-1 mb-3">
+                Please enter a valid email address
+              </p>
+            )}
+            {email.length > 0 && isEmailValid && (
+              <p className="text-green-600 text-[10px] text-left pl-1 mb-3">
+                ✓ Valid email address
+              </p>
+            )}
+            {email.length === 0 && (
+              <p className="text-[#6C757D] text-[10px] text-left pl-1 mb-3">
+                * Required for password recovery
+              </p>
+            )}
+
+            {error && (
+              <p className="text-red-500 text-xs text-center mb-3">{error}</p>
+            )}
+
+            {/* Trust Message */}
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <span className="material-symbols-outlined text-[#16A34A] text-sm">verified</span>
+              <span className="text-[#6C757D] text-xs">Your information is encrypted and never shared.</span>
+            </div>
+
+            {/* Continue Button */}
+            <button
+              onClick={handleContinue}
+              disabled={!canContinue || loading}
+              className={`w-full h-12 rounded-xl font-semibold text-base flex items-center justify-center gap-2 ${
+                !canContinue || loading
+                  ? "bg-[#B7D4BF] text-white cursor-not-allowed"
+                  : "bg-gradient-to-r from-[#1A5632] to-[#0E3A22] text-white shadow-lg active:scale-95"
+              }`}
+            >
+              {loading ? "Saving..." : "Continue"}
+              {!loading && (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        .shake-animation { animation: shake 0.3s ease-in-out; }
+      `}</style>
+    </>
+  );
+}
+
+export default UserDetailsScreenV2;
+
+===== ./screens/auth/TrustedContactScreen.jsx =====
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { FaArrowLeft, FaUser, FaPhone } from "react-icons/fa";
+import { saveTrustedContact } from "../../services/api";
+import ProgressIndicator from "../../components/trusted-contact/ProgressIndicator";
+import SafetyCircleCard from "../../components/trusted-contact/SafetyCircleCard";
+import InviteModal from "../../components/trusted-contact/InviteModal";
+
+function TrustedContactScreen() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const phone = location.state?.phone;
+  const fullName = location.state?.full_name || "User";
+
+  const [contactName, setContactName] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteSent, setInviteSent] = useState(false);
+
+  const canSendInvite = contactName.trim().length >= 3 && contactPhone.trim().length >= 10;
+
+  const inviteMessage = `Hi ${contactName || "there"},
+
+${fullName} has added you as a trusted contact in KIN.
+
+You may receive alerts if:
+• A check-in is missed
+• SOS is activated
+• An emergency is detected
+
+Download Kin:
+https://kin.app`;
+
+  const saveContactToBackend = async () => {
+    try {
+      await saveTrustedContact({ phone, contact_name: contactName, contact_phone: contactPhone, invite_sent: inviteSent });
+      console.log('✅ Trusted contact saved to backend');
+    } catch (error) {
+      console.error('❌ Failed to save trusted contact:', error);
+    }
+  };
+
+  const handleSendInvite = () => setShowInviteModal(true);
+
+  const handleSmsShare = () => {
+    window.open(`sms:${contactPhone}?body=${encodeURIComponent(inviteMessage)}`);
+    setInviteSent(true);
+    saveContactToBackend();
+  };
+
+  const handleWhatsappShare = () => {
+    const cleaned = contactPhone.replace(/\D/g, "");
+    window.open(`https://wa.me/${cleaned}?text=${encodeURIComponent(inviteMessage)}`);
+    setInviteSent(true);
+    saveContactToBackend();
+  };
+
+  const handleContinueSetup = () => {
+    console.log("Trusted contact saved:", { contactName, contactPhone });
+    navigate("/checkin-settings", { state: { phone, full_name: fullName, trusted_contact: { name: contactName, phone: contactPhone } } });
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(180deg,#F8FBF9 0%,#EDF5F0 100%)", display: "flex", justifyContent: "center", padding: "24px", boxSizing: "border-box" }}>
+      <div style={{ width: "100%", maxWidth: "430px", paddingTop: "24px" }}>
+        <button onClick={() => navigate(-1)} style={{ border: "none", background: "transparent", marginBottom: "24px", cursor: "pointer" }}>
+          <FaArrowLeft size={22} color="#1A5632" />
+        </button>
+
+        <ProgressIndicator currentStep={4} totalSteps={6} />
+
+        <h1 style={{ textAlign: "center", fontSize: "34px", fontWeight: "800", color: "#111827", marginBottom: "12px" }}>Add Trusted Contact</h1>
+        <p style={{ textAlign: "center", color: "#6B7280", lineHeight: "28px", marginBottom: "40px" }}>
+          Choose one person you trust. They may receive alerts if you miss a safety check-in or activate SOS.
+        </p>
+
+        <div style={{ marginBottom: "20px" }}>
+          <div style={{ marginBottom: "8px", fontWeight: "600", color: "#6B7280" }}>Trusted Contact Name</div>
+          <div style={{ background: "#FFFFFF", borderRadius: "20px", border: "2px solid #E5E7EB", padding: "18px", display: "flex", alignItems: "center" }}>
+            <FaUser color="#1A5632" />
+            <input type="text" value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="Sarah Johnson" style={{ flex: 1, border: "none", outline: "none", marginLeft: "12px", fontSize: "18px" }} />
+          </div>
+        </div>
+
+        <div style={{ marginBottom: "36px" }}>
+          <div style={{ marginBottom: "8px", fontWeight: "600", color: "#6B7280" }}>Phone Number</div>
+          <div style={{ background: "#FFFFFF", borderRadius: "20px", border: "2px solid #E5E7EB", padding: "18px", display: "flex", alignItems: "center" }}>
+            <FaPhone color="#1A5632" />
+            <input type="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="08012345678" style={{ flex: 1, border: "none", outline: "none", marginLeft: "12px", fontSize: "18px" }} />
+          </div>
+        </div>
+
+        <SafetyCircleCard />
+
+        <button disabled={!canSendInvite} onClick={handleSendInvite} style={{ width: "100%", height: "68px", border: "none", borderRadius: "22px", background: canSendInvite ? "linear-gradient(90deg,#1A5632,#3A7D44)" : "#B7D4BF", color: "#FFFFFF", fontSize: "18px", fontWeight: "700", cursor: canSendInvite ? "pointer" : "not-allowed" }}>
+          Preview Invite
+        </button>
+
+        <InviteModal isOpen={showInviteModal} contactName={contactName} contactPhone={contactPhone} inviteMessage={inviteMessage} inviteSent={inviteSent} onSmsShare={handleSmsShare} onWhatsappShare={handleWhatsappShare} onContinueSetup={handleContinueSetup} />
+      </div>
+    </div>
+  );
+}
+
+export default TrustedContactScreen;
+
+===== ./screens/onboarding/ContinueSetupScreen.jsx =====
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { FaClock, FaTrash, FaChevronRight, FaExclamationTriangle } from "react-icons/fa";
+import { getDraft, clearDraft, formatTimeAgo, STEPS } from "../../services/onboardingDraftService";
+
+// Map step keys to display names
+const STEP_NAMES = {
+  'welcome': 'Welcome',
+  'phone': 'Phone Number',
+  'pin': 'Create PIN',
+  'user-details': 'User Details',
+  'checkin': 'Check-In Settings',
+  'duress': 'Duress PIN',
+  'dashboard': 'Almost Done',
+  'complete': 'Complete',
+};
+
+// Map step keys to routes
+const STEP_ROUTES = {
+  'welcome': '/',
+  'phone': '/login',
+  'pin': '/create-pin',
+  'user-details': '/user-details',
+  'checkin': '/checkin-settings',
+  'duress': '/settings/duress-pin',
+  'dashboard': '/dashboard',
+  'complete': '/dashboard',
+};
+
+function ContinueSetupScreen() {
+  const navigate = useNavigate();
+  const [draft, setDraft] = useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  useEffect(() => {
+    const draftData = getDraft();
+    if (!draftData) {
+      // No draft, go to welcome
+      navigate('/');
+      return;
+    }
+    setDraft(draftData);
+  }, [navigate]);
+
+  const handleContinue = () => {
+    if (!draft) return;
+    const currentStep = draft.step || 'welcome';
+    const route = STEP_ROUTES[currentStep] || '/';
+    
+    // If we're at the last step, go to dashboard
+    if (currentStep === 'dashboard' || currentStep === 'complete') {
+      navigate('/dashboard');
+      return;
+    }
+    
+    navigate(route);
+  };
+
+  const handleStartOver = () => {
+    clearDraft();
+    navigate('/');
+  };
+
+  if (!draft) {
+    return (
+      <div className="min-h-screen bg-[#F0F7F2] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-10 h-10 border-3 border-[#1A5632] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-[#1A5632] text-sm">Checking...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const stepName = STEP_NAMES[draft.step] || 'Setup';
+  const timeAgo = formatTimeAgo(draft.updated_at);
+  const phone = draft.phone || 'No phone saved';
+  const userName = draft.profile?.name || '';
+
+  return (
+    <div className="min-h-screen bg-[#F0F7F2] flex items-center justify-center px-6">
+      <div className="w-full max-w-md">
+        
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-[#1A5632] to-[#0E3A22] shadow-lg flex items-center justify-center">
+            <span className="material-symbols-outlined text-white text-3xl">shield</span>
+          </div>
+          <h1 className="text-2xl font-black text-[#1A5632] tracking-[0.2em]">KIN</h1>
+          <p className="text-[#6C757D] text-xs mt-1">Personal Safety Network</p>
+        </div>
+
+        {/* Card */}
+        <div className="bg-white rounded-2xl p-6 shadow-lg border border-[#E9ECEF]">
+          <div className="text-center mb-6">
+            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[#E8F3EA] flex items-center justify-center">
+              <FaClock className="text-[#1A5632] text-xl" />
+            </div>
+            <h2 className="text-xl font-bold text-[#1A1A1A]">Continue Setup</h2>
+            <p className="text-sm text-[#6C757D] mt-1">
+              You were setting up your KIN account
+            </p>
+          </div>
+
+          {/* Progress Info */}
+          <div className="bg-[#F8F9FA] rounded-xl p-4 mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-[#6C757D]">Last step</span>
+              <span className="text-xs font-medium text-[#1A5632]">{stepName}</span>
+            </div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-[#6C757D]">Phone</span>
+              <span className="text-xs font-medium text-[#1A1A1A]">{phone}</span>
+            </div>
+            {userName && (
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-[#6C757D]">Name</span>
+                <span className="text-xs font-medium text-[#1A1A1A]">{userName}</span>
+              </div>
+            )}
+            <div className="mt-3 pt-3 border-t border-[#E9ECEF]">
+              <span className="text-[10px] text-[#6C757D]">Last updated {timeAgo}</span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="space-y-3">
+            <button
+              onClick={handleContinue}
+              className="w-full h-12 rounded-xl bg-gradient-to-r from-[#1A5632] to-[#0E3A22] text-white font-semibold text-base flex items-center justify-center gap-2 shadow-lg hover:opacity-90 active:scale-95 transition-all"
+            >
+              Continue Setup
+              <FaChevronRight className="text-sm" />
+            </button>
+
+            <button
+              onClick={() => setShowConfirm(true)}
+              className="w-full py-3 text-sm font-medium text-[#6C757D] hover:text-[#DC3545] transition-colors"
+            >
+              Start Over
+            </button>
+          </div>
+        </div>
+
+        {/* Version Info */}
+        <p className="text-center text-[10px] text-[#6C757D] mt-6">
+          KIN v1.0.0 • Protecting what matters
+        </p>
+      </div>
+
+      {/* Confirm Start Over Modal */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+            <div className="text-center mb-4">
+              <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-red-100 flex items-center justify-center">
+                <FaExclamationTriangle className="text-red-500 text-xl" />
+              </div>
+              <h3 className="text-lg font-bold text-[#1A1A1A]">Start Over?</h3>
+              <p className="text-sm text-[#6C757D] mt-1">
+                This will clear all your setup progress.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="flex-1 h-11 rounded-xl bg-gray-100 text-[#6C757D] font-medium text-sm hover:bg-gray-200 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleStartOver}
+                className="flex-1 h-11 rounded-xl bg-red-500 text-white font-medium text-sm hover:bg-red-600 transition"
+              >
+                Yes, Start Over
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default ContinueSetupScreen;
+

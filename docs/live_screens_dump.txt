@@ -1,0 +1,1032 @@
+===== ./screens/auth/PhoneEntryScreen.jsx =====
+import { useState } from "react";
+import { FaShieldAlt, FaLock } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+
+import NumberRegisteredPopup from "../../components/NumberRegisteredPopup";
+import NumberNotRegisteredPopup from "../../components/NumberNotRegisteredPopup";
+
+function PhoneEntryScreen() {
+const [phone, setPhone] = useState("");
+const [loading, setLoading] = useState(false);
+const [error, setError] = useState("");
+
+const [maskedPhone, setMaskedPhone] = useState("");
+
+const [showRegisteredPopup, setShowRegisteredPopup] =
+useState(false);
+
+const [showNotRegisteredPopup, setShowNotRegisteredPopup] =
+useState(false);
+
+const navigate = useNavigate();
+
+const isValid = phone.length === 10;
+
+async function handleContinue() {
+try {
+setLoading(true);
+setError("");
+
+  const response = await fetch(
+    "http://127.0.0.1:8000/api/v1/auth/confirm-phone",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        phone: `+234${phone}`,
+      }),
+    }
+  );
+
+  const data = await response.json();
+
+  setMaskedPhone(data.masked_phone);
+
+  if (data.exists) {
+    setShowRegisteredPopup(true);
+  } else {
+    setShowNotRegisteredPopup(true);
+  }
+} catch (err) {
+  console.error(err);
+
+  setError(
+    "Unable to connect to Kin server."
+  );
+} finally {
+  setLoading(false);
+}
+
+}
+
+return (
+<div
+style={{
+minHeight: "100vh",
+background:
+"linear-gradient(180deg,#F8FBF9 0%,#EDF5F0 100%)",
+display: "flex",
+alignItems: "center",
+justifyContent: "center",
+padding: "24px",
+}}
+>
+<div
+style={{
+width: "100%",
+maxWidth: "430px",
+background: "#FFFFFF",
+borderRadius: "36px",
+padding: "40px 28px",
+boxShadow:
+"0 20px 40px rgba(26,86,50,0.10)",
+}}
+>
+<div
+style={{
+display: "flex",
+justifyContent: "center",
+marginBottom: "24px",
+}}
+>
+<div
+style={{
+width: "140px",
+height: "140px",
+borderRadius: "50%",
+background: "#FFFFFF",
+display: "flex",
+alignItems: "center",
+justifyContent: "center",
+boxShadow:
+"0 20px 40px rgba(26,86,50,0.12)",
+}}
+>
+<FaShieldAlt
+size={60}
+color="#1A5632"
+/>
+</div>
+</div>
+
+    <h1
+      style={{
+        textAlign: "center",
+        fontSize: "48px",
+        color: "#1A5632",
+        fontWeight: "800",
+        margin: 0,
+      }}
+    >
+      Kin
+    </h1>
+
+    <p
+      style={{
+        textAlign: "center",
+        color: "#6B7280",
+        marginTop: "14px",
+        marginBottom: "40px",
+        fontSize: "16px",
+        lineHeight: "26px",
+      }}
+    >
+      Stay connected to the
+      <br />
+      people who matter most.
+    </p>
+
+    <div
+      style={{
+        fontWeight: "700",
+        marginBottom: "12px",
+        color: "#111827",
+      }}
+    >
+      Mobile Number
+    </div>
+
+    <div
+      style={{
+        display: "flex",
+        height: "68px",
+        border: "2px solid #E5E7EB",
+        borderRadius: "20px",
+        overflow: "hidden",
+        background: "#FFFFFF",
+      }}
+    >
+      <div
+        style={{
+          width: "90px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#F9FAFB",
+          fontWeight: "700",
+          color: "#1A5632",
+        }}
+      >
+        +234
+      </div>
+
+      <input
+        type="tel"
+        value={phone}
+        maxLength={10}
+        placeholder="8012345678"
+        onChange={(e) =>
+          setPhone(
+            e.target.value.replace(
+              /\D/g,
+              ""
+            )
+          )
+        }
+        style={{
+          flex: 1,
+          border: "none",
+          outline: "none",
+          padding: "0 18px",
+          fontSize: "18px",
+          background: "transparent",
+        }}
+      />
+    </div>
+
+    {error && (
+      <div
+        style={{
+          color: "#DC2626",
+          marginTop: "12px",
+          textAlign: "center",
+          fontSize: "14px",
+        }}
+      >
+        {error}
+      </div>
+    )}
+
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        marginTop: "16px",
+        color: "#6B7280",
+        fontSize: "14px",
+      }}                                              >
+      <FaLock size={12} />
+      Secure & Private
+    </div>                                        
+    <button                                             disabled={!isValid || loading}
+      onClick={handleContinue}                          style={{
+        width: "100%",                                    height: "64px",
+        marginTop: "24px",                                border: "none",
+        borderRadius: "20px",                             background:
+          !isValid || loading
+            ? "#B7D4BF"                                       : "linear-gradient(90deg,#1A5632,#3A7D44)",
+        color: "#FFFFFF",
+        fontSize: "18px",
+        fontWeight: "700",
+        cursor: "pointer",
+      }}
+    >
+      {loading
+        ? "Checking..."
+        : "Continue"}
+    </button>
+
+    <div
+      style={{
+        marginTop: "24px",
+        textAlign: "center",
+        color: "#6B7280",
+        fontSize: "14px",
+        lineHeight: "22px",
+      }}                                              >
+      Your location is never shared
+      <br />                                            without your permission.                        </div>
+
+<NumberRegisteredPopup
+open={showRegisteredPopup}
+phone={maskedPhone}
+onClose={() =>
+setShowRegisteredPopup(false)
+}
+onContinue={() => {
+setShowRegisteredPopup(false);
+
+navigate("/login-pin", {
+  state: {
+    phone: `+234${phone}`,
+  },
+});
+
+}}
+/>
+
+<NumberNotRegisteredPopup
+open={showNotRegisteredPopup}
+phone={maskedPhone}
+onClose={() =>
+setShowNotRegisteredPopup(false)
+}
+onContinue={() => {
+setShowNotRegisteredPopup(false);
+
+navigate("/create-pin", {
+  state: {
+    phone: `+234${phone}`,
+  },
+});
+
+}}
+/>
+
+</div>
+</div>
+
+);
+}
+export default PhoneEntryScreen;
+
+===== ./screens/auth/LoginPinScreen.jsx =====
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { FaArrowLeft } from "react-icons/fa";
+
+function LoginPinScreen() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const phone = location.state?.phone;
+  
+  const [pin, setPin] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  
+  const isValid = pin.length === 4;
+  
+  async function handleLogin() {
+    try {
+      setLoading(true);
+      setError("");
+      
+      const response = await fetch("http://127.0.0.1:8000/api/v1/auth/login-pin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, pin }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || data.error || "Invalid PIN");
+      }
+      
+      localStorage.setItem('kin_phone', phone);
+      
+      if (data.onboarding_completed) {
+        navigate("/dashboard", { state: { phone: phone }, replace: true });
+      } else {
+        navigate("/user-details", { state: { phone: phone } });
+      }
+    } catch (error) {
+      console.error("LOGIN ERROR:", error);
+      setError(error.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+  
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-[#F8FBF9] to-[#EDF5F0] flex items-center justify-center p-6">
+      <div className="w-full max-w-[430px] bg-white rounded-3xl p-10 shadow-xl">
+        <button
+          onClick={() => navigate("/login")}
+          className="border-none bg-transparent cursor-pointer mb-6"
+        >
+          <FaArrowLeft size={22} color="#1A5632" />
+        </button>
+        
+        <h1 className="text-4xl font-extrabold text-[#1A5632] mb-2">Welcome Back</h1>
+        <p className="text-gray-500 mb-10">Enter your 4-digit PIN to access Kin.</p>
+        
+        <input
+          type="password"
+          inputMode="numeric"
+          maxLength={4}
+          value={pin}
+          onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+          placeholder="••••"
+          className="w-full h-[72px] border-2 border-gray-200 rounded-2xl text-center text-3xl tracking-wider outline-none mb-2"
+        />
+        
+        {error && (
+          <div className="text-red-600 text-center text-sm mt-3">{error}</div>
+        )}
+        
+        <button
+          disabled={!isValid || loading}
+          onClick={handleLogin}
+          className={`w-full h-16 rounded-2xl text-white font-bold text-lg mt-8 transition-all ${
+            !isValid || loading
+              ? "bg-[#B7D4BF] cursor-not-allowed"
+              : "bg-gradient-to-r from-[#1A5632] to-[#3A7D44] cursor-pointer"
+          }`}
+        >
+          {loading ? "Verifying..." : "Continue"}
+        </button>
+        
+        <div className="text-center mt-6">
+          <button 
+            onClick={() => navigate("/forgot-pin")} 
+            className="text-sm text-[#1A5632] font-semibold hover:underline"
+          >
+            Forgot PIN?
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default LoginPinScreen;
+
+===== ./screens/auth/CreatePinScreen.jsx =====
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { FaArrowLeft } from "react-icons/fa";
+
+function CreatePinScreen() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const phone = location.state?.phone;
+
+  const [pin, setPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const canContinue = pin.length === 4 && confirmPin.length === 4;
+
+  async function handleContinue() {
+    if (pin !== confirmPin) {
+      setError("PINs do not match");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/v1/auth/create-pin",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            phone,
+            pin,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to create PIN");
+      }
+
+      navigate("/user-details", {
+        state: {
+          phone,
+        },
+      });
+    } catch (error) {
+      setError(error.message || "Unable to create PIN");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background:
+          "linear-gradient(180deg,#F8FBF9 0%,#EDF5F0 100%)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: "24px",
+        boxSizing: "border-box",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "430px",
+          background: "#FFFFFF",
+          borderRadius: "36px",
+          padding: "32px 24px",
+          boxShadow:
+            "0 20px 40px rgba(26,86,50,.10)",
+          boxSizing: "border-box",
+        }}
+      >
+        <button
+          onClick={() => navigate("/login")}
+          style={{
+            border: "none",
+            background: "transparent",
+            cursor: "pointer",
+            marginBottom: "20px",
+          }}
+        >
+          <FaArrowLeft size={20} />
+        </button>
+
+        <h1
+          style={{
+            margin: 0,
+            color: "#1A5632",
+            fontSize: "42px",
+            fontWeight: "800",
+            lineHeight: "1.1",
+          }}
+        >
+          Create PIN
+        </h1>
+
+        <p
+          style={{
+            marginTop: "12px",
+            color: "#6B7280",
+            lineHeight: "24px",
+            fontSize: "16px",
+          }}
+        >
+          Create a secure 4-digit PIN
+          for your Kin account.
+        </p>
+
+        <input
+          type="password"
+          inputMode="numeric"
+          maxLength={4}
+          value={pin}
+          placeholder="Create PIN"
+          onChange={(e) =>
+            setPin(
+              e.target.value.replace(/\D/g, "")
+            )
+          }
+          style={{
+            width: "100%",
+            height: "72px",
+            marginTop: "32px",
+            border: "2px solid #E5E7EB",
+            borderRadius: "20px",
+            textAlign: "center",
+            fontSize: "28px",
+            letterSpacing: "4px",
+            boxSizing: "border-box",
+            outline: "none",
+          }}
+        />
+
+        <input
+          type="password"
+          inputMode="numeric"
+          maxLength={4}
+          value={confirmPin}
+          placeholder="Confirm PIN"
+          onChange={(e) =>
+            setConfirmPin(
+              e.target.value.replace(/\D/g, "")
+            )
+          }
+          style={{
+            width: "100%",
+            height: "72px",
+            marginTop: "16px",
+            border: "2px solid #E5E7EB",
+            borderRadius: "20px",
+            textAlign: "center",
+            fontSize: "28px",
+            letterSpacing: "10px",
+            boxSizing: "border-box",
+            outline: "none",
+          }}
+        />
+
+        {error && (
+          <div
+            style={{
+              marginTop: "12px",
+              color: "#DC2626",
+              textAlign: "center",
+              fontSize: "14px",
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        <button
+          disabled={!canContinue || loading}
+          onClick={handleContinue}
+          style={{
+            width: "100%",
+            height: "64px",
+            marginTop: "24px",
+            border: "none",
+            borderRadius: "20px",
+            background:
+              canContinue && !loading
+                ? "linear-gradient(90deg,#1A5632,#3A7D44)"
+                : "#B7D4BF",
+            color: "#FFFFFF",
+            fontWeight: "700",
+            fontSize: "18px",
+            cursor:
+              canContinue && !loading
+                ? "pointer"
+                : "not-allowed",
+            boxSizing: "border-box",
+          }}
+        >
+          {loading ? "Creating PIN..." : "Continue"}
+        </button>
+
+        <div
+          style={{
+            marginTop: "20px",
+            textAlign: "center",
+            color: "#6B7280",
+            fontSize: "14px",
+          }}
+        >
+          Your PIN protects access
+          to your Kin account.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default CreatePinScreen;
+
+===== ./screens/auth/UserDetailsScreen.jsx =====
+import { useState } from "react";
+import {
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
+import { FaArrowLeft, FaUser, FaEnvelope } from "react-icons/fa";
+
+function UserDetailsScreen() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const phone = location.state?.phone;
+
+  console.log("PHONE:", phone);
+
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const canContinue = fullName.trim().length >= 3;
+
+  async function handleContinue() {
+    try {
+      setLoading(true);
+      setError("");
+
+      console.log("Sending request with:", { phone, full_name: fullName, email });
+
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/v1/auth/user-details",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            phone,
+            full_name: fullName,
+            email: email || "", // Send empty string instead of null
+          }),
+        }
+      );
+
+      const data = await response.json();
+      
+      console.log("USER DETAILS RESPONSE:", data);
+      console.log("STATUS:", response.status);
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || "Unable to save details");
+      }
+
+      console.log("Success! Navigating to checkin-settings with phone:", phone);
+      alert("Success! Going to Check-In Settings");
+      
+      // Navigate to trusted contact screen
+      navigate("/checkin-settings", {
+        state: {
+          phone: phone,
+        },
+      });
+    } catch (error) {
+      console.error("ERROR:", error);
+      alert("Error: " + error.message);
+      setError(error.message || "Unable to save details");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background:
+          "linear-gradient(180deg,#F8FBF9 0%,#EDF5F0 100%)",
+        display: "flex",
+        justifyContent: "center",
+        padding: "24px",
+        boxSizing: "border-box",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "430px",
+          paddingTop: "24px",
+        }}
+      >
+        <button
+          onClick={() => navigate(-1)}
+          style={{
+            border: "none",
+            background: "transparent",
+            cursor: "pointer",
+            marginBottom: "20px",
+          }}
+        >
+          <FaArrowLeft size={20} />
+        </button>
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: "10px",
+            marginBottom: "32px",
+          }}
+        >
+          <div
+            style={{
+              width: "12px",
+              height: "12px",
+              borderRadius: "50%",
+              background: "#1A5632",
+            }}
+          />
+          <div
+            style={{
+              width: "12px",
+              height: "12px",
+              borderRadius: "50%",
+              background: "#D4A017",
+            }}
+          />
+          <div
+            style={{
+              width: "12px",
+              height: "12px",
+              borderRadius: "50%",
+              background: "#D1D5DB",
+            }}
+          />
+          <div
+            style={{
+              width: "12px",
+              height: "12px",
+              borderRadius: "50%",
+              background: "#D1D5DB",
+            }}
+          />
+        </div>
+
+        <h1
+          style={{
+            textAlign: "center",
+            color: "#111827",
+            fontSize: "32px",
+            fontWeight: "800",
+            marginBottom: "10px",
+          }}
+        >
+          Tell us about yourself
+        </h1>
+
+        <div
+          style={{
+            color: "#1A5632",
+            textAlign: "center",
+            marginBottom: "20px",
+            padding: "10px",
+            background: "#EDF5F0",
+            borderRadius: "10px",
+            fontSize: "14px",
+            fontWeight: "bold",
+          }}
+        >
+          📱 Phone: {phone || "UNDEFINED"}
+        </div>
+
+        <p
+          style={{
+            textAlign: "center",
+            color: "#6B7280",
+            marginBottom: "36px",
+            lineHeight: "24px",
+          }}
+        >
+          This helps us recover your
+          account if you lose access.
+        </p>
+
+        <div
+          style={{
+            background: "#FFFFFF",
+            borderRadius: "20px",
+            padding: "18px",
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+            marginBottom: "16px",
+            boxShadow:
+              "0 4px 12px rgba(0,0,0,.05)",
+          }}
+        >
+          <FaUser
+            size={20}
+            color="#1A5632"
+          />
+          <input
+            type="text"
+            placeholder="Full Name"
+            value={fullName}
+            onChange={(e) =>
+              setFullName(e.target.value)
+            }
+            style={{
+              flex: 1,
+              border: "none",
+              outline: "none",
+              fontSize: "18px",
+            }}
+          />
+        </div>
+
+        <div
+          style={{
+            background: "#FFFFFF",
+            borderRadius: "20px",
+            padding: "18px",
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+            marginBottom: "24px",
+            boxShadow:
+              "0 4px 12px rgba(0,0,0,.05)",
+          }}
+        >
+          <FaEnvelope
+            size={20}
+            color="#6B7280"
+          />
+          <input
+            type="email"
+            placeholder="Email (Optional)"
+            value={email}
+            onChange={(e) =>
+              setEmail(e.target.value)
+            }
+            style={{
+              flex: 1,
+              border: "none",
+              outline: "none",
+              fontSize: "18px",
+            }}
+          />
+        </div>
+
+        {error && (
+          <div
+            style={{
+              color: "#DC2626",
+              textAlign: "center",
+              marginBottom: "20px",
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        <div
+          style={{
+            textAlign: "center",
+            color: "#16A34A",
+            marginBottom: "36px",
+            fontSize: "15px",
+          }}
+        >
+          🛡 Your information is encrypted
+          and never shared.
+        </div>
+
+        <button
+          disabled={!canContinue || loading}
+          onClick={handleContinue}
+          style={{
+            width: "100%",
+            height: "64px",
+            border: "none",
+            borderRadius: "20px",
+            background:
+              canContinue && !loading
+                ? "linear-gradient(90deg,#1A5632,#3A7D44)"
+                : "#B7D4BF",
+            color: "#FFFFFF",
+            fontSize: "18px",
+            fontWeight: "700",
+            cursor: "pointer",
+          }}
+        >
+          {loading ? "Saving..." : "Continue"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default UserDetailsScreen;
+
+===== ./screens/auth/TrustedContactScreen.jsx =====
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { FaArrowLeft, FaUser, FaPhone } from "react-icons/fa";
+import { saveTrustedContact } from "../../services/api";
+import ProgressIndicator from "../../components/trusted-contact/ProgressIndicator";
+import SafetyCircleCard from "../../components/trusted-contact/SafetyCircleCard";
+import InviteModal from "../../components/trusted-contact/InviteModal";
+
+function TrustedContactScreen() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const phone = location.state?.phone;
+  const fullName = location.state?.full_name || "User";
+
+  const [contactName, setContactName] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteSent, setInviteSent] = useState(false);
+
+  const canSendInvite = contactName.trim().length >= 3 && contactPhone.trim().length >= 10;
+
+  const inviteMessage = `Hi ${contactName || "there"},
+
+${fullName} has added you as a trusted contact in KIN.
+
+You may receive alerts if:
+• A check-in is missed
+• SOS is activated
+• An emergency is detected
+
+Download Kin:
+https://kin.app`;
+
+  const saveContactToBackend = async () => {
+    try {
+      await saveTrustedContact({ phone, contact_name: contactName, contact_phone: contactPhone, invite_sent: inviteSent });
+      console.log('✅ Trusted contact saved to backend');
+    } catch (error) {
+      console.error('❌ Failed to save trusted contact:', error);
+    }
+  };
+
+  const handleSendInvite = () => setShowInviteModal(true);
+
+  const handleSmsShare = () => {
+    window.open(`sms:${contactPhone}?body=${encodeURIComponent(inviteMessage)}`);
+    setInviteSent(true);
+    saveContactToBackend();
+  };
+
+  const handleWhatsappShare = () => {
+    const cleaned = contactPhone.replace(/\D/g, "");
+    window.open(`https://wa.me/${cleaned}?text=${encodeURIComponent(inviteMessage)}`);
+    setInviteSent(true);
+    saveContactToBackend();
+  };
+
+  const handleContinueSetup = () => {
+    console.log("Trusted contact saved:", { contactName, contactPhone });
+    navigate("/checkin-settings", { state: { phone, full_name: fullName, trusted_contact: { name: contactName, phone: contactPhone } } });
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(180deg,#F8FBF9 0%,#EDF5F0 100%)", display: "flex", justifyContent: "center", padding: "24px", boxSizing: "border-box" }}>
+      <div style={{ width: "100%", maxWidth: "430px", paddingTop: "24px" }}>
+        <button onClick={() => navigate(-1)} style={{ border: "none", background: "transparent", marginBottom: "24px", cursor: "pointer" }}>
+          <FaArrowLeft size={22} color="#1A5632" />
+        </button>
+
+        <ProgressIndicator currentStep={4} totalSteps={6} />
+
+        <h1 style={{ textAlign: "center", fontSize: "34px", fontWeight: "800", color: "#111827", marginBottom: "12px" }}>Add Trusted Contact</h1>
+        <p style={{ textAlign: "center", color: "#6B7280", lineHeight: "28px", marginBottom: "40px" }}>
+          Choose one person you trust. They may receive alerts if you miss a safety check-in or activate SOS.
+        </p>
+
+        <div style={{ marginBottom: "20px" }}>
+          <div style={{ marginBottom: "8px", fontWeight: "600", color: "#6B7280" }}>Trusted Contact Name</div>
+          <div style={{ background: "#FFFFFF", borderRadius: "20px", border: "2px solid #E5E7EB", padding: "18px", display: "flex", alignItems: "center" }}>
+            <FaUser color="#1A5632" />
+            <input type="text" value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="Sarah Johnson" style={{ flex: 1, border: "none", outline: "none", marginLeft: "12px", fontSize: "18px" }} />
+          </div>
+        </div>
+
+        <div style={{ marginBottom: "36px" }}>
+          <div style={{ marginBottom: "8px", fontWeight: "600", color: "#6B7280" }}>Phone Number</div>
+          <div style={{ background: "#FFFFFF", borderRadius: "20px", border: "2px solid #E5E7EB", padding: "18px", display: "flex", alignItems: "center" }}>
+            <FaPhone color="#1A5632" />
+            <input type="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="08012345678" style={{ flex: 1, border: "none", outline: "none", marginLeft: "12px", fontSize: "18px" }} />
+          </div>
+        </div>
+
+        <SafetyCircleCard />
+
+        <button disabled={!canSendInvite} onClick={handleSendInvite} style={{ width: "100%", height: "68px", border: "none", borderRadius: "22px", background: canSendInvite ? "linear-gradient(90deg,#1A5632,#3A7D44)" : "#B7D4BF", color: "#FFFFFF", fontSize: "18px", fontWeight: "700", cursor: canSendInvite ? "pointer" : "not-allowed" }}>
+          Preview Invite
+        </button>
+
+        <InviteModal isOpen={showInviteModal} contactName={contactName} contactPhone={contactPhone} inviteMessage={inviteMessage} inviteSent={inviteSent} onSmsShare={handleSmsShare} onWhatsappShare={handleWhatsappShare} onContinueSetup={handleContinueSetup} />
+      </div>
+    </div>
+  );
+}
+
+export default TrustedContactScreen;
+

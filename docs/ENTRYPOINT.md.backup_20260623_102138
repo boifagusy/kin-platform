@@ -1,0 +1,119 @@
+# KIN PLATFORM — ENTRYPOINT MAP
+
+Purpose: Master navigation map for AI agents
+Updated: 2026-06-22 | Version: 3.0
+
+---
+
+## DOCUMENTATION MAP (5 FILES)
+
+ENTRYPOINT.md (YOU ARE HERE) → Master Navigation
+    │
+    ├── GOVERNANCE.md → Rules, Standards, Termux
+    ├── CODEMAP.md → File Structure, Where Things Live
+    ├── SYSTEM_BIBLE.md → Models, APIs, Database
+    └── STATUS.md → Current State, Roadmap, Blockers
+
+---
+
+## WHAT EACH DOCUMENT CONTAINS
+
+File              | Content                    | When to Read
+------------------|----------------------------|----------------------
+ENTRYPOINT.md     | Navigation, rules, env     | FIRST - Before anything
+GOVERNANCE.md     | Rules, Termux, debugging   | BEFORE any code change
+CODEMAP.md        | File structure, relations  | WHEN finding files
+SYSTEM_BIBLE.md   | Models, APIs, schema       | WHEN checking details
+STATUS.md         | Progress, blockers, roadmap | BEFORE new work
+
+---
+
+## 5 RULES FOR AI
+
+1. Treat docs like code → They are source, not suggestions
+2. Evidence beats memory → Documentation wins every time
+3. Follow this order → ENTRYPOINT → STATUS → GOVERNANCE → CODEMAP → SYSTEM_BIBLE
+4. Backup before editing → cp file file.backup_$(date +%Y%m%d_%H%M%S)
+5. Update docs after changes → Keep them current
+
+---
+
+## TERMUX ENVIRONMENT
+
+PATHS:
+PROJECT_ROOT: /data/data/com.termux/files/home/storage/kin_platform/
+BACKEND:      /data/data/com.termux/files/home/storage/kin_platform/backend/
+FRONTEND:     /data/data/com.termux/files/home/storage/kin_platform/frontend/
+ANDROID:      /data/data/com.termux/files/home/storage/kin_platform/frontend/android/
+DOCS:         /data/data/com.termux/files/home/storage/kin_platform/docs/
+
+JAVA 21 SETUP:
+export JAVA_HOME=/data/data/com.termux/files/usr/lib/jvm/java-21-openjdk
+export PATH=$JAVA_HOME/bin:$PATH
+java -version
+
+ANDROID SDK SETUP:
+export ANDROID_HOME=/data/data/com.termux/files/usr/lib/android-sdk
+export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+export PATH=$ANDROID_HOME/platform-tools:$PATH
+
+BUILD COMMANDS:
+cd ~/storage/kin_platform/frontend
+npm run build
+npx cap sync android
+npx cap build android
+
+BACKEND COMMANDS:
+cd ~/storage/kin_platform/backend
+php artisan serve --host=127.0.0.1 --port=8000
+php artisan queue:work
+php artisan migrate:status
+php artisan route:list | grep api
+
+---
+
+## QUICK REFERENCE
+
+Need Rules?          → GOVERNANCE.md
+Need File Locations? → CODEMAP.md
+Need System Details? → SYSTEM_BIBLE.md
+Need Current Status? → STATUS.md
+Starting Point?      → ENTRYPOINT.md (this file)
+
+---
+
+## PROJECT SNAPSHOT
+
+Backend:  Laravel 12 (PHP 8.3+) → 19 Models, 15 API Controllers, 33+ Endpoints
+Frontend: React 19 + Vite + Tailwind → 10+ Screens, 40+ Components
+Mobile:   Capacitor 8.4.1 (Android) → compileSdk 36, minSdk 24, Java 21
+Database: SQLite (Dev), PostgreSQL (Prod)
+Auth:     Sanctum (Session-based)
+
+---
+
+## RECENT CHANGES (Last 7 Days)
+
+2026-06-22: Updated documentation structure (5 files)
+2026-06-21: TrustedContact fix (uses phone), SOS event fix
+2026-06-20: Added EmergencyEscalation model, Capacitor Android configured
+2026-06-20: NotificationService updated, Dashboard offline support
+
+---
+
+## CURRENT STATUS
+
+PHASE 1: MVP Core         → COMPLETE (100%)
+PHASE 2: Capacitor        → 95% (APK build blocked by AAPT2)
+PHASE 3: Notifications    → Ready
+PHASE 4: Firebase Push    → Pending
+PHASE 5: WhatsApp         → Pending
+PHASE 6: APK Release      → Pending
+
+BLOCKER: AAPT2 binary doesn't run in Termux
+         Error: Syntax error: "(" unexpected
+SOLUTION: npx cap build android OR build on PC with Android Studio
+
+---
+
+ALWAYS START HERE BEFORE ANY ACTION.

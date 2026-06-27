@@ -1,0 +1,13 @@
+{
+  "appId": "com.kin.app",
+  "appName": "Kin",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true,
+    "webContentsDebuggingEnabled": true
+  }
+}

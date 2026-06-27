@@ -1,0 +1,7 @@
+'user' => [
+    'name' => $user->name,
+    'phone' => $user->phone,
+    'email' => $user->email,
+    'status' => 'Connected',
+    'sms_available' => true,
+],

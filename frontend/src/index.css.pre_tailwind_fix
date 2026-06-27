@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "tailwindcss";
+
+/* ================================================= */
+/* KIN BRAND SYSTEM */
+/* ================================================= */
+
+@theme {
+  --color-primary: #1A5632;
+  --color-secondary: #D4A017;
+  --color-background: #F0F7F2;
+  --color-surface: #FFFFFF;
+  --color-danger: #DC3545;
+}
+
+/* ================================================= */
+/* GLOBAL */
+/* ================================================= */
+
+body {
+  background-color: #F0F7F2;
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  color: #111827;
+}
+
+/* ================================================= */
+/* KIN CARD SYSTEM */
+/* ================================================= */
+
+.card,
+.glass-panel,
+.glass-card {
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid #f1f5f9;
+  padding: 20px;
+  box-shadow:
+    0 1px 3px rgba(0,0,0,0.06),
+    0 8px 24px rgba(0,0,0,0.04);
+}
+
+/* ================================================= */
+/* BUTTONS */
+/* ================================================= */
+
+.btn-primary {
+  background: linear-gradient(
+    135deg,
+    #1A5632 0%,
+    #2F6A44 100%
+  );
+  color: white;
+  font-weight: 600;
+  padding: 12px 16px;
+  border-radius: 12px;
+  transition: opacity .2s;
+}
+
+.btn-primary:hover {
+  opacity: .9;
+}
+
+/* ================================================= */
+/* SOS GLOW */
+/* ================================================= */
+
+.pulse-glow {
+  animation: pulseGlow 2s infinite;
+}
+
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220,53,69,.6);
+  }
+
+  70% {
+    box-shadow: 0 0 0 16px rgba(220,53,69,0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(220,53,69,0);
+  }
+}
+
+/* ================================================= */
+/* UTILITIES */
+/* ================================================= */
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-10px); }
+  40% { transform: translateX(10px); }
+  60% { transform: translateX(-10px); }
+  80% { transform: translateX(10px); }
+}
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}

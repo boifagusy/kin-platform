@@ -1,0 +1,56 @@
+<?php
+
+namespace App\Jobs;
+
+use App\Models\User;
+use App\Models\SosEvent;
+use App\Models\EmergencyEscalation;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+
+class SendSosAlertJob implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, SerializesModels;
+
+    protected $userId;
+    protected $sosId;
+
+    public function __construct($userId, $sosId)
+    {
+        $this->userId = $userId;
+        $this->sosId = $sosId;
+    }
+
+    public function handle(): void
+    {
+        $user = User::find($this->userId);
+        $sos = SosEvent::find($this->sosId);
+
+        if (!$user || !$sos) {
+            Log::error('SendSosAlertJob: User or SOS not found', [
+                'user_id' => $this->userId,
+                'sos_id' => $this->sosId
+            ]);
+            return;
+        }
+
+        // Create emergency escalation
+        EmergencyEscalation::create([
+            'user_id' => $user->id,
+            'escalation_type' => 'sos',
+            'status' => 'active',
+            'priority' => 'critical',
+            'location_lat' => $sos->latitude,
+            'location_lng' => $sos->longitude,
+            'notes' => 'SOS alert triggered via queue',
+        ]);
+
+        Log::info('SOS alert processed via queue', [
+            'user_id' => $user->id,
+            'sos_id' => $sos->id
+        ]);
+    }
+}

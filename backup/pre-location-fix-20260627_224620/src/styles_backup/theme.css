@@ -1,0 +1,40 @@
+:root {
+
+  /* Brand */
+
+  --kin-primary: #1A5632;
+  --kin-primary-light: #3A7D44;
+
+  --kin-gold: #D4A017;
+
+  /* Backgrounds */
+
+  --kin-bg: #F0F7F2;
+  --kin-card: #FFFFFF;
+
+  /* Text */
+
+  --kin-text: #111827;
+  --kin-text-light: #6B7280;
+
+  /* Status */
+
+  --kin-success: #16A34A;
+  --kin-danger: #DC2626;
+
+  /* Radius */
+
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+
+  /* Shadow */
+
+  --shadow-card:
+    0 10px 30px rgba(0,0,0,0.08);
+
+  /* Width */
+
+  --mobile-width: 480px;
+}

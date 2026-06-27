@@ -1,0 +1,225 @@
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { FaArrowLeft } from "react-icons/fa";
+
+function CreatePinScreen() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const phone = location.state?.phone;
+
+  const [pin, setPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const canContinue = pin.length === 4 && confirmPin.length === 4;
+
+  async function handleContinue() {
+    if (pin !== confirmPin) {
+      setError("PINs do not match");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/auth/create-pin",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            phone,
+            pin,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to create PIN");
+      }
+
+      navigate("/user-details", {
+        state: {
+          phone,
+        },
+      });
+    } catch (error) {
+      setError(error.message || "Unable to create PIN");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background:
+          "linear-gradient(180deg,#F8FBF9 0%,#EDF5F0 100%)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: "24px",
+        boxSizing: "border-box",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "430px",
+          background: "#FFFFFF",
+          borderRadius: "36px",
+          padding: "32px 24px",
+          boxShadow:
+            "0 20px 40px rgba(26,86,50,.10)",
+          boxSizing: "border-box",
+        }}
+      >
+        <button
+          onClick={() => navigate("/login")}
+          style={{
+            border: "none",
+            background: "transparent",
+            cursor: "pointer",
+            marginBottom: "20px",
+          }}
+        >
+          <FaArrowLeft size={20} />
+        </button>
+
+        <h1
+          style={{
+            margin: 0,
+            color: "#1A5632",
+            fontSize: "42px",
+            fontWeight: "800",
+            lineHeight: "1.1",
+          }}
+        >
+          Create PIN
+        </h1>
+
+        <p
+          style={{
+            marginTop: "12px",
+            color: "#6B7280",
+            lineHeight: "24px",
+            fontSize: "16px",
+          }}
+        >
+          Create a secure 4-digit PIN
+          for your Kin account.
+        </p>
+
+        <input
+          type="password"
+          inputMode="numeric"
+          maxLength={4}
+          value={pin}
+          placeholder="Create PIN"
+          onChange={(e) =>
+            setPin(
+              e.target.value.replace(/\D/g, "")
+            )
+          }
+          style={{
+            width: "100%",
+            height: "72px",
+            marginTop: "32px",
+            border: "2px solid #E5E7EB",
+            borderRadius: "20px",
+            textAlign: "center",
+            fontSize: "28px",
+            letterSpacing: "4px",
+            boxSizing: "border-box",
+            outline: "none",
+          }}
+        />
+
+        <input
+          type="password"
+          inputMode="numeric"
+          maxLength={4}
+          value={confirmPin}
+          placeholder="Confirm PIN"
+          onChange={(e) =>
+            setConfirmPin(
+              e.target.value.replace(/\D/g, "")
+            )
+          }
+          style={{
+            width: "100%",
+            height: "72px",
+            marginTop: "16px",
+            border: "2px solid #E5E7EB",
+            borderRadius: "20px",
+            textAlign: "center",
+            fontSize: "28px",
+            letterSpacing: "10px",
+            boxSizing: "border-box",
+            outline: "none",
+          }}
+        />
+
+        {error && (
+          <div
+            style={{
+              marginTop: "12px",
+              color: "#DC2626",
+              textAlign: "center",
+              fontSize: "14px",
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        <button
+          disabled={!canContinue || loading}
+          onClick={handleContinue}
+          style={{
+            width: "100%",
+            height: "64px",
+            marginTop: "24px",
+            border: "none",
+            borderRadius: "20px",
+            background:
+              canContinue && !loading
+                ? "linear-gradient(90deg,#1A5632,#3A7D44)"
+                : "#B7D4BF",
+            color: "#FFFFFF",
+            fontWeight: "700",
+            fontSize: "18px",
+            cursor:
+              canContinue && !loading
+                ? "pointer"
+                : "not-allowed",
+            boxSizing: "border-box",
+          }}
+        >
+          {loading ? "Creating PIN..." : "Continue"}
+        </button>
+
+        <div
+          style={{
+            marginTop: "20px",
+            textAlign: "center",
+            color: "#6B7280",
+            fontSize: "14px",
+          }}
+        >
+          Your PIN protects access
+          to your Kin account.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default CreatePinScreen;

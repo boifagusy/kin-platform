@@ -1,0 +1,140 @@
+import { getPhone, getProfile } from "../../services/onboardingDraftService";
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { FaArrowLeft, FaUser, FaPhone } from "react-icons/fa";
+import { saveTrustedContact } from "../../services/api";
+import ProgressIndicator from "../../components/trusted-contact/ProgressIndicator";
+import SafetyCircleCard from "../../components/trusted-contact/SafetyCircleCard";
+import InviteModal from "../../components/trusted-contact/InviteModal";
+
+const API_BASE = import.meta.env.VITE_API_URL;
+
+function TrustedContactScreen() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const phone = location.state?.phone || getPhone();
+  const fullName = location.state?.full_name || getProfile()?.name || "User";
+
+  const [contactName, setContactName] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteSent, setInviteSent] = useState(false);
+  const [verificationToken, setVerificationToken] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  const canSendInvite = contactName.trim().length >= 3 && contactPhone.trim().length >= 10;
+
+  const verifyLink = verificationToken
+    ? `${API_BASE}trusted-contact/verify/${verificationToken}`
+    : "";
+
+  const inviteMessage = `Hi ${contactName || "there"},
+
+${fullName} has added you as a trusted contact in KIN.
+
+You may receive alerts if:
+• A check-in is missed
+• SOS is activated
+• An emergency is detected
+
+Please confirm you're willing to be their trusted contact:
+${verifyLink}
+
+Download Kin:
+https://kin.app`;
+
+  // Saves the contact to the backend FIRST (so we get a real verification
+  // token back), then opens the share modal with the finalized message.
+  const handleSendInvite = async () => {
+    if (!canSendInvite || saving) return;
+
+    setSaving(true);
+    setSaveError("");
+
+    try {
+      const result = await saveTrustedContact({
+        phone,
+        contact_name: contactName,
+        contact_phone: contactPhone,
+        invite_sent: true,
+      });
+
+      const token = result?.data?.verification_token;
+      if (!token) {
+        throw new Error("Server did not return a verification token");
+      }
+
+      setVerificationToken(token);
+      setShowInviteModal(true);
+    } catch (error) {
+      console.error("❌ Failed to save trusted contact:", error);
+      setSaveError("Unable to save trusted contact. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSmsShare = () => {
+    window.open(`sms:${contactPhone}?body=${encodeURIComponent(inviteMessage)}`);
+    setInviteSent(true);
+  };
+
+  const handleWhatsappShare = () => {
+    const cleaned = contactPhone.replace(/\D/g, "");
+    window.open(`https://wa.me/${cleaned}?text=${encodeURIComponent(inviteMessage)}`);
+    setInviteSent(true);
+  };
+
+  const handleContinueSetup = () => {
+    console.log("Trusted contact saved:", { contactName, contactPhone });
+    navigate("/checkin-settings", { state: { phone, full_name: fullName, trusted_contact: { name: contactName, phone: contactPhone } } });
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(180deg,#F8FBF9 0%,#EDF5F0 100%)", display: "flex", justifyContent: "center", padding: "24px", boxSizing: "border-box" }}>
+      <div style={{ width: "100%", maxWidth: "430px", paddingTop: "24px" }}>
+        <button onClick={() => navigate(-1)} style={{ border: "none", background: "transparent", marginBottom: "24px", cursor: "pointer" }}>
+          <FaArrowLeft size={22} color="#1A5632" />
+        </button>
+
+        <ProgressIndicator currentStep={4} totalSteps={6} />
+
+        <h1 style={{ textAlign: "center", fontSize: "34px", fontWeight: "800", color: "#111827", marginBottom: "12px" }}>Add Trusted Contact</h1>
+        <p style={{ textAlign: "center", color: "#6B7280", lineHeight: "28px", marginBottom: "40px" }}>
+          Choose one person you trust. They may receive alerts if you miss a safety check-in or activate SOS.
+        </p>
+
+        <div style={{ marginBottom: "20px" }}>
+          <div style={{ marginBottom: "8px", fontWeight: "600", color: "#6B7280" }}>Trusted Contact Name</div>
+          <div style={{ background: "#FFFFFF", borderRadius: "20px", border: "2px solid #E5E7EB", padding: "18px", display: "flex", alignItems: "center" }}>
+            <FaUser color="#1A5632" />
+            <input type="text" value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="Sarah Johnson" style={{ flex: 1, border: "none", outline: "none", marginLeft: "12px", fontSize: "18px" }} />
+          </div>
+        </div>
+
+        <div style={{ marginBottom: "36px" }}>
+          <div style={{ marginBottom: "8px", fontWeight: "600", color: "#6B7280" }}>Phone Number</div>
+          <div style={{ background: "#FFFFFF", borderRadius: "20px", border: "2px solid #E5E7EB", padding: "18px", display: "flex", alignItems: "center" }}>
+            <FaPhone color="#1A5632" />
+            <input type="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="08012345678" style={{ flex: 1, border: "none", outline: "none", marginLeft: "12px", fontSize: "18px" }} />
+          </div>
+        </div>
+
+        <SafetyCircleCard />
+
+        {saveError && (
+          <p style={{ color: "#DC3545", fontSize: "13px", textAlign: "center", marginBottom: "12px" }}>{saveError}</p>
+        )}
+
+        <button disabled={!canSendInvite || saving} onClick={handleSendInvite} style={{ width: "100%", height: "68px", border: "none", borderRadius: "22px", background: canSendInvite && !saving ? "linear-gradient(90deg,#1A5632,#3A7D44)" : "#B7D4BF", color: "#FFFFFF", fontSize: "18px", fontWeight: "700", cursor: canSendInvite && !saving ? "pointer" : "not-allowed" }}>
+          {saving ? "Saving..." : "Preview Invite"}
+        </button>
+
+        <InviteModal isOpen={showInviteModal} contactName={contactName} contactPhone={contactPhone} inviteMessage={inviteMessage} inviteSent={inviteSent} onSmsShare={handleSmsShare} onWhatsappShare={handleWhatsappShare} onContinueSetup={handleContinueSetup} />
+      </div>
+    </div>
+  );
+}
+
+export default TrustedContactScreen;

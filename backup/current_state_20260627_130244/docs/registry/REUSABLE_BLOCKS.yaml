@@ -1,0 +1,17 @@
+services:
+  - SafetyMonitorService
+  - UserManagementService
+  - UserActionService
+  - AuditService
+
+events:
+  - SOSTriggered
+  - CheckInCompleted
+
+jobs:
+  - SendSosAlertJob
+  - ProcessMissedCheckInJob
+
+listeners:
+  - QueueSosAlert
+  - UpdateSafetyScore

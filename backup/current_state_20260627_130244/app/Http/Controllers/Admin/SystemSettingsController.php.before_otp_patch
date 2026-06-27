@@ -1,0 +1,182 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Services\Admin\SystemSettingsService;
+use App\Models\AdminUser;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+
+class SystemSettingsController extends Controller
+{
+    protected $settingsService;
+
+    public function __construct(SystemSettingsService $settingsService)
+    {
+        $this->settingsService = $settingsService;
+    }
+
+    public function index()
+    {
+        return view('admin.settings.index');
+    }
+
+    public function otp()
+    {
+        $settings = $this->settingsService->getAllSettings();
+        return view('admin.settings.otp', compact('settings'));
+    }
+
+    public function notifications()
+    {
+        $settings = $this->settingsService->getAllSettings();
+        return view('admin.settings.notifications', compact('settings'));
+    }
+
+    public function security()
+    {
+        $settings = $this->settingsService->getAllSettings();
+        return view('admin.settings.security', compact('settings'));
+    }
+
+    public function retention()
+    {
+        $settings = $this->settingsService->getAllSettings();
+        return view('admin.settings.retention', compact('settings'));
+    }
+
+    public function integrations()
+    {
+        $settings = $this->settingsService->getAllSettings();
+        return view('admin.settings.integrations', compact('settings'));
+    }
+
+    public function features()
+    {
+        $settings = $this->settingsService->getAllSettings();
+        return view('admin.settings.features', compact('settings'));
+    }
+
+    public function emailSettings()
+    {
+        $settings = $this->settingsService->getAllSettings();
+        return view('admin.settings.email.index', compact('settings'));
+    }
+
+    public function updateEmailSettings(Request $request)
+    {
+        $settings = $request->only([
+            'mail_mailer', 'mail_host', 'mail_port', 'mail_username',
+            'mail_encryption', 'mail_from_address', 'mail_from_name'
+        ]);
+
+        if ($request->filled('mail_password')) {
+            $settings['mail_password'] = $request->mail_password;
+        }
+
+        $this->settingsService->updateSettings($settings);
+
+        config([
+            'mail.default' => $request->mail_mailer,
+            'mail.mailers.smtp.host' => $request->mail_host,
+            'mail.mailers.smtp.port' => $request->mail_port,
+            'mail.mailers.smtp.encryption' => $request->mail_encryption,
+            'mail.mailers.smtp.username' => $request->mail_username,
+        ]);
+        
+        if ($request->filled('mail_password')) {
+            config(['mail.mailers.smtp.password' => $request->mail_password]);
+        }
+
+        return redirect()->route('admin.settings.email')->with('success', 'Email settings updated successfully');
+    }
+
+    public function testEmail(Request $request)
+    {
+        try {
+            // Get admin user (logged in or first)
+            $admin = auth()->guard('admin')->user();
+            if (!$admin) {
+                $admin = AdminUser::first();
+            }
+            
+            if (!$admin || !$admin->email) {
+                return response()->json(['message' => 'No admin email found'], 400);
+            }
+
+            Mail::raw('This is a test email from KIN Admin. Your SMTP configuration is working!', function ($message) use ($admin) {
+                $message->to($admin->email)
+                    ->subject('KIN Test Email');
+            });
+
+            return response()->json(['message' => 'Test email sent to ' . $admin->email]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Failed to send: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function updateOtp(Request $request)
+    {
+        $settings = $request->only([
+            'otp_sms_enabled',
+            'otp_email_enabled',
+            'otp_whatsapp_enabled',
+            'otp_code_length',
+            'otp_expiry_minutes',
+            'otp_resend_cooldown',
+            'otp_whatsapp_api_url',
+            'otp_whatsapp_api_key',
+            'otp_whatsapp_session_id',
+            'otp_whatsapp_api_url',
+            'otp_whatsapp_api_key',
+            'otp_whatsapp_session_id',
+        ]);
+
+        $success = $this->settingsService->updateSettings($settings);
+        return response()->json(['success' => $success]);
+    }
+
+    public function updateNotifications(Request $request)
+    {
+        $settings = $request->only([
+            'sms_enabled',
+            'whatsapp_enabled',
+            'notification_driver',
+        ]);
+
+        $success = $this->settingsService->updateSettings($settings);
+        return response()->json(['success' => $success]);
+    }
+
+    public function updateSecurity(Request $request)
+    {
+        $settings = $request->only([
+            'rate_limit_enabled',
+            'rate_limit_attempts',
+            'rate_limit_lockout_minutes',
+            'session_lifetime',
+            'max_concurrent_sessions',
+            'min_pin_length',
+            'max_pin_attempts',
+        ]);
+
+        $success = $this->settingsService->updateSettings($settings);
+        return response()->json(['success' => $success]);
+    }
+
+    public function updateRetention(Request $request)
+    {
+        $settings = $request->only([
+            'retention_otp_days',
+            'retention_audit_days',
+            'inactive_user_cleanup_days',
+            'deleted_account_retention_days',
+            'activity_logs_retention_days',
+            'backup_retention_days',
+        ]);
+
+        $success = $this->settingsService->updateSettings($settings);
+        return response()->json(['success' => $success]);
+    }
+}

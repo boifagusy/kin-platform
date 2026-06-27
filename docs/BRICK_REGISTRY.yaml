@@ -1,0 +1,216 @@
+# KIN PLATFORM — BRICK REGISTRY
+# Version: 2.1.0
+# Last Updated: 2026-06-23
+# Evidence-Based: ✅ All entries verified from code
+
+metadata:
+  version: 2.1.0
+  last_updated: 2026-06-23
+  total_project_bricks: 6
+  AUTH-007:
+    name: Onboarding Persistence
+    description: Cross-device onboarding draft persistence
+    status: complete
+    priority: high
+    completed_at: 2026-06-23
+    evidence:
+      - app/Http/Controllers/Api/V1/OnboardingDraftController.php
+      - frontend/src/services/onboardingDraftService.js
+    documentation:
+      - BUILD_LOG.md
+  total_system_modules: 6
+
+# ─── TYPE A: PROJECT BRICKS (Work Items) ───
+# These move through: DISCOVERING → BUILDING → TESTING → VALIDATED → FROZEN
+
+project_bricks:
+  AUTH-007:
+    name: Onboarding Persistence
+    description: Cross-device onboarding draft persistence
+    status: complete
+    priority: high
+    completed_at: 2026-06-23
+    evidence:
+      - app/Http/Controllers/Api/V1/OnboardingDraftController.php
+      - frontend/src/services/onboardingDraftService.js
+    documentation:
+      - BUILD_LOG.md
+  ADMIN-004:
+    name: Dashboard Real Data
+    description: Admin dashboard with real-time safety monitoring data
+    status: frozen
+    priority: high
+    completed_at: 2026-06-15
+    evidence:
+      - app/Http/Controllers/Admin/DashboardController.php
+      - app/Services/Admin/SafetyMonitorService.php
+    documentation:
+      - SYSTEM_BIBLE.md
+
+  ADMIN-017A:
+    name: Admin Password Reset
+    description: OTP-based password reset for admin users
+    status: validated
+    priority: high
+    completed_at: 2026-06-15
+    features:
+      - 6-digit OTP via email
+      - 60-second countdown
+      - Monkey emoji toggle
+      - Password strength meter
+      - Numeric keyboard on mobile
+      - Auto-tab OTP inputs
+    evidence:
+      - app/Http/Controllers/Admin/PasswordResetController.php
+      - database/migrations/*_add_otp_columns_to_admin_password_resets_table.php
+    documentation:
+      - SYSTEM_BIBLE.md
+
+  ADMIN-015:
+    name: Admin Management
+    description: Admin user management and administration
+    status: discovering
+    priority: medium
+    evidence:
+      - app/Http/Controllers/Admin/AdminManagementController.php
+
+  NOTIFY-001:
+    name: Multi-Gateway Email
+    description: Email notifications with multiple gateway support
+    status: discovering
+    priority: medium
+    evidence:
+      - app/Services/NotificationService.php
+
+  ADMIN-014:
+    name: Emergency Map
+    description: Emergency map visualization for incidents
+    status: discovering
+    priority: medium
+    evidence:
+      - app/Http/Controllers/Api/V1/LocationController.php
+
+  AUTH-006:
+    name: OTP Premature Consumption
+    description: Tech debt - OTP consumption timing fix
+    status: deferred
+    priority: low
+    evidence:
+      - app/Models/PasswordReset.php
+
+# ─── TYPE B: SYSTEM MODULES (Permanent Architecture) ───
+# These are permanent platform capabilities
+
+system_modules:
+  AUTH:
+    name: Authentication System
+    description: User authentication with email/password, PIN, and duress PIN
+    status: active
+    controllers:
+      - app/Http/Controllers/Api/V1/AuthController.php
+      - app/Http/Controllers/Api/V1/PasswordResetController.php
+      - app/Http/Controllers/Api/V1/DuressPinController.php
+    models:
+      - app/Models/User.php
+      - app/Models/PasswordReset.php
+    apis:
+      - POST /api/v1/auth/login
+      - POST /api/v1/auth/login-pin
+      - POST /api/v1/auth/create-pin
+      - POST /api/v1/auth/complete-onboarding
+      - POST /api/v1/auth/confirm-phone
+      - POST /api/v1/auth/user-details
+      - POST /api/v1/auth/trusted-contact
+      - POST /api/v1/forgot-pin/send-otp
+      - POST /api/v1/forgot-pin/verify-otp
+      - POST /api/v1/forgot-pin/reset
+    documentation:
+      - SYSTEM_BIBLE.md
+      - CODEMAP.md
+
+  SOS:
+    name: SOS Alert System
+    description: Emergency SOS with duress mode and escalation
+    status: active
+    controllers:
+      - app/Http/Controllers/Api/V1/SosController.php
+    models:
+      - app/Models/SosEvent.php
+    jobs:
+      - app/Jobs/SendSosAlertJob.php
+    listeners:
+      - app/Listeners/QueueSosAlert.php
+    events:
+      - app/Events/SOSTriggered.php
+    apis:
+      - POST /api/v1/sos
+    documentation:
+      - SYSTEM_BIBLE.md
+
+  TRUSTED_CONTACTS:
+    name: Trusted Contacts
+    description: Emergency contact network with verification
+    status: active
+    controllers:
+      - app/Http/Controllers/Api/V1/TrustedContactController.php
+    models:
+      - app/Models/TrustedContact.php
+    apis:
+      - GET /api/v1/trusted-contacts
+      - POST /api/v1/trusted-contacts
+      - DELETE /api/v1/trusted-contacts/{id}
+      - GET /api/v1/trusted-contact/notifications/{phone}
+    documentation:
+      - SYSTEM_BIBLE.md
+
+  CHECKIN:
+    name: Check-In System
+    description: Scheduled check-ins with grace period and escalation
+    status: active
+    controllers:
+      - app/Http/Controllers/Api/V1/CheckInController.php
+      - app/Http/Controllers/Api/V1/CheckInSettingsController.php
+      - app/Http/Controllers/Api/V1/ReminderController.php
+    models:
+      - app/Models/CheckIn.php
+      - app/Models/CheckinSetting.php
+    jobs:
+      - app/Jobs/ProcessMissedCheckInJob.php
+      - app/Jobs/SendCheckInReminderJob.php
+    apis:
+      - POST /api/v1/checkin
+      - GET /api/v1/checkin-settings
+      - POST /api/v1/checkin-settings
+      - GET /api/v1/check-reminder
+    documentation:
+      - SYSTEM_BIBLE.md
+
+  LOCATION:
+    name: Location Services
+    description: Live location tracking and emergency-only access
+    status: active
+    controllers:
+      - app/Http/Controllers/Api/V1/LocationController.php
+    services:
+      - app/Services/EmergencyPermissionService.php
+    apis:
+      - GET /api/v1/location
+    documentation:
+      - SYSTEM_BIBLE.md
+      - CODEMAP.md
+
+  INCIDENTS:
+    name: Incident Management
+    description: Full incident lifecycle tracking and resolution
+    status: active
+    controllers:
+      - app/Http/Controllers/Api/V1/IncidentController.php
+    models:
+      - app/Models/SafetyIncident.php
+      - app/Models/IncidentNotification.php
+    apis:
+      - GET /api/v1/incidents
+      - GET /api/v1/incidents/{id}
+      - POST /api/v1/incidents/{id}/resolve
+    documentation:
+      - SYSTEM_BIBLE.md

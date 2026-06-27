@@ -1,0 +1,154 @@
+project:
+  name: KIN Platform
+  version: 4.0.0
+  status: active
+
+ownership:
+  project_owner: User
+  validation_authority: User
+  freeze_authority: User
+
+environment:
+  primary:
+    - Android
+    - Termux
+    - Mobile Browser
+
+  backend_path: ~/storage/kin_platform/backend
+  frontend_path: ~/storage/kin_platform/frontend
+  docs_path: ~/storage/kin_platform/docs
+
+architecture:
+
+  methodology: Brick Based Development
+
+  lifecycle:
+
+    - IDEA
+    - DISCOVERING
+    - VERIFIED
+    - ARCHITECTURE
+    - BUILD_PLAN
+    - BUILDING
+    - PATCHED
+    - TESTING
+    - USER_VALIDATED
+    - FROZEN
+    - DOCUMENTED
+
+  reuse_order:
+
+    - REUSE
+    - EXTEND
+    - REFACTOR
+    - CREATE
+
+source_of_truth:
+
+  priority:
+
+    - running_system
+    - database_schema
+    - routes
+    - source_code
+    - test_results
+    - documentation
+    - ai_reports
+    - ai_assumptions
+
+documentation:
+
+  entrypoint: docs/ENTRYPOINT.md
+
+  core_files:
+
+    - docs/PROJECT_STATUS.md
+    - docs/PROJECT_DNA.yaml
+    - docs/SYSTEM_BIBLE.md
+    - docs/CODEMAP.md
+    - docs/GOVERNANCE.md
+    - docs/BUILD_LOG.md
+    - docs/BRICK_REGISTRY.yaml
+
+roadmap:
+
+  master_roadmap:
+    docs/architecture/MASTER_ROADMAP_DASHBOARD.md
+
+current:
+
+  active_brick: TBD
+
+  current_phase: DISCOVERING
+
+  assigned_agent: Product Agent
+
+agents:
+
+  product_agent:
+
+    responsibilities:
+      - requirements
+      - brick_definition
+      - specifications
+      - roadmap_alignment
+
+  design_agent:
+
+    responsibilities:
+      - ux
+      - ui
+      - wireframes
+      - design_system
+
+  build_agent:
+
+    responsibilities:
+      - frontend
+      - backend
+      - database
+      - api
+
+  qa_agent:
+
+    responsibilities:
+      - testing
+      - validation
+      - security
+      - performance
+
+  release_agent:
+
+    responsibilities:
+      - documentation
+      - release_notes
+      - build_logs
+      - governance_sync
+
+external_review:
+
+  enabled: true
+
+  providers:
+    - ChatGPT
+    - Claude
+    - Gemini
+    - DeepSeek
+
+rules:
+
+  ai_can:
+
+    - discover
+    - analyze
+    - design
+    - build
+    - patch
+    - document
+
+  ai_cannot:
+
+    - validate
+    - freeze
+    - self_approve
+

@@ -1,0 +1,114 @@
+<?php
+
+namespace App\Http\Controllers\Api\V1;
+
+use App\Models\SafetyIncident;
+use App\Models\IncidentNotification;
+use App\Models\TrustedContact;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Log;
+
+class IncidentController extends Controller
+{
+    public function index(Request $request)
+    {
+        $phone = $request->query('phone');
+
+        if (!$phone) {
+            return response()->json(['success' => false, 'error' => 'Phone required'], 400);
+        }
+
+        $user = \App\Models\User::where('phone', $phone)
+            ->orWhere('phone', "'" . $phone . "'")
+            ->first();
+
+        if (!$user) {
+            return response()->json(['success' => false, 'error' => 'User not found'], 404);
+        }
+
+        $incidents = SafetyIncident::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'incidents' => $incidents,
+                'total' => $incidents->count(),
+                'unread' => $incidents->where('status', 'active')->count(),
+            ]
+        ]);
+    }
+
+    public function show($id)
+    {
+        $incident = SafetyIncident::with('notifications')->find($id);
+
+        if (!$incident) {
+            return response()->json(['success' => false, 'error' => 'Incident not found'], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $incident
+        ]);
+    }
+
+    public function markResolved($id)
+    {
+        $incident = SafetyIncident::find($id);
+
+        if (!$incident) {
+            return response()->json(['success' => false, 'error' => 'Incident not found'], 404);
+        }
+
+        $incident->update([
+            'status' => 'resolved',
+            'resolved_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Incident resolved'
+        ]);
+    }
+
+    public function notifications($contactPhone)
+    {
+        Log::info('Trusted contact notifications called', ['phone' => $contactPhone]);
+
+        // Try multiple formats, and match ALL contacts with this phone
+        // (the same phone number can legitimately belong to multiple
+        // trusted_contact records across different KIN users).
+        $contacts = TrustedContact::where('phone', $contactPhone)
+            ->orWhere('phone', "'" . $contactPhone . "'")
+            ->orWhere('phone', str_replace("'", "", $contactPhone))
+            ->get();
+
+        if ($contacts->isEmpty()) {
+            Log::warning('Trusted contact not found', ['phone' => $contactPhone]);
+            return response()->json(['success' => false, 'error' => 'Contact not found'], 404);
+        }
+
+        $contactIds = $contacts->pluck('id');
+        Log::info('Trusted contacts found', ['contact_ids' => $contactIds]);
+
+        $notifications = IncidentNotification::whereIn('trusted_contact_id', $contactIds)
+            ->whereNull('viewed_at')
+            ->with('incident')
+            ->get();
+
+        Log::info('Notifications found', ['count' => $notifications->count()]);
+
+        // Mark as viewed now that they have been delivered to this client
+        IncidentNotification::whereIn('id', $notifications->pluck('id'))
+            ->update(['viewed_at' => now()]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $notifications
+        ]);
+    }
+}

@@ -1,0 +1,84 @@
+<?php
+
+namespace App\Http\Controllers\Api\V1;
+
+use App\Http\Controllers\Controller;
+use App\Http\Responses\ApiResponse;
+use App\Models\User;
+use App\Models\CheckinSetting;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class CheckInSettingsController extends Controller
+{
+    public function get(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required|string',
+        ]);
+
+        $user = User::where('phone', $request->phone)->first();
+        
+        if (!$user) {
+            return ApiResponse::notFound('User not found');
+        }
+
+        // Direct database query to bypass any caching
+        $setting = DB::table('checkin_settings')->where('user_id', $user->id)->first();
+        
+        if (!$setting) {
+            // Create default setting
+            $id = DB::table('checkin_settings')->insertGetId([
+                'user_id' => $user->id,
+                'checkin_time' => '21:00:00',
+                'grace_minutes' => 15,
+                'enabled' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            $setting = DB::table('checkin_settings')->find($id);
+        }
+
+        return ApiResponse::success([
+            'checkin_time' => substr($setting->checkin_time, 0, 5),
+            'grace_minutes' => $setting->grace_minutes,
+            'enabled' => (bool)$setting->enabled,
+        ], 'Settings retrieved successfully');
+    }
+
+    public function update(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required|string',
+            'checkin_time' => 'required|string',
+            'grace_minutes' => 'required|integer|min:5|max:60',
+            'enabled' => 'required|boolean',
+        ]);
+
+        $user = User::where('phone', $request->phone)->first();
+        
+        if (!$user) {
+            return ApiResponse::notFound('User not found');
+        }
+
+        // Direct database update
+        $updated = DB::table('checkin_settings')->updateOrInsert(
+            ['user_id' => $user->id],
+            [
+                'checkin_time' => $request->checkin_time . ':00',
+                'grace_minutes' => $request->grace_minutes,
+                'enabled' => $request->enabled,
+                'updated_at' => now(),
+            ]
+        );
+
+        // Get the updated record
+        $setting = DB::table('checkin_settings')->where('user_id', $user->id)->first();
+
+        return ApiResponse::success([
+            'checkin_time' => substr($setting->checkin_time, 0, 5),
+            'grace_minutes' => $setting->grace_minutes,
+            'enabled' => (bool)$setting->enabled,
+        ], 'Settings updated successfully');
+    }
+}

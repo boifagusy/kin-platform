@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>KIN Test</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: 0 auto; background: #f8f9fa; }
+    .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    button { padding: 12px 24px; background: #1A5632; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; }
+    .log { background: #1a1a2e; color: #e0e0e0; padding: 16px; border-radius: 8px; min-height: 200px; font-family: monospace; font-size: 13px; line-height: 1.8; margin-top: 16px; }
+    .pass { color: #22c55e; }
+    .fail { color: #ef4444; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🧪 KIN Test</h1>
+    <p>Click the button to test localStorage</p>
+    <button onclick="runTests()">▶️ Run Tests</button>
+    <div class="log" id="log">No tests run yet</div>
+  </div>
+  <script>
+    function addLog(msg, type = 'info') {
+      const log = document.getElementById('log');
+      const colors = { pass: '#22c55e', fail: '#ef4444', info: '#e0e0e0' };
+      const time = new Date().toLocaleTimeString();
+      log.innerHTML += `<div style="color: ${colors[type] || '#e0e0e0'}">[${time}] ${msg}</div>`;
+    }
+
+    async function runTests() {
+      document.getElementById('log').innerHTML = '';
+      addLog('🧪 Starting tests...', 'info');
+      
+      // Test 1: localStorage
+      try {
+        localStorage.setItem('test_key', 'hello_world');
+        const value = localStorage.getItem('test_key');
+        if (value === 'hello_world') {
+          addLog('✅ localStorage: PASSED', 'pass');
+        } else {
+          addLog(`❌ localStorage: FAILED (got "${value}")`, 'fail');
+        }
+      } catch (e) {
+        addLog(`❌ localStorage error: ${e.message}`, 'fail');
+      }
+
+      // Test 2: try to load secureStorage
+      try {
+        const module = await import('./src/services/secureStorage.js');
+        if (module && module.secureStorage) {
+          addLog('✅ secureStorage: FOUND', 'pass');
+          await module.secureStorage.set('test', 'world');
+          const val = await module.secureStorage.get('test');
+          if (val === 'world') {
+            addLog('✅ secureStorage: PASSED', 'pass');
+          } else {
+            addLog(`❌ secureStorage: FAILED (got "${val}")`, 'fail');
+          }
+        } else {
+          addLog('⚠️ secureStorage: Module found but export missing', 'fail');
+        }
+      } catch (e) {
+        addLog(`⚠️ secureStorage: ${e.message}`, 'fail');
+      }
+
+      // Test 3: try to load sosService
+      try {
+        const module = await import('./src/services/sosService.js');
+        if (module && module.default) {
+          addLog('✅ sosService: FOUND', 'pass');
+        } else {
+          addLog('⚠️ sosService: Module found but export missing', 'fail');
+        }
+      } catch (e) {
+        addLog(`⚠️ sosService: ${e.message}`, 'fail');
+      }
+
+      addLog('✅ All tests complete!', 'pass');
+    }
+  </script>
+</body>
+</html>

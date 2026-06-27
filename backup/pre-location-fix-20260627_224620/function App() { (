@@ -1,0 +1,113 @@
+le={{
+        minHeight: "100vh",
+        background: "#EEF7EF",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: "24px",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "420px",
+          background: "#FFFFFF",
+          borderRadius: "32px",
+          padding: "40px 30px",
+          textAlign: "center",
+          boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+        }}
+      >
+        {/* Shield */}
+        <div
+          style={{
+            width: "110px",
+            height: "110px",
+            margin: "0 auto 24px",
+            borderRadius: "50%",
+            background: "#E8F5EA",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "50px",
+          }}
+        >
+          🛡️
+        </div>
+
+        {/* Brand */}
+        <h1
+          style={{
+            color: "#0B7A3E",
+            fontSize: "48px",
+            margin: 0,
+          }}
+        >
+          Kin
+        </h1>
+
+        <p
+          style={{
+            color: "#666",
+            marginTop: "12px",
+            fontSize: "18px",
+            lineHeight: "1.6",
+          }}
+        >
+          Your people. Your safety.
+        </p>
+
+        <p
+          style={{
+            color: "#888",
+            marginTop: "24px",
+            fontSize: "16px",
+            lineHeight: "1.7",
+          }}
+        >
+          Stay connected with trusted family and friends,
+          share your location when needed, and get help
+          quickly during emergencies.
+        </p>
+
+        {/* Button */}
+        <button
+          style={{
+            width: "100%",
+            marginTop: "36px",
+            height: "58px",
+            border: "none",
+            borderRadius: "16px",
+            background: "#2F944D",
+            color: "#FFFFFF",
+            fontSize: "18px",
+            fontWeight: "600",
+            cursor: "pointer",
+          }}
+        >
+          Get Started
+        </button>
+
+        <p
+          style={{
+            marginTop: "20px",
+            color: "#999",
+            fontSize: "14px",
+          }}
+        >
+          Protect yourself and the people who matter most.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default App;function App() {
+  return (
+    <div style={{padding:'40px'}}>
+      <h1>Kin Welcome Screen</h1>
+    </div>
+  );
+}
+
+export default App;
