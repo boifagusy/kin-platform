@@ -11,13 +11,11 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
-      with:
-        fetch-depth: 1  # Only fetch latest commit, reduces size
     
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 22
+        node-version: '22'
         
     - name: Setup Java
       uses: actions/setup-java@v4
@@ -36,7 +34,7 @@ jobs:
     - name: Build web app
       run: |
         cd frontend
-        npm run build
+        NODE_OPTIONS="--no-warnings" npm run build
         
     - name: Sync Capacitor
       run: |
