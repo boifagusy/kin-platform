@@ -21,22 +21,23 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: 'zulu'
-        java-version: '21'  # Changed from 17 to 21
+        java-version: '21'
         
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
     
-    - name: Build
+    - name: Build APK
       run: |
         cd frontend
         npm install --legacy-peer-deps
         npm run build
         npx cap sync android
         
-        # Fix missing string resource
-        cd android/app/src/main/res/values
+        # Add missing strings.xml if needed
+        cd android/app/src/main/res
+        mkdir -p values
+        cd values
         if [ ! -f strings.xml ]; then
-          mkdir -p .
           echo '<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Kin</string>
@@ -47,11 +48,12 @@ jobs:
             sed -i '/<\/resources>/i \    <string name="default_notification_channel_id">kin_notifications</string>' strings.xml
           fi
         fi
-        
         cd ../../../../
+        
+        # Build with Kotlin support
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon
+        ./gradlew assembleDebug --no-daemon --stacktrace
         
     - name: Upload APK
       uses: actions/upload-artifact@v4
