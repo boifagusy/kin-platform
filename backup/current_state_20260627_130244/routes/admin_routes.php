@@ -1,9 +1,0 @@
-<?php
-
-// Test if this file is being loaded
-
-
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\UserManagementController;
-
-Route::get('/admin/users-test', [UserManagementController::class, 'index']);
