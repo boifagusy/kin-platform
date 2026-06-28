@@ -20,7 +20,7 @@ jobs:
     - name: Setup Java
       uses: actions/setup-java@v4
       with:
-        distribution: 'zulu'
+        distribution: 'temurin'  # Changed from 'zulu' to 'temurin'
         java-version: '21'
         
     - name: Setup Android SDK
@@ -52,9 +52,7 @@ jobs:
       working-directory: ./frontend/android
       run: |
         chmod +x gradlew
-        # Try with Java 21 explicitly
-        export JAVA_HOME=/opt/hostedtoolcache/Java_Zulu_jdk/21.0.6-7/x64
-        ./gradlew assembleDebug --no-daemon --stacktrace
+        ./gradlew assembleDebug --no-daemon
         
     - name: Upload APK
       uses: actions/upload-artifact@v4
