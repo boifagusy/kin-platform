@@ -29,12 +29,12 @@ jobs:
     - name: Build
       run: |
         cd frontend
-        npm install --legacy-peer-deps --no-audit --no-fund
-        npm run build -- --no-lint
+        npm install --legacy-peer-deps
+        CI=false npm run build
         npx cap sync android
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon --no-parallel
+        ./gradlew assembleDebug --no-daemon
         
     - name: Upload APK
       uses: actions/upload-artifact@v4
