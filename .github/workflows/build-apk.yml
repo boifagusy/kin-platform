@@ -16,17 +16,12 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '22'
-        # Force use of Node 22
-        check-latest: true
         
-    - name: Verify Node Version
-      run: node --version
-    
     - name: Setup Java
       uses: actions/setup-java@v4
       with:
         distribution: 'zulu'
-        java-version: '17'
+        java-version: '21'  # Changed from 17 to 21
         
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
@@ -34,12 +29,26 @@ jobs:
     - name: Build
       run: |
         cd frontend
-        # Use Node 22 explicitly
-        export NODE_VERSION=$(node --version)
-        echo "Using Node $NODE_VERSION"
         npm install --legacy-peer-deps
         npm run build
         npx cap sync android
+        
+        # Fix missing string resource
+        cd android/app/src/main/res/values
+        if [ ! -f strings.xml ]; then
+          mkdir -p .
+          echo '<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Kin</string>
+    <string name="default_notification_channel_id">kin_notifications</string>
+</resources>' > strings.xml
+        else
+          if ! grep -q "default_notification_channel_id" strings.xml; then
+            sed -i '/<\/resources>/i \    <string name="default_notification_channel_id">kin_notifications</string>' strings.xml
+          fi
+        fi
+        
+        cd ../../../../
         cd android
         chmod +x gradlew
         ./gradlew assembleDebug --no-daemon
