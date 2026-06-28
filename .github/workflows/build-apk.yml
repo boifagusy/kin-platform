@@ -16,7 +16,12 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '22'
+        # Force use of Node 22
+        check-latest: true
         
+    - name: Verify Node Version
+      run: node --version
+    
     - name: Setup Java
       uses: actions/setup-java@v4
       with:
@@ -29,8 +34,11 @@ jobs:
     - name: Build
       run: |
         cd frontend
+        # Use Node 22 explicitly
+        export NODE_VERSION=$(node --version)
+        echo "Using Node $NODE_VERSION"
         npm install --legacy-peer-deps
-        CI=false npm run build
+        npm run build
         npx cap sync android
         cd android
         chmod +x gradlew
