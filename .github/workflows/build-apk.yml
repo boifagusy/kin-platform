@@ -26,27 +26,30 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
     
-    - name: Build APK
+    - name: Build Web
+      working-directory: ./frontend
       run: |
-        cd frontend
         npm install --legacy-peer-deps
         npm run build
-        npx cap sync android
         
-        # Create strings.xml in the correct location
-        cd android/app/src/main/res
-        mkdir -p values
-        echo '<?xml version="1.0" encoding="utf-8"?>
+    - name: Sync Capacitor
+      working-directory: ./frontend
+      run: npx cap sync android
+        
+    - name: Create strings.xml
+      run: |
+        mkdir -p frontend/android/app/src/main/res/values
+        cat > frontend/android/app/src/main/res/values/strings.xml << 'STRINGS'
+        <?xml version="1.0" encoding="utf-8"?>
         <resources>
             <string name="app_name">Kin</string>
             <string name="default_notification_channel_id">kin_notifications</string>
-        </resources>' > values/strings.xml
+        </resources>
+        STRINGS
         
-        # Go back to frontend directory
-        cd ../../../../
-        
-        # Now build the Android APK
-        cd android
+    - name: Build APK
+      working-directory: ./frontend/android
+      run: |
         chmod +x gradlew
         ./gradlew assembleDebug --no-daemon
         
