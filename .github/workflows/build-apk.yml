@@ -33,25 +33,22 @@ jobs:
         npm run build
         npx cap sync android
         
+        # Create strings.xml in the correct location
         cd android/app/src/main/res
         mkdir -p values
-        cd values
-        if [ ! -f strings.xml ]; then
-          echo '<?xml version="1.0" encoding="utf-8"?>
+        echo '<?xml version="1.0" encoding="utf-8"?>
         <resources>
             <string name="app_name">Kin</string>
             <string name="default_notification_channel_id">kin_notifications</string>
-        </resources>' > strings.xml
-        else
-          if ! grep -q "default_notification_channel_id" strings.xml; then
-            sed -i '/<\/resources>/i \    <string name="default_notification_channel_id">kin_notifications</string>' strings.xml
-          fi
-        fi
+        </resources>' > values/strings.xml
+        
+        # Go back to frontend directory
         cd ../../../../
         
+        # Now build the Android APK
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon --stacktrace
+        ./gradlew assembleDebug --no-daemon
         
     - name: Upload APK
       uses: actions/upload-artifact@v4
