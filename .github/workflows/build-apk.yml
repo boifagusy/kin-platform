@@ -21,26 +21,24 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '17'
+        java-version: '21'
         
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
     
-    - name: Clean Build
-      run: |
-        cd frontend/android
-        chmod +x gradlew
-        ./gradlew clean
-        
     - name: Build Web
       working-directory: ./frontend
       run: |
         npm install --legacy-peer-deps
         npm run build
         
-    - name: Sync Capacitor
+    - name: Full Capacitor Sync
       working-directory: ./frontend
-      run: npx cap sync android
+      run: |
+        # Remove old Android folder to ensure clean sync
+        rm -rf android
+        npx cap add android
+        npx cap sync android
         
     - name: Create string resources
       run: |
@@ -58,7 +56,7 @@ jobs:
       working-directory: ./frontend/android
       run: |
         chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon
+        ./gradlew assembleDebug --no-daemon --stacktrace
         
     - name: Upload APK
       uses: actions/upload-artifact@v4
