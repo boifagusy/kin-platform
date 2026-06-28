@@ -21,11 +21,17 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '21'
+        java-version: '17'
         
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
     
+    - name: Clean Build
+      run: |
+        cd frontend/android
+        chmod +x gradlew
+        ./gradlew clean
+        
     - name: Build Web
       working-directory: ./frontend
       run: |
@@ -48,12 +54,11 @@ jobs:
         </resources>
         STRINGS
         
-    - name: Build APK (Skip Kotlin)
+    - name: Build APK
       working-directory: ./frontend/android
       run: |
         chmod +x gradlew
-        # Skip Kotlin compilation to bypass plugin errors
-        ./gradlew assembleDebug --no-daemon -x compileDebugKotlin
+        ./gradlew assembleDebug --no-daemon
         
     - name: Upload APK
       uses: actions/upload-artifact@v4
