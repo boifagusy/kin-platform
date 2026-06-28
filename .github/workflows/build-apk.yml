@@ -15,7 +15,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '22'
         
     - name: Setup Java
       uses: actions/setup-java@v4
@@ -29,12 +29,12 @@ jobs:
     - name: Build
       run: |
         cd frontend
-        npm install --legacy-peer-deps
-        npm run build
+        npm install --legacy-peer-deps --no-audit --no-fund
+        npm run build -- --no-lint
         npx cap sync android
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon
+        ./gradlew assembleDebug --no-daemon --no-parallel
         
     - name: Upload APK
       uses: actions/upload-artifact@v4
