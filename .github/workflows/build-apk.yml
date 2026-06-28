@@ -15,7 +15,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '22'
+        node-version: '20'
         
     - name: Setup Java
       uses: actions/setup-java@v4
@@ -26,24 +26,13 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
     
-    - name: Install dependencies
+    - name: Build
       run: |
         cd frontend
         npm install --legacy-peer-deps
-        
-    - name: Build web app
-      run: |
-        cd frontend
-        NODE_OPTIONS="--no-warnings" npm run build
-        
-    - name: Sync Capacitor
-      run: |
-        cd frontend
+        npm run build
         npx cap sync android
-        
-    - name: Build APK
-      run: |
-        cd frontend/android
+        cd android
         chmod +x gradlew
         ./gradlew assembleDebug --no-daemon
         
