@@ -33,16 +33,15 @@ jobs:
         npm run build
         npx cap sync android
         
-        # Add missing strings.xml if needed
         cd android/app/src/main/res
         mkdir -p values
         cd values
         if [ ! -f strings.xml ]; then
           echo '<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">Kin</string>
-    <string name="default_notification_channel_id">kin_notifications</string>
-</resources>' > strings.xml
+        <resources>
+            <string name="app_name">Kin</string>
+            <string name="default_notification_channel_id">kin_notifications</string>
+        </resources>' > strings.xml
         else
           if ! grep -q "default_notification_channel_id" strings.xml; then
             sed -i '/<\/resources>/i \    <string name="default_notification_channel_id">kin_notifications</string>' strings.xml
@@ -50,7 +49,6 @@ jobs:
         fi
         cd ../../../../
         
-        # Build with Kotlin support
         cd android
         chmod +x gradlew
         ./gradlew assembleDebug --no-daemon --stacktrace
