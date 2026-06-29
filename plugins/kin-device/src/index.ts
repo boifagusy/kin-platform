@@ -1,5 +1,4 @@
 import { registerPlugin } from '@capacitor/core';
-
 import type { KinDevicePlugin } from './definitions';
 
 const KinDevice = registerPlugin<KinDevicePlugin>('KinDevice', {

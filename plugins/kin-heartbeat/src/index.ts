@@ -1,5 +1,4 @@
 import { registerPlugin } from '@capacitor/core';
-
 import type { KinHeartbeatPlugin } from './definitions';
 
 const KinHeartbeat = registerPlugin<KinHeartbeatPlugin>('KinHeartbeat', {

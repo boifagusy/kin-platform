@@ -1,5 +1,4 @@
 import { registerPlugin } from '@capacitor/core';
-
 import type { KinNotificationsPlugin } from './definitions';
 
 const KinNotifications = registerPlugin<KinNotificationsPlugin>('KinNotifications', {
