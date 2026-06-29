@@ -11,8 +11,17 @@ project(':capacitor-local-notifications').projectDir = new File('../node_modules
 include ':kin-core'
 project(':kin-core').projectDir = new File('../../plugins/kin-core/android')
 
+include ':kin-device'
+project(':kin-device').projectDir = new File('../../plugins/kin-device/android')
+
+include ':kin-heartbeat'
+project(':kin-heartbeat').projectDir = new File('../../plugins/kin-heartbeat/android')
+
 include ':kin-location'
 project(':kin-location').projectDir = new File('../../plugins/kin-location/android')
+
+include ':kin-notifications'
+project(':kin-notifications').projectDir = new File('../../plugins/kin-notifications/android')
 
 include ':kin-security'
 project(':kin-security').projectDir = new File('../../plugins/kin-security/android')

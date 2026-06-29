@@ -12,7 +12,10 @@ dependencies {
     implementation project(':capacitor-geolocation')
     implementation project(':capacitor-local-notifications')
     implementation project(':kin-core')
+    implementation project(':kin-device')
+    implementation project(':kin-heartbeat')
     implementation project(':kin-location')
+    implementation project(':kin-notifications')
     implementation project(':kin-security')
 
 }
