@@ -1,5 +1,4 @@
 import { registerPlugin } from '@capacitor/core';
-
 import type { KinCorePlugin } from './definitions';
 
 const KinCore = registerPlugin<KinCorePlugin>('KinCore', {
