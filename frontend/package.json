@@ -29,6 +29,7 @@
     "@kin/device": "file:../plugins/kin-device",
     "@kin/heartbeat": "file:../plugins/kin-heartbeat",
     "@kin/location": "file:../plugins/kin-location",
+    "@kin/network": "file:../plugins/kin-network",
     "@kin/notifications": "file:../plugins/kin-notifications",
     "@kin/security": "file:../plugins/kin-security",
     "@react-native-community/geolocation": "^3.4.0",
