@@ -1,5 +1,4 @@
 import { registerPlugin } from '@capacitor/core';
-
 import type { KinSecurityPlugin } from './definitions';
 
 const KinSecurity = registerPlugin<KinSecurityPlugin>('KinSecurity', {
