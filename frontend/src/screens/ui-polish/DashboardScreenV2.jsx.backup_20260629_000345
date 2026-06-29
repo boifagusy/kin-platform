@@ -28,16 +28,6 @@ function DashboardScreenV2() {
   const [showAssistanceOptions, setShowAssistanceOptions] = useState(false);
   const [showEmergencyConfirm, setShowEmergencyConfirm] = useState(false);
   const [offline, setOffline] = useState(!navigator.onLine);
-  const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
-
-  useEffect(() => {
-    if (navigator.permissions && navigator.permissions.query) {
-      navigator.permissions.query({ name: "geolocation" }).then((result) => {
-        setLocationPermissionGranted(result.state === "granted");
-        result.onchange = () => setLocationPermissionGranted(result.state === "granted");
-      }).catch(() => setLocationPermissionGranted(false));
-    }
-  }, []);
   const [activeTab, setActiveTab] = useState("home");
 
   // Trusted Contact handlers
@@ -102,7 +92,7 @@ function DashboardScreenV2() {
   }, [phone, navigate]);
 
   const tasks = dashboard?.pending_tasks || [];
-  const locationEnabled = locationPermissionGranted;
+  const locationEnabled = !tasks.find(t => t.id === "location");
   const homeZoneAdded = !tasks.find(t => t.id === "safe_zones");
   const duressPinCreated = !tasks.find(t => t.id === "duress_pin");
 
@@ -128,7 +118,7 @@ function DashboardScreenV2() {
 
   const breakdownItems = [
     { label: "Location Enabled", status: locationEnabled },
-    { label: "Trusted Contact Added", status: dashboard?.has_verified_contact ?? (contactsCount > 0) },
+    { label: "Trusted Contact Added", status: contactsCount > 0 },
     { label: "Safe Zones Added", status: homeZoneAdded },
     { label: "Duress PIN Created", status: duressPinCreated },
     { label: "Recent Check-In", status: recentCheckIn !== false },
@@ -314,8 +304,6 @@ function DashboardScreenV2() {
           onEmergency={handleEmergency}
           onUpdateStatus={() => setCheckInState("default")}
           loading={checkInLoading}
-          hasTrustedContact={dashboard?.has_verified_contact ?? (contactsCount > 0)}
-          onAddContact={() => navigate("/network", { state: { phone } })}
         />
 
         {showAssistanceOptions && (

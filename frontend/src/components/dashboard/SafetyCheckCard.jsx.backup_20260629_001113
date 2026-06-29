@@ -4,9 +4,7 @@ function SafetyCheckCard({
   onSafe,
   onAssistance,
   onEmergency,
-  onUpdateStatus,
-  hasTrustedContact = true,
-  onAddContact
+  onUpdateStatus
 }) {
 
   if (checkInState === "safe") {
@@ -103,16 +101,15 @@ function SafetyCheckCard({
 
         <button
           onClick={onSafe}
-          disabled={!hasTrustedContact}
           style={{
-            background: hasTrustedContact ? "#DCFCE7" : "#F3F4F6",
-            color: hasTrustedContact ? "#166534" : "#9CA3AF",
+            background: "#DCFCE7",
+            color: "#166534",
             border: "none",
             borderRadius: 16,
             padding: "16px",
             fontWeight: "bold",
             fontSize: 16,
-            cursor: hasTrustedContact ? "pointer" : "not-allowed"
+            cursor: "pointer"
           }}
         >
           🟢 I'm Safe
@@ -136,50 +133,21 @@ function SafetyCheckCard({
 
         <button
           onClick={onEmergency}
-          disabled={!hasTrustedContact}
           style={{
-            background: hasTrustedContact ? "#FEE2E2" : "#F3F4F6",
-            color: hasTrustedContact ? "#B91C1C" : "#9CA3AF",
+            background: "#FEE2E2",
+            color: "#B91C1C",
             border: "none",
             borderRadius: 16,
             padding: "16px",
             fontWeight: "bold",
             fontSize: 16,
-            cursor: hasTrustedContact ? "pointer" : "not-allowed"
+            cursor: "pointer"
           }}
         >
           🔴 Emergency
         </button>
 
       </div>
-
-      {!hasTrustedContact && (
-        <div style={{
-          marginTop: 16,
-          padding: "12px 16px",
-          background: "#FEF3C7",
-          borderRadius: 12,
-          textAlign: "center"
-        }}>
-          <p style={{ color: "#92400E", fontSize: 13, marginBottom: 8 }}>
-            Add a trusted contact first to enable check-ins and SOS.
-          </p>
-          <button
-            onClick={onAddContact}
-            style={{
-              border: "none",
-              background: "transparent",
-              color: "#1A5632",
-              fontWeight: "bold",
-              fontSize: 13,
-              cursor: "pointer",
-              textDecoration: "underline"
-            }}
-          >
-            Add Trusted Contact →
-          </button>
-        </div>
-      )}
     </div>
   );
 }

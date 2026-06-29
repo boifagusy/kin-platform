@@ -8,6 +8,7 @@ import type {
   InvestigationStatus,
   EmergencyEvidence,
   LocationTimelineEntry,
+  LocationSource,  // ✅ ADD THIS
 } from './definitions';
 
 export class KinLocationWeb extends WebPlugin implements KinLocationPlugin {
@@ -224,7 +225,7 @@ export class KinLocationWeb extends WebPlugin implements KinLocationPlugin {
       },
       (error) => {
         this.notifyListeners('trackingError', {
-          code: error.code,
+          code: error.code.toString(),
           message: error.message,
           timestamp: new Date().toISOString(),
         });

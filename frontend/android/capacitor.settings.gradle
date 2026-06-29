@@ -7,3 +7,12 @@ project(':capacitor-geolocation').projectDir = new File('../node_modules/@capaci
 
 include ':capacitor-local-notifications'
 project(':capacitor-local-notifications').projectDir = new File('../node_modules/@capacitor/local-notifications/android')
+
+include ':kin-core'
+project(':kin-core').projectDir = new File('../../plugins/kin-core/android')
+
+include ':kin-location'
+project(':kin-location').projectDir = new File('../../plugins/kin-location/android')
+
+include ':kin-security'
+project(':kin-security').projectDir = new File('../../plugins/kin-security/android')
