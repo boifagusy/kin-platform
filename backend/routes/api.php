@@ -87,3 +87,16 @@ Route::prefix('escalation')->middleware('auth:sanctum')->group(function () {
     Route::get('/history', [App\Http\Controllers\Api\V1\EscalationDecisionController::class, 'history'])
         ->middleware('admin');
 });
+
+// Location Tracking Routes
+Route::post('/location', [App\Http\Controllers\Api\V1\LocationTrackingController::class, 'store'])
+    ->middleware('auth:sanctum')
+    ->name('location.store');
+
+Route::get('/location/history', [App\Http\Controllers\Api\V1\LocationTrackingController::class, 'history'])
+    ->middleware('auth:sanctum')
+    ->name('location.history');
+
+Route::get('/location/last', [App\Http\Controllers\Api\V1\LocationTrackingController::class, 'last'])
+    ->middleware('auth:sanctum')
+    ->name('location.last');

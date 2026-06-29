@@ -9,7 +9,6 @@ use App\Models\SafetyIncident;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Events\SOSTriggered;
-use App\Services\SafetyScoreService;
 
 class SosController extends Controller
 {
@@ -42,39 +41,6 @@ class SosController extends Controller
                     'code' => 'RATE_LIMITED',
                     'retry_after' => $this->getRetryTime($user),
                 ], 429);
-            }
-
-            // Block if an SOS is already active (unresolved)
-            $activeSOS = SosEvent::where('user_id', $user->id)
-                ->whereNull('resolved_at')
-                ->latest('triggered_at')
-                ->first();
-
-            if ($activeSOS) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'SOS already active. Resolve your current SOS before triggering a new one.',
-                    'code' => 'SOS_ALREADY_ACTIVE',
-                    'data' => ['sos_id' => $activeSOS->id, 'triggered_at' => $activeSOS->triggered_at],
-                ], 409);
-            }
-
-            // Cooldown: 5 minutes between SOS triggers, even after resolution
-            $lastSOS = SosEvent::where('user_id', $user->id)
-                ->latest('triggered_at')
-                ->first();
-
-            if ($lastSOS) {
-                $secondsSinceLast = now()->diffInSeconds($lastSOS->triggered_at);
-                $cooldownSeconds = 300; // 5 minutes
-                if ($secondsSinceLast < $cooldownSeconds) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => 'Please wait before triggering another SOS.',
-                        'code' => 'SOS_COOLDOWN',
-                        'retry_after' => $cooldownSeconds - $secondsSinceLast,
-                    ], 429);
-                }
             }
 
             return $this->processSOS($request);
