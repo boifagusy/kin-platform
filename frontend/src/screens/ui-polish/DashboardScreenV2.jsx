@@ -175,7 +175,11 @@ function DashboardScreenV2() {
       try {
         const response = await fetch(`${API_BASE}/checkin`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("kin_token")}`,
+            "Accept": "application/json",
+          },
           body: JSON.stringify(checkinBody),
         });
 
@@ -211,6 +215,11 @@ function DashboardScreenV2() {
   };
 
   const handleEmergency = () => {
+    const hasContact = dashboard?.has_verified_contact ?? (contactsCount > 0);
+    if (!hasContact) {
+      alert("Add a trusted contact first to enable SOS.");
+      return;
+    }
     setShowEmergencyConfirm(true);
   };
 
@@ -250,7 +259,11 @@ function DashboardScreenV2() {
     try {
       const response = await fetch(`${API_BASE}/sos`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("kin_token")}`,
+          "Accept": "application/json",
+        },
         body: JSON.stringify(sosBody),
       });
 
