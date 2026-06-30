@@ -17,7 +17,9 @@ import {
   FaToggleOff,
   FaUserCircle,
   FaPhone,
-  FaEnvelope
+  FaEnvelope,
+  FaUsers,
+  FaLock
 } from "react-icons/fa";
 
 function ProfileScreen() {
@@ -165,12 +167,28 @@ function ProfileScreen() {
               <FaChevronRight className="text-gray-400 text-sm" />
             </button>
             
-            <button className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition">
+            <button
+              onClick={() => navigate("/dashboard", { state: { phone } })}
+              className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition border-b border-gray-100"
+            >
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
                   <FaMapMarkerAlt className="text-[#1A5632] text-sm" />
                 </div>
-                <span className="text-sm text-gray-700">Geofence Zones</span>
+                <span className="text-sm text-gray-700">Safe Zones</span>
+              </div>
+              <FaChevronRight className="text-gray-400 text-sm" />
+            </button>
+
+            <button
+              onClick={() => navigate("/network", { state: { phone } })}
+              className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                  <FaUsers className="text-[#1A5632] text-sm" />
+                </div>
+                <span className="text-sm text-gray-700">Trusted Contact</span>
               </div>
               <FaChevronRight className="text-gray-400 text-sm" />
             </button>
@@ -183,8 +201,11 @@ function ProfileScreen() {
             <h3 className="font-semibold text-[#1A5632]">Privacy & Security</h3>
           </div>
           <div>
-            <button className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition border-b border-gray-100">
-              <span className="text-sm text-gray-700">Change Master PIN</span>
+            <button
+              onClick={() => navigate("/forgot-pin", { state: { phone } })}
+              className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition border-b border-gray-100"
+            >
+              <span className="text-sm text-gray-700">Change / Reset PIN</span>
               <FaChevronRight className="text-gray-400 text-sm" />
             </button>
             
