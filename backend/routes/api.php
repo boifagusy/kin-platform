@@ -59,3 +59,8 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower/notifications')
 Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower/security')->group(function () {
     Route::get('/metrics', [App\Http\Controllers\Watchtower\SecurityMonitorController::class, 'metrics']);
 });
+
+// Watchtower Self-Monitoring
+Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower/system')->group(function () {
+    Route::get('/health', [App\Http\Controllers\Watchtower\WatchtowerHealthController::class, 'index']);
+});

@@ -3,30 +3,30 @@
 namespace App\Services\Watchtower;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Queue;
 
 class QueueMonitorService
 {
-    /**
-     * Get queue metrics
-     */
     public function getMetrics(): array
     {
+        $jobMetrics = $this->getJobMetrics();
+        $failedMetrics = $this->getFailedJobMetrics();
+
         return [
-            'jobs' => $this->getJobMetrics(),
-            'workers' => $this->getWorkerMetrics(),
-            'failed_jobs' => $this->getFailedJobMetrics(),
+            'jobs' => $jobMetrics,
+            'workers' => [
+                'driver' => config('queue.default'),
+                'is_configured' => config('queue.default') !== 'sync',
+                'status' => config('queue.default') !== 'sync' ? 'healthy' : 'warning',
+                'workers' => 0,
+            ],
+            'failed_jobs' => $failedMetrics,
             'status' => $this->getQueueStatus(),
-            'overall_health' => $this->calculateOverallHealth(),
+            'overall_health' => $this->calculateOverallHealth($jobMetrics, $failedMetrics),
             'timestamp' => now()->toISOString(),
         ];
     }
 
-    /**
-     * Get job metrics
-     */
-    protected function getJobMetrics(): array
+    private function getJobMetrics(): array
     {
         try {
             $pending = DB::table('jobs')->whereNull('reserved_at')->count();
@@ -39,49 +39,15 @@ class QueueMonitorService
                 'status' => $pending > 100 ? 'warning' : 'healthy',
             ];
         } catch (\Exception $e) {
-            return [
-                'pending' => 0,
-                'processing' => 0,
-                'total' => 0,
-                'status' => 'unhealthy',
-                'error' => $e->getMessage(),
-            ];
+            return ['pending' => 0, 'processing' => 0, 'total' => 0, 'status' => 'unhealthy'];
         }
     }
 
-    /**
-     * Get worker metrics
-     */
-    protected function getWorkerMetrics(): array
-    {
-        // In production, you'd check actual running workers
-        // For now, we'll check if the queue system is configured
-        $driver = config('queue.default', 'sync');
-        $isConfigured = $driver !== 'sync';
-
-        return [
-            'driver' => $driver,
-            'is_configured' => $isConfigured,
-            'status' => $isConfigured ? 'healthy' : 'warning',
-            'workers' => $isConfigured ? 1 : 0,
-        ];
-    }
-
-    /**
-     * Get failed job metrics
-     */
-    protected function getFailedJobMetrics(): array
+    private function getFailedJobMetrics(): array
     {
         try {
-            $hasTable = DB::connection()->getSchemaBuilder()->hasTable('failed_jobs');
-
-            if (!$hasTable) {
-                return [
-                    'has_table' => false,
-                    'failed_count' => 0,
-                    'status' => 'warning',
-                    'message' => 'failed_jobs table not found',
-                ];
+            if (!DB::connection()->getSchemaBuilder()->hasTable('failed_jobs')) {
+                return ['has_table' => false, 'failed_count' => 0, 'status' => 'warning'];
             }
 
             $count = DB::table('failed_jobs')->count();
@@ -94,87 +60,41 @@ class QueueMonitorService
                 'status' => $count > 10 ? 'critical' : ($count > 5 ? 'warning' : 'healthy'),
             ];
         } catch (\Exception $e) {
-            return [
-                'has_table' => false,
-                'failed_count' => 0,
-                'status' => 'unhealthy',
-                'error' => $e->getMessage(),
-            ];
+            return ['has_table' => false, 'failed_count' => 0, 'status' => 'unhealthy'];
         }
     }
 
-    /**
-     * Get queue status
-     */
-    protected function getQueueStatus(): array
+    private function getQueueStatus(): array
     {
-        $driver = config('queue.default');
-        $isWorking = $driver !== 'sync';
-
         return [
-            'driver' => $driver,
-            'is_working' => $isWorking,
-            'status' => $isWorking ? 'healthy' : 'degraded',
+            'driver' => config('queue.default'),
+            'is_working' => config('queue.default') !== 'sync',
+            'status' => config('queue.default') !== 'sync' ? 'healthy' : 'degraded',
         ];
     }
 
-    /**
-     * Calculate overall health
-     */
-    protected function calculateOverallHealth(): array
+    private function calculateOverallHealth($jobMetrics, $failedMetrics): array
     {
-        $statuses = [
-            $this->getJobMetrics()['status'],
-            $this->getWorkerMetrics()['status'],
-            $this->getFailedJobMetrics()['status'],
-        ];
+        $statuses = [$jobMetrics['status'], $failedMetrics['status']];
+        $hasCritical = in_array('critical', $statuses);
+        $hasUnhealthy = in_array('unhealthy', $statuses);
 
-        $healthy = array_filter($statuses, function ($status) {
-            return $status === 'healthy';
-        });
-
-        $critical = array_filter($statuses, function ($status) {
-            return $status === 'critical';
-        });
-
-        if (count($critical) > 0) {
-            $status = 'critical';
-            $score = 30;
-        } elseif (count($healthy) < count($statuses)) {
-            $status = 'warning';
-            $score = 60;
-        } else {
-            $status = 'healthy';
-            $score = 100;
-        }
-
-        return [
-            'status' => $status,
-            'score' => $score,
-        ];
+        if ($hasCritical) { return ['status' => 'critical', 'score' => 30]; }
+        if ($hasUnhealthy) { return ['status' => 'warning', 'score' => 60]; }
+        return ['status' => 'healthy', 'score' => 100];
     }
 
-    /**
-     * Check for stuck jobs
-     */
     public function checkStuckJobs(): array
     {
         try {
-            $stuckJobs = DB::table('jobs')
+            $stuck = DB::table('jobs')
                 ->whereNotNull('reserved_at')
                 ->where('reserved_at', '<', now()->subMinutes(10))
                 ->count();
 
-            return [
-                'stuck_jobs' => $stuckJobs,
-                'status' => $stuckJobs > 0 ? 'warning' : 'healthy',
-            ];
+            return ['stuck_jobs' => $stuck, 'status' => $stuck > 0 ? 'warning' : 'healthy'];
         } catch (\Exception $e) {
-            return [
-                'stuck_jobs' => 0,
-                'status' => 'unhealthy',
-                'error' => $e->getMessage(),
-            ];
+            return ['stuck_jobs' => 0, 'status' => 'unhealthy'];
         }
     }
 }
