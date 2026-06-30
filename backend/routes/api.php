@@ -1,102 +1,61 @@
 <?php
 
+
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\V1\AuthController;
-use App\Http\Controllers\Api\V1\DashboardController;
-use App\Http\Controllers\Api\V1\PasswordResetController;
-use App\Http\Controllers\Api\V1\CheckInController;
-use App\Http\Controllers\Api\V1\AssistanceController;
-use App\Http\Controllers\Api\V1\SosController;
-use App\Http\Controllers\Api\V1\CheckInSettingsController;
-use App\Http\Controllers\Api\V1\HealthController;
-use App\Http\Controllers\Api\V1\ReminderController;
-use App\Http\Controllers\Api\V1\DuressPinController;
-use App\Http\Controllers\Api\V1\TrustedContactController;
-use App\Http\Controllers\Api\V1\ActivitiesController;
-use App\Http\Controllers\Api\V1\LocationController;
-use App\Http\Controllers\Api\V1\IncidentController;
-use App\Http\Controllers\Api\V1\OnboardingDraftController;
 
-Route::prefix('v1')->group(function () {
-    // PUBLIC ROUTES
-    Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:otp');
-    Route::post('/auth/confirm-phone', [AuthController::class, 'confirmPhone']);
-    Route::post('/auth/create-pin', [AuthController::class, 'createPin']);
-    Route::post('/auth/login-pin', [AuthController::class, 'loginPin']);
-
-    // Public magic links
-    Route::get('/trusted-contact/verify/{token}', [TrustedContactController::class, 'verify']);
-    Route::get('/trusted-contact/notifications/{phone}', [IncidentController::class, 'notifications']);
-
-    Route::post('/auth/user-details', [AuthController::class, 'userDetails']);
-    Route::post('/auth/trusted-contact', [AuthController::class, 'saveTrustedContact']);
-    Route::post('/auth/complete-onboarding', [AuthController::class, 'completeOnboarding']);
-
-    // PROTECTED ROUTES
-    Route::middleware(['auth:sanctum'])->group(function () {
-        Route::post('/sos', [SosController::class, 'store']);
-        Route::get('/location', [LocationController::class, 'show']);
-        
-        // Trusted Contacts Management
-        Route::get('/trusted-contacts', [TrustedContactController::class, 'index']);
-        Route::post('/trusted-contacts', [TrustedContactController::class, 'store']);
-        Route::delete('/trusted-contacts/{id}', [TrustedContactController::class, 'destroy']);
-
-        // Incidents Management
-        Route::get('/incidents', [IncidentController::class, 'index']);
-        Route::get('/incidents/{id}', [IncidentController::class, 'show']);
-        Route::post('/incidents/{id}/resolve', [IncidentController::class, 'markResolved']);
-
-        Route::get('/dashboard', [DashboardController::class, 'index']);
-        Route::get('/dashboard/activities', [DashboardController::class, 'activities']);
-        Route::post('/checkin', [CheckInController::class, 'store']);
-        Route::post('/assistance', [AssistanceController::class, 'store']);
-        Route::get('/checkin-settings', [CheckInSettingsController::class, 'get']);
-        Route::post('/checkin-settings', [CheckInSettingsController::class, 'update']);
-        Route::get('/duress-pin', [DuressPinController::class, 'status']);
-        Route::post('/duress-pin', [DuressPinController::class, 'store']);
-        Route::delete('/duress-pin', [DuressPinController::class, 'destroy']);
-        Route::get('/activities', [ActivitiesController::class, 'index']);
-        Route::get('/check-reminder', [ReminderController::class, 'check']);
-
-        // Onboarding draft routes
-        Route::get('/onboarding/draft', [OnboardingDraftController::class, 'get']);
-        Route::post('/onboarding/draft', [OnboardingDraftController::class, 'store']);
-    });
-
-    Route::post('/forgot-pin/send-otp', [PasswordResetController::class, 'sendOtp'])->middleware('throttle:otp');
-    Route::post('/forgot-pin/verify-otp', [PasswordResetController::class, 'verifyOtp'])->middleware('throttle:otp');
-    Route::post('/forgot-pin/reset', [PasswordResetController::class, 'resetPin'])->middleware('throttle:otp');
-    Route::get('/health', [HealthController::class, 'index']);
-    Route::get('/ping', [HealthController::class, 'ping']);
+// Test route
+Route::get('/test-watchtower', function () {
+    return ['status' => 'ok'];
 });
 
-// Device Trust Routes
-Route::prefix('device-trust')->group(function () {
-    Route::get('/status', [App\Http\Controllers\Api\V1\DeviceTrustController::class, 'status']);
-    Route::post('/update', [App\Http\Controllers\Api\V1\DeviceTrustController::class, 'update']);
-    Route::post('/verify', [App\Http\Controllers\Api\V1\DeviceTrustController::class, 'verify']);
+// ============================================================
+// Watchtower Observability System Routes
+// ============================================================
+
+// Public health endpoint (no auth) - outside watchtower prefix
+Route::get('/health', [App\Http\Controllers\HealthController::class, 'index']);
+
+// Watchtower routes (require admin auth)
+Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower')->group(function () {
+    Route::get('/health', [App\Http\Controllers\HealthController::class, 'index']);
 });
 
-// Escalation Decision Routes
-Route::prefix('escalation')->middleware('auth:sanctum')->group(function () {
-    Route::post('/decide', [App\Http\Controllers\Api\V1\EscalationDecisionController::class, 'decide']);
-    Route::get('/status', [App\Http\Controllers\Api\V1\EscalationDecisionController::class, 'status']);
-    Route::post('/reset-cooldown', [App\Http\Controllers\Api\V1\EscalationDecisionController::class, 'resetCooldown'])
-        ->middleware('admin');
-    Route::get('/history', [App\Http\Controllers\Api\V1\EscalationDecisionController::class, 'history'])
-        ->middleware('admin');
+Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower/api')->group(function () {
+    Route::get('/metrics', [App\Http\Controllers\Watchtower\ApiMonitorController::class, 'metrics']);
+    Route::get('/degradation', [App\Http\Controllers\Watchtower\ApiMonitorController::class, 'degradation']);
 });
 
-// Location Tracking Routes
-Route::post('/location', [App\Http\Controllers\Api\V1\LocationTrackingController::class, 'store'])
-    ->middleware('auth:sanctum')
-    ->name('location.store');
+Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower/queue')->group(function () {
+    Route::get('/metrics', [App\Http\Controllers\Watchtower\QueueMonitorController::class, 'metrics']);
+    Route::get('/stuck', [App\Http\Controllers\Watchtower\QueueMonitorController::class, 'stuck']);
+});
 
-Route::get('/location/history', [App\Http\Controllers\Api\V1\LocationTrackingController::class, 'history'])
-    ->middleware('auth:sanctum')
-    ->name('location.history');
+Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower/database')->group(function () {
+    Route::get('/metrics', [App\Http\Controllers\Watchtower\DatabaseMonitorController::class, 'metrics']);
+    Route::get('/locks', [App\Http\Controllers\Watchtower\DatabaseMonitorController::class, 'locks']);
+});
 
-Route::get('/location/last', [App\Http\Controllers\Api\V1\LocationTrackingController::class, 'last'])
-    ->middleware('auth:sanctum')
-    ->name('location.last');
+Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower/plugins')->group(function () {
+    Route::get('/', [App\Http\Controllers\Watchtower\PluginHealthController::class, 'all']);
+    Route::get('/{name}', [App\Http\Controllers\Watchtower\PluginHealthController::class, 'show']);
+});
+
+Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower/safety')->group(function () {
+    Route::get('/metrics', [App\Http\Controllers\Watchtower\SafetyEngineMonitorController::class, 'metrics']);
+});
+
+Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower/performance')->group(function () {
+    Route::get('/metrics', [App\Http\Controllers\Watchtower\PerformanceMonitorController::class, 'metrics']);
+});
+
+Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower/errors')->group(function () {
+    Route::get('/metrics', [App\Http\Controllers\Watchtower\ErrorMonitorController::class, 'metrics']);
+});
+
+Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower/notifications')->group(function () {
+    Route::get('/metrics', [App\Http\Controllers\Watchtower\NotificationMonitorController::class, 'metrics']);
+});
+
+Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower/security')->group(function () {
+    Route::get('/metrics', [App\Http\Controllers\Watchtower\SecurityMonitorController::class, 'metrics']);
+});
