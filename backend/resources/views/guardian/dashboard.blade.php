@@ -3,131 +3,127 @@
 @section('title', 'Guardian Platform')
 
 @section('content')
-<div class="container-fluid">
+@php
+    try {
+        $guardianService = app()->make(\App\Services\Guardian\GuardianAggregationService::class);
+        $status = $guardianService->getPlatformStatus();
+        $score = $guardianService->getGuardianScore();
+        
+        $totalUsers = \App\Models\User::count();
+        $activeIncidents = \App\Models\WatchtowerIncident::where('status', '!=', 'resolved')->count();
+        $criticalIncidents = \App\Models\WatchtowerIncident::where('severity', 'critical')->where('status', '!=', 'resolved')->count();
+        $safetyEvents = \App\Models\SafetyEvent::where('created_at', '>=', now()->subHours(24))->count();
+        $securityEvents = \App\Models\SecurityEvent::where('created_at', '>=', now()->subHours(24))->count();
+    } catch (\Exception $e) {
+        $score = ['overall' => 0, 'operations' => 0, 'security' => 0, 'safety' => 0];
+        $status = ['health' => ['status' => 'unknown'], 'incidents' => ['total' => 0]];
+        $totalUsers = 0;
+        $activeIncidents = 0;
+        $criticalIncidents = 0;
+        $safetyEvents = 0;
+        $securityEvents = 0;
+    }
+@endphp
+
+<div class="container mx-auto px-4 py-6">
     <!-- Header -->
-    <div class="row">
-        <div class="col-12">
-            <h1 class="h3 mb-4">🛡️ Guardian Platform</h1>
-            <p class="text-muted">Unified view of all KIN subsystems</p>
-            <small class="text-muted">Last updated: {{ $lastUpdated }}</small>
-        </div>
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">🛡️ Guardian Platform</h1>
+        <p class="text-gray-500 mt-1">Unified view of all KIN subsystems</p>
     </div>
-    
+
     <!-- Guardian Score -->
-    <div class="row mt-3">
-        <div class="col-12">
-            <div class="card bg-{{ $guardianScore['overall'] >= 80 ? 'success' : ($guardianScore['overall'] >= 60 ? 'warning' : 'danger') }} text-white">
-                <div class="card-body text-center">
-                    <h5>Guardian Score</h5>
-                    <div style="font-size: 72px; font-weight: bold;">
-                        {{ $guardianScore['overall'] }}
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-4">
-                            <small>Operations</small>
-                            <div>{{ $guardianScore['operations'] }}</div>
-                        </div>
-                        <div class="col-md-4">
-                            <small>Security</small>
-                            <div>{{ $guardianScore['security'] }}</div>
-                        </div>
-                        <div class="col-md-4">
-                            <small>Safety</small>
-                            <div>{{ $guardianScore['safety'] }}</div>
-                        </div>
-                    </div>
-                </div>
+    <div class="bg-gradient-to-r from-purple-600 to-indigo-700 rounded-xl p-6 mb-8 text-white">
+        <div class="flex justify-between items-center">
+            <div>
+                <p class="text-purple-200 text-sm">Overall Guardian Score</p>
+                <p class="text-5xl font-bold">{{ $score['overall'] ?? 0 }}</p>
+                <p class="text-purple-200 text-sm mt-1">
+                    Operations: {{ $score['operations'] ?? 0 }} | 
+                    Security: {{ $score['security'] ?? 0 }} | 
+                    Safety: {{ $score['safety'] ?? 0 }}
+                </p>
             </div>
-        </div>
-    </div>
-    
-    <!-- Status Cards -->
-    <div class="row mt-4">
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <h6>Platform Health</h6>
-                    <h3 class="text-{{ $platformStatus['health']['status'] === 'healthy' ? 'success' : 'danger' }}">
-                        {{ ucfirst($platformStatus['health']['status'] ?? 'Unknown') }}
-                    </h3>
-                    <small class="text-muted">Score: {{ $platformStatus['health']['score'] ?? 0 }}</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <h6>Security Status</h6>
-                    <h3 class="text-{{ $platformStatus['security']['status'] === 'normal' ? 'success' : 'warning' }}">
-                        {{ ucfirst($platformStatus['security']['status'] ?? 'Unknown') }}
-                    </h3>
-                    <small class="text-muted">Score: {{ $platformStatus['security']['score'] ?? 0 }}</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <h6>Safety Status</h6>
-                    <h3 class="text-{{ $platformStatus['safety']['status'] === 'normal' ? 'success' : 'warning' }}">
-                        {{ ucfirst($platformStatus['safety']['status'] ?? 'Unknown') }}
-                    </h3>
-                    <small class="text-muted">Score: {{ $platformStatus['safety']['score'] ?? 0 }}</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <h6>Active Incidents</h6>
-                    <h3 class="text-{{ ($platformStatus['incidents']['critical'] ?? 0) > 0 ? 'danger' : 'success' }}">
-                        {{ $platformStatus['incidents']['total'] ?? 0 }}
-                    </h3>
-                    <small class="text-muted">
-                        Critical: {{ $platformStatus['incidents']['critical'] ?? 0 }} | 
-                        High: {{ $platformStatus['incidents']['high'] ?? 0 }}
-                    </small>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Timeline -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5>📋 Unified Timeline</h5>
-                </div>
-                <div class="card-body" style="max-height: 500px; overflow-y: auto;">
-                    @if(empty($timeline))
-                        <p class="text-muted text-center">No events yet</p>
+            <div class="text-right">
+                <span class="text-purple-200 text-sm">Status</span>
+                <p class="text-xl font-semibold">
+                    @if(($score['overall'] ?? 0) >= 80)
+                        <span class="text-green-300">✅ Excellent</span>
+                    @elseif(($score['overall'] ?? 0) >= 60)
+                        <span class="text-yellow-300">⚠️ Good</span>
                     @else
-                        <div class="timeline">
-                            @foreach($timeline as $event)
-                                <div class="timeline-item d-flex mb-3">
-                                    <div class="timeline-badge me-3">
-                                        <span class="badge bg-{{ $event['severity'] === 'critical' ? 'danger' : ($event['severity'] === 'high' ? 'warning' : 'info') }}">
-                                            {{ ucfirst($event['source']) }}
-                                        </span>
-                                    </div>
-                                    <div class="timeline-content flex-grow-1">
-                                        <div class="d-flex justify-content-between">
-                                            <strong>{{ $event['message'] }}</strong>
-                                            <small class="text-muted">{{ $event['time_ago'] }}</small>
-                                        </div>
-                                        <div class="text-muted small">
-                                            User: {{ $event['user'] }} | 
-                                            Type: {{ $event['event_type'] }}
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
+                        <span class="text-red-300">🔴 Critical</span>
                     @endif
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+            <p class="text-gray-500 text-sm">Total Users</p>
+            <p class="text-2xl font-bold text-gray-800">{{ $totalUsers }}</p>
+        </div>
+        <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+            <p class="text-gray-500 text-sm">Active Incidents</p>
+            <p class="text-2xl font-bold text-{{ $activeIncidents > 0 ? 'red-600' : 'green-600' }}">{{ $activeIncidents }}</p>
+            @if($criticalIncidents > 0)
+                <p class="text-red-500 text-xs">Critical: {{ $criticalIncidents }}</p>
+            @endif
+        </div>
+        <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+            <p class="text-gray-500 text-sm">24h Safety Events</p>
+            <p class="text-2xl font-bold text-orange-600">{{ $safetyEvents }}</p>
+        </div>
+        <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+            <p class="text-gray-500 text-sm">24h Security Events</p>
+            <p class="text-2xl font-bold text-blue-600">{{ $securityEvents }}</p>
+        </div>
+    </div>
+
+    <!-- Platform Health -->
+    <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm mb-8">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">📊 Platform Health</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                <span class="text-2xl">🟢</span>
+                <div>
+                    <p class="text-sm text-gray-600">Watchtower</p>
+                    <p class="font-semibold text-green-700">{{ $status['health']['status'] ?? 'Healthy' }}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                <span class="text-2xl">🔵</span>
+                <div>
+                    <p class="text-sm text-gray-600">Sentinel</p>
+                    <p class="font-semibold text-blue-700">{{ $status['security']['status'] ?? 'Normal' }}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 p-3 bg-orange-50 rounded-lg">
+                <span class="text-2xl">🟠</span>
+                <div>
+                    <p class="text-sm text-gray-600">Pulse</p>
+                    <p class="font-semibold text-orange-700">{{ $status['safety']['status'] ?? 'Normal' }}</p>
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <a href="/admin/watchtower/overview" class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition text-center">
+            <span class="text-2xl block">👁️</span>
+            <span class="text-gray-700 font-medium">View Watchtower</span>
+        </a>
+        <a href="/admin/sentinel/dashboard" class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition text-center">
+            <span class="text-2xl block">🔒</span>
+            <span class="text-gray-700 font-medium">View Sentinel</span>
+        </a>
+        <a href="/pulse/dashboard" class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition text-center">
+            <span class="text-2xl block">💓</span>
+            <span class="text-gray-700 font-medium">View Pulse</span>
+        </a>
     </div>
 </div>
 @endsection
