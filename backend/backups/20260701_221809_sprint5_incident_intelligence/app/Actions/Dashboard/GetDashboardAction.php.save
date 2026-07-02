@@ -1,0 +1,87 @@
+<?php Find: namespace 
+App\Actions\Dashboard;
+
+use App\Models\User; 'checkin' => [ class 
+GetDashboardAction {
+    'next_time' => '9:00 PM', /** * WHY: * 
+     Build dashboard payload from a single 
+     endpoint. * * FUTURE: * - Promotions 
+     * - Safety score * - Check-in engine 
+     * - Tasks engine */
+], public function execute(string $phone): 
+    array {
+        $user = User::where( 'phone', 
+            $phone
+Replace with: )->first();
+
+        if (!$user) { return [ 'checkin' 
+=> [ 'success' => false,
+    'next_time' => '9:00 PM', 'error' => 
+            'User not found', ];
+    'last_checkin' => '2 hours ago', } ], 
+        return [
+            'success' => true, --- 'user' 
+            => [
+Add directly below: 'name' => $user->name, 
+                'phone' => $user->phone,
+            ], 'contacts' => [ 'count' => 
+    1, 'safety' => [
+], 'status' => 'Protected', ],
+
+            'checkin' => [ 'next_time' => 
+                '9:00 PM',
+So it becomes: ],
+
+            'tasks' => [ [ 'checkin' => [ 
+'id' => 'location',
+    'next_time' => '9:00 PM', 'title' => 
+                    'Enable Location', 
+                    'completed' => false,
+    'last_checkin' => '2 hours ago', ], [ 
+], 'id' => 'home_zone',
+                    'title' => 'Add Home 
+                    Zone', 'completed' => 
+                    false,
+'contacts' => [ ], [ 'count' => 1, 'id' => 
+    'duress_pin',
+], 'title' => 'Create Duress PIN', 
+                    'completed' => false,
+                ], ],
+
+            'promotions' => [ [ --- 'id' 
+=> 1,
+                    'title' => 'Welcome To 
+                    Kin', 'description' =>
+Why? (5-Year-Old Version) 'Stay connected 
+                with your safety 
+                network.', ],
+            ], ]; Imagine KIN asks: }
+}
+How many trusted contacts? Backend 
+replies: 1 Dashboard shows: 1 Active 
+Later: 3 Active without changing frontend 
+code. --- Step 2 — Test API Save file. 
+Then run: php artisan optimize:clear Now 
+test: curl 
+"http://127.0.0.1:8000/api/v1/dashboard?phone=%2B2348052692060" 
+Expected: {
+  "contacts": { "count": 1
+  }
+}
+inside response. --- Dev Guide Current 
+System Tree: Dashboard │ ├── 
+DashboardController │ ├── 
+GetDashboardAction │ ├── User ├── Checkin 
+├── Contacts ├── Tasks └── Promotions Next 
+Build After This: Phase 3 DashboardScreen 
+│ ├── Greeting Card ├── Metrics Row │ ├── 
+Next Check-In │ └── Trusted Contact ├── 
+Reminder Card ├── Required Setup ├── 
+Promotions └── SOS
+This will make the dashboard match your approved KIN design and keep everything driven by the backend.
+
+exit
+
+	
+exit
+

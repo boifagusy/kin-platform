@@ -1,0 +1,190 @@
+# KIN GOVERNANCE ENTRYPOINT
+
+STOP.
+
+Before performing ANY task:
+
+Read documents in this exact order.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. PROJECT_STATUS.md
+
+Purpose:
+
+Current project state.
+
+Current brick.
+
+Frozen bricks.
+
+Tech debt.
+
+Roadmap position.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2. AI_GOVERNANCE.md
+
+Purpose:
+
+Global project rules.
+
+Architecture protection.
+
+Workflow rules.
+
+Debugging requirements.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+3. TERMUX_STANDARDS.md
+
+Purpose:
+
+Mobile-first workflow.
+
+Copy-paste commands.
+
+Patch safety rules.
+
+Verification requirements.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+4. EVIDENCE_REQUIREMENTS.md
+
+Purpose:
+
+Discovery requirements.
+
+Root cause requirements.
+
+Evidence collection rules.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5. DEBUGGING_WORKFLOW.md
+
+Purpose:
+
+Bug investigation workflow.
+
+Root cause analysis.
+
+Patch confidence rules.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+6. BRICK_REGISTRY.yaml
+
+Purpose:
+
+All project bricks.
+
+Brick ownership.
+
+Brick status.
+
+Dependencies.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+7. REUSABLE_BLOCKS.yaml
+
+Purpose:
+
+Reusable architecture.
+
+Reusable services.
+
+Reusable UI patterns.
+
+Reusable workflows.
+
+Always reuse before creating.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+8. BRICK_DEPENDENCIES.yaml
+
+Purpose:
+
+Dependency mapping.
+
+Build order.
+
+Required prerequisites.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+9. IMPLEMENTATION_CHECKLIST.md
+
+Purpose:
+
+Build quality checklist.
+
+Verification checklist.
+
+Termux compliance.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+WORKFLOW
+
+DISCOVERING
+↓
+VERIFIED
+↓
+ARCHITECTURE
+↓
+BUILD PLAN
+↓
+BUILDING
+↓
+PATCHED
+↓
+TESTING
+↓
+VALIDATED
+↓
+FROZEN
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+RULES
+
+Never code before evidence.
+
+Never create before reuse review.
+
+Never patch before root cause.
+
+Never freeze without user approval.
+
+Always provide:
+
+BACKUP
+
+PATCH
+
+VERIFY
+
+EXPECTED RESULT
+
+ROLLBACK
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TERMUX DEFAULT
+
+Assume:
+
+Android
+
+Termux
+
+Mobile Browser
+
+unless explicitly told otherwise.
+

@@ -1,0 +1,33 @@
+project: KIN
+
+bricks:
+
+  AUTH:
+    status: frozen
+
+  NETWORK:
+    status: frozen
+
+  LOCATION:
+    status: frozen
+
+  ADMIN-011:
+    name: Relationship Management
+    status: frozen
+
+  ADMIN-012:
+    name: Emergency Operations
+    status: frozen
+
+  ADMIN-013A:
+    name: Alert Operations
+    status: frozen
+
+  ADMIN-016A:
+    name: User Management
+    status: frozen
+
+  ADMIN-004:
+    name: Dashboard Real Data
+    status: discovering
+

@@ -1,0 +1,245 @@
+@extends('layouts.admin')
+
+@section('title', 'OTP Settings')
+
+@section('content')
+<div class="max-w-2xl mx-auto">
+    <div class="mb-6">
+        <a href="{{ route('admin.settings.index') }}" class="text-green-600 hover:text-green-700 flex items-center gap-1 mb-4">
+            <span class="material-symbols-outlined text-sm">arrow_back</span> Back to Settings
+        </a>
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">OTP Settings</h1>
+        <p class="text-sm text-gray-500">Configure One-Time Password delivery and behavior.</p>
+    </div>
+
+    <div id="message" class="hidden mb-4 p-4 rounded-lg"></div>
+
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="p-6 space-y-6">
+            <!-- Delivery Channels Section -->
+            <div>
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="material-symbols-outlined text-green-600">alternate_email</span>
+                    <h3 class="text-base font-semibold text-gray-800">Delivery Channels</h3>
+                </div>
+                <p class="text-sm text-gray-500 mb-4">Manage how One-Time Passwords are delivered to users.</p>
+                <div class="space-y-3">
+                    <!-- SMS Delivery -->
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-green-600">message</span>
+                            <div>
+                                <p class="font-medium text-gray-800">SMS Delivery</p>
+                                <p class="text-xs text-gray-500">Primary method via Twilio/Termii</p>
+                            </div>
+                        </div>
+                        <div>
+                            <span id="otp_sms_status" class="mr-3 text-sm font-medium text-gray-600">{{ ($settings['otp_sms_enabled'] ?? true) ? 'Enabled' : 'Disabled' }}</span>
+                            <button type="button" onclick="toggleSetting('otp_sms_enabled')" class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors {{ ($settings['otp_sms_enabled'] ?? true) ? 'bg-green-600' : 'bg-gray-300' }}">
+                                <span id="otp_sms_slider" class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {{ ($settings['otp_sms_enabled'] ?? true) ? 'translate-x-6' : 'translate-x-1' }}"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Email Delivery -->
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-green-600">email</span>
+                            <div>
+                                <p class="font-medium text-gray-800">Email Delivery</p>
+                                <p class="text-xs text-gray-500">Fallback method via SendGrid</p>
+                            </div>
+                        </div>
+                        <div>
+                            <span id="otp_email_status" class="mr-3 text-sm font-medium text-gray-600">{{ ($settings['otp_email_enabled'] ?? true) ? 'Enabled' : 'Disabled' }}</span>
+                            <button type="button" onclick="toggleSetting('otp_email_enabled')" class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors {{ ($settings['otp_email_enabled'] ?? true) ? 'bg-green-600' : 'bg-gray-300' }}">
+                                <span id="otp_email_slider" class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {{ ($settings['otp_email_enabled'] ?? true) ? 'translate-x-6' : 'translate-x-1' }}"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- WhatsApp Delivery -->
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-green-600">chat</span>
+                            <div>
+                                <p class="font-medium text-gray-800">WhatsApp Delivery</p>
+                                <p class="text-xs text-gray-500">Via WhatsApp Business API</p>
+                            </div>
+                        </div>
+                        <div>
+                            <span id="otp_whatsapp_status" class="mr-3 text-sm font-medium text-gray-600">{{ ($settings['otp_whatsapp_enabled'] ?? false) ? 'Enabled' : 'Disabled' }}</span>
+                            <button type="button" onclick="toggleSetting('otp_whatsapp_enabled')" class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors {{ ($settings['otp_whatsapp_enabled'] ?? false) ? 'bg-green-600' : 'bg-gray-300' }}">
+                                <span id="otp_whatsapp_slider" class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {{ ($settings['otp_whatsapp_enabled'] ?? false) ? 'translate-x-6' : 'translate-x-1' }}"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-100"></div>
+
+            <!-- Configuration Section -->
+            <div>
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="material-symbols-outlined text-green-600">tune</span>
+                    <h3 class="text-base font-semibold text-gray-800">Configuration</h3>
+                </div>
+                <p class="text-sm text-gray-500 mb-4">Set parameters for code generation and validity.</p>
+                <div class="grid grid-cols-1 gap-5">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Code Length</label>
+                        <input type="number" id="otp_code_length" value="{{ $settings['otp_code_length'] ?? 6 }}" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200">
+                        <p class="text-xs text-gray-400 mt-1">Number of digits in OTP code (4-8)</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Expiry Time (Minutes)</label>
+                        <input type="number" id="otp_expiry_minutes" value="{{ $settings['otp_expiry_minutes'] ?? 10 }}" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200">
+                        <p class="text-xs text-gray-400 mt-1">Time before OTP expires (1-30 minutes)</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Resend Cooldown (Seconds)</label>
+                        <input type="number" id="otp_resend_cooldown" value="{{ $settings['otp_resend_cooldown'] ?? 60 }}" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200">
+                        <p class="text-xs text-gray-400 mt-1">Minimum time before a user can request another OTP (30-300 seconds)</p>
+
+            <div class="border-t border-gray-100"></div>
+
+            <div>
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="material-symbols-outlined text-green-600">cable</span>
+                    <h3 class="text-base font-semibold text-gray-800">WhatsApp Gateway (OpenWA)</h3>
+                </div>
+                <p class="text-sm text-gray-500 mb-4">Connection details for your self-hosted OpenWA instance.</p>
+                <div class="grid grid-cols-1 gap-5">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">OpenWA Base URL</label>
+                        <input type="text" id="otp_whatsapp_api_url" value="{{ $settings['otp_whatsapp_api_url'] ?? '' }}" placeholder="https://your-openwa-host.com" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">OpenWA API Key</label>
+                        <input type="text" id="otp_whatsapp_api_key" value="{{ $settings['otp_whatsapp_api_key'] ?? '' }}" placeholder="your-api-key" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">OpenWA Session ID</label>
+                        <input type="text" id="otp_whatsapp_session_id" value="{{ $settings['otp_whatsapp_session_id'] ?? '' }}" placeholder="default" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200">
+                    </div>
+                </div>
+            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end">
+            <button onclick="saveSettings()" id="saveBtn" class="px-6 py-2.5 bg-green-700 hover:bg-green-800 text-white font-semibold rounded-xl transition-all">Save Changes</button>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    let otp_sms = {{ ($settings['otp_sms_enabled'] ?? true) ? 'true' : 'false' }};
+    let otp_email = {{ ($settings['otp_email_enabled'] ?? true) ? 'true' : 'false' }};
+    let otp_whatsapp = {{ ($settings['otp_whatsapp_enabled'] ?? false) ? 'true' : 'false' }};
+
+    function toggleSetting(setting) {
+        let value;
+        let statusSpan;
+        
+        if (setting === 'otp_sms_enabled') { 
+            otp_sms = !otp_sms; 
+            value = otp_sms;
+            statusSpan = document.getElementById('otp_sms_status');
+        } else if (setting === 'otp_email_enabled') { 
+            otp_email = !otp_email; 
+            value = otp_email;
+            statusSpan = document.getElementById('otp_email_status');
+        } else { 
+            otp_whatsapp = !otp_whatsapp; 
+            value = otp_whatsapp;
+            statusSpan = document.getElementById('otp_whatsapp_status');
+        }
+        
+        const btn = event.currentTarget;
+        const slider = btn.querySelector('span');
+        
+        if (value) {
+            btn.classList.remove('bg-gray-300');
+            btn.classList.add('bg-green-600');
+            slider.classList.remove('translate-x-1');
+            slider.classList.add('translate-x-6');
+            if (statusSpan) statusSpan.textContent = 'Enabled';
+        } else {
+            btn.classList.remove('bg-green-600');
+            btn.classList.add('bg-gray-300');
+            slider.classList.remove('translate-x-6');
+            slider.classList.add('translate-x-1');
+            if (statusSpan) statusSpan.textContent = 'Disabled';
+        }
+    }
+
+    async function saveSettings() {
+        const btn = document.getElementById('saveBtn');
+        const msg = document.getElementById('message');
+        const original = btn.innerHTML;
+        
+        btn.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div> Saving...';
+        btn.disabled = true;
+        
+        const data = {
+            otp_sms_enabled: otp_sms,
+            otp_email_enabled: otp_email,
+            otp_whatsapp_enabled: otp_whatsapp,
+            otp_code_length: parseInt(document.getElementById('otp_code_length').value),
+            otp_expiry_minutes: parseInt(document.getElementById('otp_expiry_minutes').value),
+            otp_resend_cooldown: parseInt(document.getElementById('otp_resend_cooldown').value),
+            otp_whatsapp_api_url: document.getElementById('otp_whatsapp_api_url').value,
+            otp_whatsapp_api_key: document.getElementById('otp_whatsapp_api_key').value,
+            otp_whatsapp_session_id: document.getElementById('otp_whatsapp_session_id').value
+        };
+        
+        try {
+            const res = await fetch('/admin/settings/otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            
+            if (result.success) {
+                btn.innerHTML = '✓ Saved!';
+                btn.classList.remove('bg-green-700');
+                btn.classList.add('bg-green-600');
+                msg.classList.remove('hidden');
+                msg.className = 'mb-4 p-4 rounded-lg bg-green-50 border border-green-200';
+                msg.innerHTML = '<p class="text-green-800">✓ OTP settings saved successfully!</p>';
+                setTimeout(() => { msg.classList.add('hidden'); }, 3000);
+                setTimeout(() => {
+                    btn.innerHTML = original;
+                    btn.classList.remove('bg-green-600');
+                    btn.classList.add('bg-green-700');
+                    btn.disabled = false;
+                }, 1500);
+            } else {
+                throw new Error('Failed');
+            }
+        } catch(e) {
+            btn.innerHTML = '✗ Error!';
+            btn.classList.add('bg-red-600');
+            msg.classList.remove('hidden');
+            msg.className = 'mb-4 p-4 rounded-lg bg-red-50 border border-red-200';
+            msg.innerHTML = '<p class="text-red-800">✗ Failed to save. Please try again.</p>';
+            setTimeout(() => { msg.classList.add('hidden'); }, 3000);
+            setTimeout(() => {
+                btn.innerHTML = original;
+                btn.classList.remove('bg-red-600');
+                btn.classList.add('bg-green-700');
+                btn.disabled = false;
+            }, 2000);
+        }
+    }
+</script>
+@endpush

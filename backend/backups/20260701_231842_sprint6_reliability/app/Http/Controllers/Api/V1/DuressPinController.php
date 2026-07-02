@@ -1,0 +1,52 @@
+<?php
+
+namespace App\Http\Controllers\Api\V1;
+
+use App\Http\Controllers\Controller;
+use App\Http\Responses\ApiResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+
+class DuressPinController extends Controller
+{
+    public function status(Request $request)
+    {
+        $user = $request->user();
+
+        return ApiResponse::success([
+            'has_duress_pin' => !empty($user->duress_pin_hash),
+        ], 'Duress PIN status retrieved');
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'duress_pin' => 'required|string|min:4|max:4',
+        ]);
+        $user = $request->user();
+
+        // Cannot set same as normal PIN
+        if (!empty($user->login_pin_hash) && Hash::check($request->duress_pin, $user->login_pin_hash)) {
+            return ApiResponse::error('Duress PIN cannot be the same as your normal PIN', 422);
+        }
+
+        $user->duress_pin_hash = Hash::make($request->duress_pin);
+        $user->save();
+
+        return ApiResponse::success([
+            'has_duress_pin' => true,
+        ], 'Duress PIN saved successfully');
+    }
+
+    public function destroy(Request $request)
+    {
+        $user = $request->user();
+
+        $user->duress_pin_hash = null;
+        $user->save();
+
+        return ApiResponse::success([
+            'has_duress_pin' => false,
+        ], 'Duress PIN removed');
+    }
+}

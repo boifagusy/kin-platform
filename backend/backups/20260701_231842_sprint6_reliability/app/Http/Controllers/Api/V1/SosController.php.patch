@@ -1,0 +1,10 @@
+// Add confidence score to SOS response
+// In SosController@store, after creating the incident:
+
+// Get confidence score
+$scoreService = app(\App\Services\SafetyScoreService::class);
+$confidence = $scoreService->getForUser($user);
+
+// Add confidence score to response
+$response['confidence'] = $confidence;
+$response['tier'] = $scoreService->getTier($confidence);

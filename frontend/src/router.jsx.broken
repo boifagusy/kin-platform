@@ -1,0 +1,23 @@
+import WatchtowerDashboard from "./screens/watchtower/WatchtowerDashboard";
+import React from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import WatchtowerDashboard from './screens/watchtower/WatchtowerDashboard'
+
+// Import other screens (add as needed)
+// import DashboardScreenV2 from './screens/ui-polish/DashboardScreenV2'
+
+const AppRouter = () => {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/watchtower" element={<WatchtowerDashboard />} />
+        {/* Add other routes here */}
+
+     { path: "/watchtower", element: <WatchtowerDashboard /> },
+        {/* <Route path="/" element={<DashboardScreenV2 />} /> */}
+      </Routes>
+    </BrowserRouter>
+  )
+}
+
+export default AppRouter

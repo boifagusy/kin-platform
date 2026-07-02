@@ -1,0 +1,110 @@
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useNavigate,
+} from "react-router-dom";
+
+import { FaShieldAlt } from "react-icons/fa";
+
+function WelcomePage() {
+  const navigate = useNavigate();
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#F0F7F2",
+        padding: "24px",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          textAlign: "center",
+        }}
+      >
+        <FaShieldAlt
+          size={90}
+          color="#1A5632"
+        />
+
+        <h1
+          style={{
+            fontSize: "64px",
+            fontWeight: "700",
+            marginTop: "20px",
+            marginBottom: "10px",
+            color: "#1A5632",
+          }}
+        >
+          Kin
+        </h1>
+
+        <p
+          style={{
+            fontSize: "22px",
+            color: "#6B7280",
+          }}
+        >
+          Your people. Your safety.
+        </p>
+      </div>
+
+      <div>
+        <button
+          onClick={() => navigate("/login")}
+          style={{
+            width: "100%",
+            height: "56px",
+            border: "none",
+            borderRadius: "16px",
+            background: "#1A5632",
+            color: "#FFFFFF",
+            fontSize: "18px",
+            fontWeight: "600",
+          }}
+        >
+          Get Started
+        </button>
+
+        <button
+          onClick={() => navigate("/login")}
+          style={{
+            width: "100%",
+            height: "50px",
+            marginTop: "10px",
+            border: "none",
+            background: "transparent",
+            color: "#1A5632",
+            fontSize: "16px",
+            fontWeight: "600",
+          }}
+        >
+          Log In
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function LoginPage() {
+  return <h1>Login Page</h1>;
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<WelcomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}

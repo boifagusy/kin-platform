@@ -1,0 +1,156 @@
+<?php
+
+namespace App\Http\Controllers\Api\V1;
+
+use App\Http\Controllers\Controller;
+use App\Models\SosEvent;
+use App\Models\TrustedContact;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use App\Events\SOSTriggered;
+
+class SosController extends Controller
+{
+    /**
+     * Trigger SOS event
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'accuracy' => 'nullable|numeric',
+            'battery_level' => 'nullable|integer|min:0|max:100',
+        ]);
+
+        // Enforce authenticated user context
+        $user = $request->user();
+
+        // Verify active safety network exists
+        $activeContacts = TrustedContact::where('user_id', $user->id)
+            ->where('active', true)
+            ->where('verified', true)
+            ->count();
+
+        if ($activeContacts === 0) {
+            return response()->json([
+                'success' => false,
+                'error' => 'SOS unavailable. You must have at least one active verified trusted contact.',
+            ], 422);
+        }
+
+        // Create SOS event
+        $sos = SosEvent::create([
+            'user_id' => $user->id,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+            'accuracy' => $request->accuracy,
+            'battery_level' => $request->battery_level,
+            'triggered_at' => now(),
+            'resolved_at' => null,
+        ]);
+
+        // Fire event (listeners handle queue dispatch, logs, etc.)
+        event(new SOSTriggered(
+            $user,
+            $sos
+        ));
+
+        // Log for monitoring
+        Log::info('SOS triggered for user: ' . $user->id, [
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+            'accuracy' => $request->accuracy,
+            'battery_level' => $request->battery_level,
+            'sos_id' => $sos->id,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'SOS triggered successfully',
+            'data' => [
+                'sos_id' => $sos->id,
+                'triggered_at' => $sos->triggered_at,
+            ],
+        ], 201);
+    }
+
+    /**
+     * Resolve SOS event
+     */
+    public function resolve(Request $request, $id)
+    {
+        $sos = SosEvent::where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
+
+        $sos->update([
+            'resolved_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'SOS resolved',
+        ]);
+    }
+}
+
+    /**
+     * Store a new SOS with rate limiting
+     */
+    public function store(Request $request)
+    {
+        $user = $request->user();
+        
+        // Rate limit: 3 SOS per hour
+        $recentSOS = SafetyIncident::where('user_id', $user->id)
+            ->where('type', 'sos')
+            ->where('created_at', '>', now()->subHour())
+            ->count();
+        
+        if ($recentSOS >= 3) {
+            return response()->json([
+                'error' => 'Too many SOS requests. Please wait.',
+                'retry_after' => 3600 - now()->diffInSeconds(
+                    SafetyIncident::where('user_id', $user->id)
+                        ->where('type', 'sos')
+                        ->latest()
+                        ->first()
+                        ->created_at
+                )
+            ], 429);
+        }
+
+        // Continue with normal SOS creation...
+        return $this->processSOS($request);
+    }
+
+    /**
+     * Store a new SOS with rate limiting
+     */
+    public function store(Request $request)
+    {
+        $user = $request->user();
+        
+        // Rate limit: 3 SOS per hour
+        $recentSOS = SafetyIncident::where('user_id', $user->id)
+            ->where('type', 'sos')
+            ->where('created_at', '>', now()->subHour())
+            ->count();
+        
+        if ($recentSOS >= 3) {
+            return response()->json([
+                'error' => 'Too many SOS requests. Please wait.',
+                'retry_after' => 3600 - now()->diffInSeconds(
+                    SafetyIncident::where('user_id', $user->id)
+                        ->where('type', 'sos')
+                        ->latest()
+                        ->first()
+                        ->created_at
+                )
+            ], 429);
+        }
+
+        // Continue with normal SOS creation...
+        return $this->processSOS($request);
+    }
