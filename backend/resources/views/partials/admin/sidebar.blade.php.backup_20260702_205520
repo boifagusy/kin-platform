@@ -10,7 +10,7 @@
             </div>
         </div>
     </div>
-
+    
     <div class="py-4 px-3">
         <!-- MAIN SECTION -->
         <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2">Main</p>
@@ -52,31 +52,7 @@
             </li>
         </ul>
 
-        <!-- PLATFORM SECTION -->
-        <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2">Platform</p>
-        <ul class="space-y-1 mb-6">
-            <li>
-                <a href="{{ route('guardian.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 {{ request()->routeIs('guardian.*') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600 hover:bg-gray-50' }} rounded-lg transition-all">
-                    <span class="material-symbols-outlined">shield</span>
-                    <span class="text-sm">Guardian</span>
-                    <span class="ml-auto text-[10px] font-medium text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">v0.1</span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('pulse.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 {{ request()->routeIs('pulse.*') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600 hover:bg-gray-50' }} rounded-lg transition-all">
-                    <span class="material-symbols-outlined">favorite</span>
-                    <span class="text-sm">Pulse</span>
-                    <span class="ml-auto text-[10px] font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded">v0.4</span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('recovery.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 {{ request()->routeIs('recovery.*') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600 hover:bg-gray-50' }} rounded-lg transition-all">
-                    <span class="material-symbols-outlined">autorenew</span>
-                    <span class="text-sm">Recovery</span>
-                    <span class="ml-auto text-[10px] font-medium text-yellow-600 bg-yellow-50 px-1.5 py-0.5 rounded">v1.0</span>
-                </a>
-            </li>
-        </ul>
+        <!-- SYSTEM SECTION -->
 
         <!-- SAFETY SECTION -->
         <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2">Safety</p>
@@ -88,8 +64,6 @@
                 </a>
             </li>
         </ul>
-
-        <!-- SYSTEM SECTION -->
         <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2">System</p>
         <ul class="space-y-1 mb-6">
             <li>

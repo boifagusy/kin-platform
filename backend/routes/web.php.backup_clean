@@ -17,7 +17,6 @@ Route::get('/login', function () {
 })->name('login');
 
 // Load admin routes from separate file
-require __DIR__.'/admin.php';
 
 // Admin User Management Routes
 Route::middleware(['web', 'admin.auth'])->prefix('admin')->group(function () {
@@ -107,16 +106,16 @@ Route::prefix('recovery')->middleware(['auth'])->group(function () {
     Route::get('/attempts', [RecoveryController::class, 'getAttempts']);
 });
 
-// ============================================================
-// PLATFORM ROUTES (Guardian, Pulse, Recovery)
-// ============================================================
-Route::middleware('admin.auth')->group(function () {
-    // Guardian
-    Route::get('/guardian/dashboard', [App\Http\Controllers\Guardian\GuardianDashboardController::class, 'dashboard'])->name('guardian.dashboard');
-    
-    // Pulse
-    Route::get('/pulse/dashboard', [App\Http\Controllers\Pulse\PulseDashboardController::class, 'dashboard'])->name('pulse.dashboard');
-    
-    // Recovery
-    Route::get('/recovery/dashboard', [App\Http\Controllers\Recovery\RecoveryController::class, 'dashboard'])->name('recovery.dashboard');
+// Admin Routes
+Route::prefix('admin')->middleware(['auth'])->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/users', [App\Http\Controllers\Admin\UserManagementController::class, 'index'])->name('admin.users.index');
+    Route::get('/audit', [App\Http\Controllers\Admin\AuditController::class, 'index'])->name('admin.audit.index');
+    Route::get('/settings', [App\Http\Controllers\Admin\SystemSettingsController::class, 'index'])->name('admin.settings.index');
+    Route::post('/logout', [App\Http\Controllers\Admin\AuthController::class, 'logout'])->name('admin.logout');
 });
+
+// Load admin routes (must be last)
+
+// Load admin routes
+require __DIR__.'/web_admin_routes.php';
