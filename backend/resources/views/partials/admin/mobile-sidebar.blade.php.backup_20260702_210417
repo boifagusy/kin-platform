@@ -9,11 +9,7 @@
                 <p class="text-gray-500 text-xs">Safety Management</p>
             </div>
         </div>
-        
-<<<<<<< HEAD
-=======
-        <!-- MAIN SECTION -->
->>>>>>> b139096 (BACKUP: Pre-dashboard-redesign-20260702_211431)
+
         <div class="mb-4">
             <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Main</p>
             <ul class="space-y-1">
@@ -22,19 +18,8 @@
                 <li><a href="{{ route('admin.users.index') }}" class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('admin.users.*') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600' }} rounded-xl hover:bg-gray-50"><span class="material-symbols-outlined">group</span>Users</a></li>
             </ul>
         </div>
-<<<<<<< HEAD
-        
-=======
 
-        <!-- PLATFORM SECTION (NEW) -->
-        <div class="mb-4">
-            <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Platform</p>
-            <ul class="space-y-1">
-                <li><a href="{{ route('guardian.dashboard') }}" class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('guardian.*') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600' }} rounded-xl hover:bg-gray-50"><span class="material-symbols-outlined">shield</span>Guardian <span class="ml-auto text-[10px] font-medium text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">v0.1</span></a></li>
-                <li><a href="{{ route('pulse.dashboard') }}" class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('pulse.*') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600' }} rounded-xl hover:bg-gray-50"><span class="material-symbols-outlined">favorite</span>Pulse <span class="ml-auto text-[10px] font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded">v0.4</span></a></li>
-                <li><a href="{{ route('recovery.dashboard') }}" class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('recovery.*') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600' }} rounded-xl hover:bg-gray-50"><span class="material-symbols-outlined">autorenew</span>Recovery <span class="ml-auto text-[10px] font-medium text-yellow-600 bg-yellow-50 px-1.5 py-0.5 rounded">v1.0</span></a></li>
-            </ul>
-        </div>
+        <!-- OBSERVABILITY SECTION -->
 
         <!-- SECURITY SECTION -->
         <div class="mb-4">
@@ -43,8 +28,6 @@
                 <li><a href="{{ route('sentinel.dashboard') }}" class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('sentinel.*') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600' }} rounded-xl hover:bg-gray-50"><span class="material-symbols-outlined">security</span>Sentinel</a></li>
             </ul>
         </div>
-
-        <!-- OBSERVABILITY SECTION -->
         <div class="mb-4">
             <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Observability</p>
             <ul class="space-y-1">
@@ -54,8 +37,6 @@
             </ul>
         </div>
 
-        <!-- ENGAGEMENT SECTION -->
->>>>>>> b139096 (BACKUP: Pre-dashboard-redesign-20260702_211431)
         <div class="mb-4">
             <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">Engagement</p>
             <ul class="space-y-1">
@@ -63,12 +44,7 @@
                 <li><a href="/admin/alerts" class="flex items-center gap-3 px-4 py-3 text-gray-600 rounded-xl hover:bg-gray-50"><span class="material-symbols-outlined">settings_accessibility</span>Community Settings</a></li>
             </ul>
         </div>
-<<<<<<< HEAD
-        
-=======
 
-        <!-- SYSTEM SECTION -->
->>>>>>> b139096 (BACKUP: Pre-dashboard-redesign-20260702_211431)
         <div class="mb-4">
             <p class="text-xs text-gray-400 uppercase tracking-wider mb-2">System</p>
             <ul class="space-y-1">
@@ -80,12 +56,7 @@
                 <li><a href="{{ route('admin.settings.index') }}" class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('admin.settings.*') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600' }} rounded-xl hover:bg-gray-50"><span class="material-symbols-outlined">settings</span>General Settings</a></li>
             </ul>
         </div>
-<<<<<<< HEAD
-        
-=======
 
-        <!-- LOGOUT -->
->>>>>>> b139096 (BACKUP: Pre-dashboard-redesign-20260702_211431)
         <div class="mt-6 pt-4 border-t border-gray-200">
             <div class="px-4 py-3 mb-2 bg-gray-50 rounded-lg">
                 <div class="text-sm font-medium text-gray-800">{{ Auth::guard('admin')->user()->name ?? 'Admin' }}</div>

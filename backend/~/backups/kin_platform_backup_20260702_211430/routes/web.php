@@ -76,8 +76,6 @@ Route::middleware(['web', 'admin.auth'])->prefix('admin/settings')->name('admin.
 
 // Security Settings Save Route
 Route::middleware(['web', 'admin.auth'])->post('/admin/settings/security', [App\Http\Controllers\Admin\SystemSettingsController::class, 'updateSecurity'])->name('admin.settings.update.security');
-<<<<<<< HEAD
-=======
 
 // Pulse Routes
 Route::prefix('pulse')->middleware(['auth'])->group(function () {
@@ -122,4 +120,3 @@ Route::middleware('admin.auth')->group(function () {
     // Recovery
     Route::get('/recovery/dashboard', [App\Http\Controllers\Recovery\RecoveryController::class, 'dashboard'])->name('recovery.dashboard');
 });
->>>>>>> b139096 (BACKUP: Pre-dashboard-redesign-20260702_211431)

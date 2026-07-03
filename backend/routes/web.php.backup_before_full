@@ -1,0 +1,45 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+
+// ============================================================
+// TEST ROUTE — Verify routing works
+// ============================================================
+Route::get('/test', function () {
+    return 'Route is working!';
+});
+
+// Welcome page
+Route::get('/', function () {
+    return view('welcome');
+});
+
+// Login redirect
+Route::get('/login', function () {
+    return redirect('/admin/login');
+})->name('login');
+
+// ============================================================
+// ADMIN ROUTES
+// ============================================================
+Route::get('/admin/login', [App\Http\Controllers\Admin\AuthController::class, 'showLoginForm'])->name('admin.login');
+Route::post('/admin/login', [App\Http\Controllers\Admin\AuthController::class, 'login']);
+
+Route::middleware('admin.auth')->prefix('admin')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('admin.dashboard');
+    Route::post('/logout', [App\Http\Controllers\Admin\AuthController::class, 'logout'])->name('admin.logout');
+});
+
+// ============================================================
+// GUARDIAN ROUTES (Platform Integration)
+// ============================================================
+Route::middleware('admin.auth')->prefix('guardian')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\Guardian\GuardianDashboardController::class, 'dashboard'])->name('guardian.dashboard');
+});
+
+// ============================================================
+// RECOVERY ROUTES (Self-Healing)
+// ============================================================
+Route::middleware('admin.auth')->prefix('recovery')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\Recovery\RecoveryController::class, 'dashboard'])->name('recovery.dashboard');
+});
