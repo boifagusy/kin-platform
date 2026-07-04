@@ -111,3 +111,21 @@ Route::get('/verify-otp', [App\Http\Controllers\Admin\PasswordResetController::c
 Route::post('/verify-otp', [App\Http\Controllers\Admin\PasswordResetController::class, 'verifyOtp'])->name('admin.password.verify');
 Route::get('/reset-password', [App\Http\Controllers\Admin\PasswordResetController::class, 'showResetForm'])->name('admin.password.reset.form');
 Route::post('/reset-password', [App\Http\Controllers\Admin\PasswordResetController::class, 'reset'])->name('admin.password.update');
+
+// Subsystem Dashboard Routes
+Route::middleware('admin.auth')->group(function () {
+});
+
+// Subsystem Dashboard Routes
+Route::middleware('admin.auth')->group(function () {
+});
+
+// Subsystem Dashboard Routes
+Route::middleware('admin.auth')->group(function () {
+});
+
+// Admin Audit Routes
+Route::middleware('admin.auth')->prefix('admin')->group(function () {
+    Route::get('/audit', [App\Http\Controllers\Admin\AuditController::class, 'index'])->name('admin.audit.index');
+    Route::get('/audit/export', [App\Http\Controllers\Admin\AuditController::class, 'export'])->name('admin.audit.export');
+});

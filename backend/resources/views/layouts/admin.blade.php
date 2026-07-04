@@ -5,11 +5,11 @@
     <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Kin Admin') | System Overview Dashboard</title>
-    
+
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    
+
     <script>
         tailwind.config = {
             theme: {
@@ -34,7 +34,7 @@
             }
         }
     </script>
-    
+
     <style>
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -56,7 +56,7 @@
 
     @include('partials.admin.header')
     @include('partials.admin.sidebar')
-    @include('partials.admin.mobile-sidebar')
+    {{-- @include('partials.admin.mobile-sidebar') --}}
 
     <main class="md:ml-64 mt-16 p-4 sm:p-5 md:p-6 w-full max-w-7xl mx-auto">
         @yield('content')
@@ -68,23 +68,23 @@
         const menuButton = document.getElementById('menuButton');
         const mobileSidebar = document.getElementById('mobileSidebar');
         const mobileOverlay = document.getElementById('mobileOverlay');
-        
+
         if (menuButton && mobileSidebar && mobileOverlay) {
             function openSidebar() {
                 mobileSidebar.classList.remove('-translate-x-full');
                 mobileOverlay.classList.remove('hidden');
                 document.body.style.overflow = 'hidden';
             }
-            
+
             function closeSidebar() {
                 mobileSidebar.classList.add('-translate-x-full');
                 mobileOverlay.classList.add('hidden');
                 document.body.style.overflow = '';
             }
-            
+
             menuButton.addEventListener('click', openSidebar);
             mobileOverlay.addEventListener('click', closeSidebar);
-            
+
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape' && !mobileSidebar.classList.contains('-translate-x-full')) {
                     closeSidebar();
@@ -92,7 +92,12 @@
             });
         }
     </script>
-    
+
     @stack('scripts')
 </body>
 </html>
+
+<!-- Mobile Menu Toggle -->
+<button onclick="openMobileSidebar()" class="md:hidden fixed top-4 left-4 z-30 bg-white p-2 rounded-lg shadow-lg">
+    <span class="material-symbols-outlined text-2xl">menu</span>
+</button>

@@ -28,9 +28,21 @@ class AdminLog extends Model
         'new_values' => 'json',
     ];
 
+    /**
+     * Get the admin user that performed the action
+     */
     public function admin(): BelongsTo
     {
         $adminModel = class_exists('App\Models\AdminUser') ? 'App\Models\AdminUser' : 'App\Models\Admin';
         return $this->belongsTo($adminModel, 'admin_user_id');
+    }
+
+    /**
+     * Alias for admin() relationship
+     * Used by AuditService
+     */
+    public function adminUser(): BelongsTo
+    {
+        return $this->admin();
     }
 }

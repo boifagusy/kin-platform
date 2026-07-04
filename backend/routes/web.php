@@ -20,34 +20,14 @@ Route::get('/login', function () {
 require __DIR__.'/admin.php';
 
 // Admin User Management Routes
-Route::middleware(['web', 'admin.auth'])->prefix('admin')->group(function () {
-    Route::get('/users', [UserManagementController::class, 'index'])->name('admin.users.index');
-    Route::get('/users/{id}', [UserManagementController::class, 'show'])->name('admin.users.show');
-});
 
 // Admin User Action Routes
-Route::middleware(['web', 'admin.auth'])->prefix('admin')->group(function () {
-    Route::post('/users/{id}/suspend', [UserManagementController::class, 'suspend'])->name('admin.users.suspend');
-    Route::post('/users/{id}/activate', [UserManagementController::class, 'activate'])->name('admin.users.activate');
-});
 
 // Admin Audit Routes
-Route::middleware(['web', 'admin.auth'])->prefix('admin')->group(function () {
-    Route::get('/audit', [AuditController::class, 'index'])->name('admin.audit.index');
-    Route::get('/audit/export', [AuditController::class, 'export'])->name('admin.audit.export');
-});
 
 // Admin Settings Routes
-Route::middleware(['web', 'admin.auth'])->prefix('admin')->group(function () {
-    Route::get('/settings', [SystemSettingsController::class, 'index'])->name('admin.settings.index');
-    Route::post('/settings', [SystemSettingsController::class, 'update'])->name('admin.settings.update');
-});
 
 // Admin Safety Routes
-Route::middleware(['web', 'admin.auth'])->prefix('admin')->group(function () {
-    Route::get('/safety/metrics', [SafetyMonitorController::class, 'getMetrics'])->name('admin.safety.metrics');
-    Route::get('/safety/trend', [SafetyMonitorController::class, 'getTrendData'])->name('admin.safety.trend');
-});
 
 // API endpoint to get current settings (for the settings page)
 Route::middleware(['web', 'admin.auth'])->get('/admin/api/settings', function() {
@@ -76,3 +56,52 @@ Route::middleware(['web', 'admin.auth'])->prefix('admin/settings')->name('admin.
 
 // Security Settings Save Route
 Route::middleware(['web', 'admin.auth'])->post('/admin/settings/security', [App\Http\Controllers\Admin\SystemSettingsController::class, 'updateSecurity'])->name('admin.settings.update.security');
+
+// ============================================================
+// SUBSYSTEM ROUTES
+// ============================================================
+
+// ============================================================
+// SUBSYSTEM ROUTES (Guardian, Pulse, Recovery, Sentinel, Watchtower)
+// ============================================================
+
+// Subsystem Routes
+
+// Subsystem Routes (Single source)
+
+// Subsystem Routes (Single source)
+
+// ============================================================
+// SUBSYSTEM DASHBOARD ROUTES (Definitive)
+// ============================================================
+
+// ============================================================
+// SUBSYSTEM DASHBOARD ROUTES (Definitive)
+// ============================================================
+Route::middleware(['web', 'admin.auth'])->prefix('admin')->group(function () {
+    Route::get('/guardian/dashboard', [App\Http\Controllers\Guardian\GuardianDashboardController::class, 'dashboard'])->name('guardian.dashboard');
+    Route::get('/pulse/dashboard', [App\Http\Controllers\Pulse\PulseDashboardController::class, 'dashboard'])->name('pulse.dashboard');
+    Route::get('/recovery/dashboard', [App\Http\Controllers\Recovery\RecoveryController::class, 'dashboard'])->name('recovery.dashboard');
+    Route::get('/sentinel/dashboard', [App\Http\Controllers\Sentinel\SentinelDashboardController::class, 'dashboard'])->name('sentinel.dashboard');
+    Route::get('/watchtower/overview', [App\Http\Controllers\Watchtower\DashboardController::class, 'overview'])->name('watchtower.overview');
+});
+
+// TEST ROUTE - Confirm routing works
+Route::get('/test-subsystem', function() {
+    return 'Subsystem routes are working!';
+});
+
+// Subsystem Routes (Verified)
+Route::middleware(['web', 'admin.auth'])->prefix('admin')->group(function () {
+    Route::get('/guardian/dashboard', [App\Http\Controllers\Guardian\GuardianDashboardController::class, 'dashboard'])->name('guardian.dashboard');
+    Route::get('/pulse/dashboard', [App\Http\Controllers\Pulse\PulseDashboardController::class, 'dashboard'])->name('pulse.dashboard');
+    Route::get('/recovery/dashboard', [App\Http\Controllers\Recovery\RecoveryController::class, 'dashboard'])->name('recovery.dashboard');
+    Route::get('/sentinel/dashboard', [App\Http\Controllers\Sentinel\SentinelDashboardController::class, 'dashboard'])->name('sentinel.dashboard');
+    Route::get('/watchtower/overview', [App\Http\Controllers\Watchtower\DashboardController::class, 'overview'])->name('watchtower.overview');
+});
+
+// Admin Audit Routes
+Route::middleware(['web', 'admin.auth'])->prefix('admin')->group(function () {
+    Route::get('/audit', [App\Http\Controllers\Admin\AuditController::class, 'index'])->name('admin.audit.index');
+    Route::get('/audit/export', [App\Http\Controllers\Admin\AuditController::class, 'export'])->name('admin.audit.export');
+});
