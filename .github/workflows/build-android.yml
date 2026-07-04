@@ -18,11 +18,11 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Setup Java
+      - name: Setup Java 21 (for Android)
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -39,25 +39,20 @@ jobs:
         working-directory: ./frontend
         run: npx cap sync android
 
-      - name: Restore Custom Icons
+      - name: Remove conflicting adaptive icon files
         working-directory: ./frontend
         run: |
-          echo "🔧 Restoring custom icons..."
-          # Copy your custom icons from the repo to the Android resources
-          # The icons are at: android/app/src/main/res/mipmap-*/
-          # They should be copied to the same location (they're already there after checkout)
-          # But we need to make sure they're not overwritten by sync
-          # So we copy them back from the git-tracked version
-          cp -r ../android/app/src/main/res/mipmap-* ./android/app/src/main/res/ 2>/dev/null || true
-          # Remove adaptive icons
-          rm -rf ./android/app/src/main/res/mipmap-anydpi-v26/
-          echo "✅ Custom icons restored"
+          echo "🔧 Removing conflicting adaptive icon files..."
+          rm -f android/app/src/main/res/drawable/ic_launcher_foreground.xml 2>/dev/null || true
+          rm -f android/app/src/main/res/drawable/ic_launcher_background.xml 2>/dev/null || true
+          rm -rf android/app/src/main/res/mipmap-anydpi-v26/ 2>/dev/null || true
+          echo "✅ Conflicts removed"
 
       - name: Build Debug APK
         working-directory: ./frontend/android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
