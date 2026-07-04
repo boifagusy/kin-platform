@@ -138,44 +138,4 @@
             </div>
         </div>
     </div>
-@endsection
 
-@push('scripts')
-<script>
-function loadSafetyMonitor() {
-    fetch('{{ route("admin.safety.metrics") }}')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const html = `
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div class="bg-white rounded-xl p-4 border-l-4 border-red-500 shadow-sm">
-                            <div class="text-2xl font-bold text-red-500">${data.data.active_sos.count}</div>
-                            <div class="text-sm text-gray-500">Active SOS</div>
-                        </div>
-                        <div class="bg-white rounded-xl p-4 border-l-4 border-yellow-500 shadow-sm">
-                            <div class="text-2xl font-bold text-yellow-600">${data.data.missed_today.count}</div>
-                            <div class="text-sm text-gray-500">Missed Today</div>
-                        </div>
-                        <div class="bg-white rounded-xl p-4 border-l-4 border-green-500 shadow-sm">
-                            <div class="text-2xl font-bold text-green-600">${data.data.duress_today.count}</div>
-                            <div class="text-sm text-gray-500">Duress Today</div>
-                        </div>
-                        <div class="bg-white rounded-xl p-4 border-l-4 border-blue-500 shadow-sm">
-                            <div class="text-2xl font-bold text-blue-600">${data.data.pending_escalations.count}</div>
-                            <div class="text-sm text-gray-500">Pending Escalations</div>
-                        </div>
-                    </div>
-                    <div class="text-right text-xs text-gray-400">Updated: ${new Date().toLocaleTimeString()}</div>
-                `;
-                document.getElementById('safetyMonitorContent').innerHTML = html;
-            }
-        })
-        .catch(error => {
-            document.getElementById('safetyMonitorContent').innerHTML = '<div class="text-center text-red-500">Failed to load safety data</div>';
-        });
-}
-document.addEventListener('DOMContentLoaded', loadSafetyMonitor);
-setInterval(loadSafetyMonitor, 30000);
-</script>
-@endpush

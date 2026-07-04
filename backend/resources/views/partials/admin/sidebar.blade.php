@@ -11,7 +11,6 @@
             </div>
         </div>
     </div>
-
     <div class="py-4 px-3">
         <!-- MAIN -->
         <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2">Main</p>
@@ -78,10 +77,16 @@
         <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2">Observability</p>
         <ul class="space-y-1 mb-6">
             <li>
-                <a href="{{ route('watchtower.overview') }}" class="flex items-center gap-3 px-4 py-2.5 {{ request()->routeIs('watchtower.*') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600 hover:bg-gray-50' }} rounded-lg transition-all">
+                <a href="{{ route('watchtower.overview') }}" class="flex items-center gap-3 px-4 py-2.5 {{ request()->routeIs('watchtower.overview') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600 hover:bg-gray-50' }} rounded-lg transition-all">
                     <span class="material-symbols-outlined">monitoring</span>
                     <span class="text-sm">Watchtower</span>
                     <span class="ml-auto text-[10px] font-medium text-cyan-600 bg-cyan-50 px-1.5 py-0.5 rounded">v2.0</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('watchtower.health') }}" class="flex items-center gap-3 px-4 py-2.5 pl-10 {{ request()->routeIs('watchtower.health') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600 hover:bg-gray-50' }} rounded-lg transition-all">
+                    <span class="material-symbols-outlined">health_and_safety</span>
+                    <span class="text-sm">System Health</span>
                 </a>
             </li>
         </ul>
@@ -162,7 +167,6 @@
             <span class="material-symbols-outlined">close</span>
         </button>
     </div>
-
     <div class="py-4 px-3">
         <!-- MAIN -->
         <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2">Main</p>
@@ -229,10 +233,16 @@
         <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2">Observability</p>
         <ul class="space-y-1 mb-6">
             <li>
-                <a href="{{ route('watchtower.overview') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 {{ request()->routeIs('watchtower.*') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600' }}" onclick="closeMobileSidebar()">
+                <a href="{{ route('watchtower.overview') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 {{ request()->routeIs('watchtower.overview') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600' }}" onclick="closeMobileSidebar()">
                     <span class="material-symbols-outlined">monitoring</span>
                     <span class="text-sm">Watchtower</span>
                     <span class="ml-auto text-[10px] font-medium text-cyan-600 bg-cyan-50 px-1.5 py-0.5 rounded">v2.0</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('watchtower.health') }}" class="flex items-center gap-3 px-4 py-3 pl-10 rounded-xl hover:bg-gray-50 {{ request()->routeIs('watchtower.health') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600' }}" onclick="closeMobileSidebar()">
+                    <span class="material-symbols-outlined">health_and_safety</span>
+                    <span class="text-sm">System Health</span>
                 </a>
             </li>
         </ul>
@@ -304,12 +314,10 @@ function openMobileSidebar() {
     document.getElementById('mobileSidebar').classList.remove('-translate-x-full');
     document.getElementById('mobileOverlay').classList.remove('hidden');
 }
-
 function closeMobileSidebar() {
     document.getElementById('mobileSidebar').classList.add('-translate-x-full');
     document.getElementById('mobileOverlay').classList.add('hidden');
 }
-
 // Close with Escape key
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {

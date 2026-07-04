@@ -11,7 +11,6 @@ class DashboardController extends Controller
 {
     public function overview(): View
     {
-        // Get incident stats
         $totalIncidents = WatchtowerIncident::count();
         $criticalIncidents = WatchtowerIncident::where('severity', 'critical')->count();
         $openIncidents = WatchtowerIncident::where('status', 'open')->count();
@@ -19,7 +18,6 @@ class DashboardController extends Controller
             ->where('updated_at', '>=', now()->subHours(24))
             ->count();
 
-        // Get recent incidents
         $recentIncidents = WatchtowerIncident::orderBy('created_at', 'desc')
             ->take(10)
             ->get();
@@ -65,6 +63,27 @@ class DashboardController extends Controller
             'open' => $open,
             'resolved' => $resolved,
             'incidents' => $incidents,
+        ]);
+    }
+
+    /**
+     * Display the system health page
+     */
+    public function health(): View
+    {
+        // TEST: Return a simple view to verify routing works
+        return view('admin.watchtower.health', [
+            'healthScore' => 95,
+            'statusColor' => 'green',
+            'statusText' => 'Healthy',
+            'diskUsage' => ['used' => '2.3 GB', 'free' => '2.2 GB', 'total' => '4.5 GB', 'used_percentage' => 51],
+            'database' => ['status' => 'healthy', 'connection' => 'sqlite'],
+            'cache' => ['status' => 'healthy', 'driver' => 'file'],
+            'storage' => ['status' => 'healthy'],
+            'queue' => ['status' => 'healthy', 'connection' => 'database'],
+            'memory' => ['used_percentage' => 45, 'current' => '128 MB', 'limit' => '256 MB'],
+            'cpu' => ['load_1min' => 0.5, 'load_5min' => 0.6, 'load_15min' => 0.7, 'cpus' => 4],
+            'uptime' => '2d 4h 32m',
         ]);
     }
 }
