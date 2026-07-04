@@ -44,9 +44,13 @@ jobs:
         run: |
           echo "🔧 Restoring custom icons..."
           # Copy your custom icons from the repo to the Android resources
-          cp -r android/app/src/main/res/mipmap-* android/app/src/main/res/ 2>/dev/null || true
+          # The icons are at: android/app/src/main/res/mipmap-*/
+          # They should be copied to the same location (they're already there after checkout)
+          # But we need to make sure they're not overwritten by sync
+          # So we copy them back from the git-tracked version
+          cp -r ../android/app/src/main/res/mipmap-* ./android/app/src/main/res/ 2>/dev/null || true
           # Remove adaptive icons
-          rm -rf android/app/src/main/res/mipmap-anydpi-v26/
+          rm -rf ./android/app/src/main/res/mipmap-anydpi-v26/
           echo "✅ Custom icons restored"
 
       - name: Build Debug APK
