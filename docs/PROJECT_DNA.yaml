@@ -1,154 +1,26 @@
+version: "1.0"
+last_updated: "2026-07-04"
+status: "production_stable"
+
 project:
-  name: KIN Platform
-  version: 4.0.0
-  status: active
+  name: "KIN Platform"
+  version: "2.0"
 
-ownership:
-  project_owner: User
-  validation_authority: User
-  freeze_authority: User
+services:
+  subsystems:
+    - name: "Guardian" version: "0.1" status: "active"
+    - name: "Pulse" version: "0.4" status: "active"
+    - name: "Recovery" version: "1.0" status: "active"
+    - name: "Sentinel" version: "0.5" status: "active"
+    - name: "Watchtower" version: "2.0" status: "active"
 
-environment:
-  primary:
-    - Android
-    - Termux
-    - Mobile Browser
-
-  backend_path: ~/storage/kin_platform/backend
-  frontend_path: ~/storage/kin_platform/frontend
-  docs_path: ~/storage/kin_platform/docs
-
-architecture:
-
-  methodology: Brick Based Development
-
-  lifecycle:
-
-    - IDEA
-    - DISCOVERING
-    - VERIFIED
-    - ARCHITECTURE
-    - BUILD_PLAN
-    - BUILDING
-    - PATCHED
-    - TESTING
-    - USER_VALIDATED
-    - FROZEN
-    - DOCUMENTED
-
-  reuse_order:
-
-    - REUSE
-    - EXTEND
-    - REFACTOR
-    - CREATE
-
-source_of_truth:
-
-  priority:
-
-    - running_system
-    - database_schema
-    - routes
-    - source_code
-    - test_results
-    - documentation
-    - ai_reports
-    - ai_assumptions
+key_decisions:
+  - "HealthService with graceful fallbacks"
+  - "Admin-only routes for management"
 
 documentation:
-
-  entrypoint: docs/ENTRYPOINT.md
-
-  core_files:
-
-    - docs/PROJECT_STATUS.md
-    - docs/PROJECT_DNA.yaml
-    - docs/SYSTEM_BIBLE.md
-    - docs/CODEMAP.md
-    - docs/GOVERNANCE.md
-    - docs/BUILD_LOG.md
-    - docs/BRICK_REGISTRY.yaml
-
-roadmap:
-
-  master_roadmap:
-    docs/architecture/MASTER_ROADMAP_DASHBOARD.md
-
-current:
-
-  active_brick: TBD
-
-  current_phase: DISCOVERING
-
-  assigned_agent: Product Agent
-
-agents:
-
-  product_agent:
-
-    responsibilities:
-      - requirements
-      - brick_definition
-      - specifications
-      - roadmap_alignment
-
-  design_agent:
-
-    responsibilities:
-      - ux
-      - ui
-      - wireframes
-      - design_system
-
-  build_agent:
-
-    responsibilities:
-      - frontend
-      - backend
-      - database
-      - api
-
-  qa_agent:
-
-    responsibilities:
-      - testing
-      - validation
-      - security
-      - performance
-
-  release_agent:
-
-    responsibilities:
-      - documentation
-      - release_notes
-      - build_logs
-      - governance_sync
-
-external_review:
-
-  enabled: true
-
-  providers:
-    - ChatGPT
-    - Claude
-    - Gemini
-    - DeepSeek
-
-rules:
-
-  ai_can:
-
-    - discover
-    - analyze
-    - design
-    - build
-    - patch
-    - document
-
-  ai_cannot:
-
-    - validate
-    - freeze
-    - self_approve
-
+  source_of_truth:
+    - "SYSTEM_BIBLE.md"
+    - "PROJECT_STATUS.md"
+    - "CODEMAP.md"
+    - "BUILD_LOG.md"

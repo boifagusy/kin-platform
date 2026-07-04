@@ -1,31 +1,37 @@
-# KIN PLATFORM — SYSTEM BIBLE v4.2
+# KIN PLATFORM — SYSTEM BIBLE
 
-**Status:** LIVE
-**Version:** 4.2.0
-**Last Updated:** 2026-06-23
-**Confidence:** Evidence Verified ✅
+**Version:** 2.0  
+**Last Updated:** 2026-07-04  
+**Status:** Production Stable
 
----
+## Core Subsystems
 
-## 1. SYSTEM OVERVIEW
+| Subsystem | Version | Status | Purpose |
+|-----------|---------|--------|---------|
+| Guardian | v0.1 | ✅ Active | Safety monitoring |
+| Pulse | v0.4 | ✅ Active | Health tracking |
+| Recovery | v1.0 | ✅ Active | Incident recovery |
+| Sentinel | v0.5 | ✅ Active | Security |
+| Watchtower | v2.0 | ✅ Active | System health |
 
-**KIN** — Personal Safety & Tracking Platform
+## Watchtower v2.0
 
-**Mission:** User checks in → KIN monitors → KIN detects risk → KIN escalates → KIN protects
+### Health Service
+- getSystemHealth() - Returns health data with fallbacks
+- checkServices() - Checks all system services
+- Safe system load reading
+- Never fails, always returns data
 
-**Status:** MVP_STABILIZATION | **Launch Readiness:** 75/100
+### Routes
+- /admin/watchtower/overview - Main dashboard
+- /admin/watchtower/health - System health page
 
-### Features (18/18 = 100%)
-Authentication ✅ | Onboarding ✅ | PIN System ✅ | Duress PIN ✅
-Password Recovery ✅ | Check-In System ✅ | Missed Check-In ✅ | SOS System ✅
-Trusted Contacts ✅ | Location Tracking ✅ | Emergency Escalations ✅ | Incident Management ✅
-Notifications ✅ | Dashboard ✅ | Admin System ✅ | Monitoring ✅
-Settings ✅ | Activities ✅
+### Recent Updates (2026-07-04)
+- Fixed sidebar HTML structure
+- Removed duplicate System Health entries
+- HealthService with robust fallback system
 
----
-
-## 2. TECHNOLOGY STACK
-
-| Layer | Technology | Version | Evidence |
-|-------|------------|---------|----------|
-| Backend | Laravel | 13.12.0 | ✅ 
+## Quick Links
+- Dashboard: http://127.0.0.1:8000/admin/dashboard
+- Watchtower: http://127.0.0.1:8000/admin/watchtower/overview
+- System Health: http://127.0.0.1:8000/admin/watchtower/health
