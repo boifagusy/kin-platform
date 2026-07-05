@@ -8,3 +8,6 @@ export { default as RetryManager } from './RetryManager';
 export { default as HealthMonitor } from './HealthMonitor';
 export { default as OfflineManager } from './OfflineManager';
 export { default as DiagnosticsService } from './DiagnosticsService';
+
+// Also export the singleton instance
+export { default as environmentManager } from './EnvironmentManager';
