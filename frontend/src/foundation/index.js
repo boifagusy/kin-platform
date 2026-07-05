@@ -17,6 +17,7 @@ export { default as RetryManager } from './connection/RetryManager';
 export { default as HealthMonitor } from './connection/HealthMonitor';
 export { default as OfflineManager } from './connection/OfflineManager';
 export { default as DiagnosticsService } from './connection/DiagnosticsService';
+export { FailureType } from './connection/DiagnosticsService';
 
 // Metrics
 export { default as ConnectionMetrics } from './metrics/ConnectionMetrics';

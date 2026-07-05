@@ -8,3 +8,4 @@ export { default as RetryManager } from './RetryManager';
 export { default as HealthMonitor } from './HealthMonitor';
 export { default as OfflineManager } from './OfflineManager';
 export { default as DiagnosticsService } from './DiagnosticsService';
+export { FailureType } from './DiagnosticsService';
