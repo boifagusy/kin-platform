@@ -18,6 +18,7 @@ export { default as DiagnosticsService } from './connection/DiagnosticsService';
 
 // Metrics
 export { default as ConnectionMetrics } from './metrics/ConnectionMetrics';
+export { default as connectionMetrics } from './metrics/ConnectionMetrics';
 
 // Context
 export { ConnectivityProvider, useConnectivity } from './context/ConnectivityContext';
