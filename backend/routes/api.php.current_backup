@@ -1,0 +1,136 @@
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+
+// Test route
+Route::get('/test-watchtower', function () {
+    return ['status' => 'ok'];
+});
+
+// ============================================================
+// Watchtower Observability System Routes
+// ============================================================
+
+// Public health endpoint (no auth)
+Route::get('/health', [App\Http\Controllers\HealthController::class, 'index']);
+
+// Watchtower routes
+Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower')->group(function () {
+    Route::get('/health', [App\Http\Controllers\HealthController::class, 'index']);
+});
+
+Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower/api')->group(function () {
+    Route::get('/metrics', [App\Http\Controllers\Watchtower\ApiMonitorController::class, 'metrics']);
+    Route::get('/degradation', [App\Http\Controllers\Watchtower\ApiMonitorController::class, 'degradation']);
+});
+
+Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower/queue')->group(function () {
+    Route::get('/metrics', [App\Http\Controllers\Watchtower\QueueMonitorController::class, 'metrics']);
+    Route::get('/stuck', [App\Http\Controllers\Watchtower\QueueMonitorController::class, 'stuck']);
+});
+
+Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower/database')->group(function () {
+    Route::get('/metrics', [App\Http\Controllers\Watchtower\DatabaseMonitorController::class, 'metrics']);
+    Route::get('/locks', [App\Http\Controllers\Watchtower\DatabaseMonitorController::class, 'locks']);
+});
+
+Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower/plugins')->group(function () {
+    Route::get('/', [App\Http\Controllers\Watchtower\PluginHealthController::class, 'all']);
+    Route::get('/{name}', [App\Http\Controllers\Watchtower\PluginHealthController::class, 'show']);
+});
+
+Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower/safety')->group(function () {
+    Route::get('/metrics', [App\Http\Controllers\Watchtower\SafetyEngineMonitorController::class, 'metrics']);
+});
+
+Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower/performance')->group(function () {
+    Route::get('/metrics', [App\Http\Controllers\Watchtower\PerformanceMonitorController::class, 'metrics']);
+});
+
+Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower/errors')->group(function () {
+    Route::get('/metrics', [App\Http\Controllers\Watchtower\ErrorMonitorController::class, 'metrics']);
+});
+
+Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower/notifications')->group(function () {
+    Route::get('/metrics', [App\Http\Controllers\Watchtower\NotificationMonitorController::class, 'metrics']);
+});
+
+Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower/security')->group(function () {
+    Route::get('/metrics', [App\Http\Controllers\Watchtower\SecurityMonitorController::class, 'metrics']);
+});
+
+Route::middleware(['auth:sanctum', 'admin'])->prefix('watchtower/system')->group(function () {
+    Route::get('/health', [App\Http\Controllers\Watchtower\WatchtowerHealthController::class, 'index']);
+});
+
+// ============================================
+// AUTHENTICATION ROUTES (Added for frontend)
+// ============================================
+
+Route::post('/auth/confirm-phone', function (Request $request) {
+    $validated = $request->validate([
+        'phone' => 'required|string',
+        'otp' => 'sometimes|string',
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Phone confirmed successfully',
+        'data' => [
+            'verified' => true,
+            'phone' => $validated['phone'],
+        ]
+    ]);
+});
+
+Route::post('/auth/create-pin', function (Request $request) {
+    $validated = $request->validate([
+        'pin' => 'required|string|min:4|max:6',
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'PIN created successfully',
+        'data' => [
+            'pin_set' => true,
+        ]
+    ]);
+});
+
+Route::post('/auth/login', function (Request $request) {
+    $validated = $request->validate([
+        'phone' => 'required|string',
+        'pin' => 'required|string',
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Login successful',
+        'data' => [
+            'token' => 'fake-token-for-testing',
+            'user' => [
+                'phone' => $validated['phone'],
+                'name' => 'Test User',
+            ]
+        ]
+    ]);
+});
+
+Route::post('/auth/register', function (Request $request) {
+    $validated = $request->validate([
+        'phone' => 'required|string',
+        'name' => 'sometimes|string',
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Registration successful',
+        'data' => [
+            'user' => [
+                'phone' => $validated['phone'],
+                'name' => $validated['name'] ?? 'User',
+            ]
+        ]
+    ]);
+});

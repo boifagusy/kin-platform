@@ -76,17 +76,31 @@ Route::prefix('watchtower')->middleware(['api'])->group(function () {
 
 // Pulse API Routes
 Route::prefix('pulse')->middleware(['auth:sanctum'])->group(function () {
+    Route::get('/safety-score', [App\Http\Controllers\Pulse\PulseDashboardController::class, 'getSafetyScore']);
+    Route::get('/score-history', [App\Http\Controllers\Pulse\PulseDashboardController::class, 'getScoreHistory']);
 });
 
 
+    Route::post('/run-detection', [PulseDashboardController::class, 'runDetection']);
+    Route::get('/active-rules', [PulseDashboardController::class, 'getActiveRules']);
+    Route::get('/all-detections', [PulseDashboardController::class, 'getAllDetections']);
 
 
 // Pulse Detection Routes
 Route::prefix('pulse')->middleware(['auth:sanctum'])->group(function () {
+    Route::post('/run-detection', [App\Http\Controllers\Pulse\PulseDashboardController::class, 'runDetection']);
+    Route::get('/active-rules', [App\Http\Controllers\Pulse\PulseDashboardController::class, 'getActiveRules']);
+    Route::get('/all-detections', [App\Http\Controllers\Pulse\PulseDashboardController::class, 'getAllDetections']);
 });
 
 // Pulse Detection Routes
 Route::prefix('pulse')->middleware(['auth:sanctum'])->group(function () {
+    Route::post('/run-detection', [App\Http\Controllers\Pulse\PulseDashboardController::class, 'runDetection']);
+    Route::get('/active-rules', [App\Http\Controllers\Pulse\PulseDashboardController::class, 'getActiveRules']);
+    Route::get('/all-detections', [App\Http\Controllers\Pulse\PulseDashboardController::class, 'getAllDetections']);
 });
 
+    Route::get('/widget-data', [PulseDashboardController::class, 'getWidgetData']);
 
+    Route::post('/automated-check', [PulseDashboardController::class, 'runAutomatedCheck']);
+    Route::get('/incidents', [PulseDashboardController::class, 'getIncidents']);
