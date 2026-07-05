@@ -1,206 +1,271 @@
-// frontend/src/services/api.js
-// API service for KIN frontend
+// KIN Platform — API Service (Compatibility Layer)
+// All existing API calls go through this layer
+// Internally uses the new Foundation FetchClient
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+import { fetchClient } from '../foundation';
 
-// Helper to get auth token
-const getToken = () => localStorage.getItem('kin_token');
-
-// Helper headers
-const getHeaders = () => ({
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-  ...(getToken() && { 'Authorization': `Bearer ${getToken()}` })
-});
-
-// Generic request handler
-async function request(endpoint, options = {}) {
-  const url = `${API_BASE_URL}${endpoint}`;
-  console.log('📡 API Request:', url);
-
-  try {
-    const response = await fetch(url, {
-      ...options,
-      headers: { ...getHeaders(), ...options.headers }
-    });
-
-    // Check if response is JSON
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      const text = await response.text();
-      console.error('❌ Non-JSON response:', text.substring(0, 100));
-      throw new Error('Server returned non-JSON response');
-    }
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || data.error || 'Request failed');
-    }
-
-    return data;
-  } catch (error) {
-    console.error('❌ API Error:', error.message);
-    throw error;
+// Logging helper (optional, for migration tracking)
+const logMigration = (endpoint, method) => {
+  if (import.meta.env.DEV) {
+    console.log(`[API] ${method} ${endpoint} → via FetchClient`);
   }
-}
-
-// ============= AUTH ENDPOINTS =============
-
-// Check if phone exists
-export const checkPhone = async (phone) => {
-  return request('/auth/check-phone', {
-    method: 'POST',
-    body: JSON.stringify({ phone })
-  });
 };
 
-// Confirm phone with last 4 digits
-export const confirmPhone = async (phone, lastFourDigits) => {
-  return request('/auth/confirm-phone', {
-    method: 'POST',
-    body: JSON.stringify({ phone, last_four_digits: lastFourDigits })
-  });
+// ──────────────────────────────────────────────
+// User API
+// ──────────────────────────────────────────────
+
+export const userApi = {
+  async getProfile() {
+    logMigration('/user/profile', 'GET');
+    return fetchClient.get('/user/profile');
+  },
+
+  async updateProfile(data) {
+    logMigration('/user/profile', 'PUT');
+    return fetchClient.put('/user/profile', data);
+  },
+
+  async getSettings() {
+    logMigration('/user/settings', 'GET');
+    return fetchClient.get('/user/settings');
+  },
+
+  async updateSettings(data) {
+    logMigration('/user/settings', 'PUT');
+    return fetchClient.put('/user/settings', data);
+  },
 };
 
-// Create login PIN
-export const createPin = async (pin, pinConfirmation) => {
-  return request('/auth/create-pin', {
-    method: 'POST',
-    body: JSON.stringify({ pin, pin_confirmation: pinConfirmation })
-  });
+// ──────────────────────────────────────────────
+// Auth API
+// ──────────────────────────────────────────────
+
+export const authApi = {
+  async login(credentials) {
+    logMigration('/auth/login', 'POST');
+    return fetchClient.post('/auth/login', credentials);
+  },
+
+  async register(data) {
+    logMigration('/auth/register', 'POST');
+    return fetchClient.post('/auth/register', data);
+  },
+
+  async logout() {
+    logMigration('/auth/logout', 'POST');
+    return fetchClient.post('/auth/logout');
+  },
+
+  async refreshToken() {
+    logMigration('/auth/refresh', 'POST');
+    return fetchClient.post('/auth/refresh');
+  },
+
+  async confirmPhone(data) {
+    logMigration('/auth/confirm-phone', 'POST');
+    return fetchClient.post('/auth/confirm-phone', data);
+  },
 };
 
-// Login with PIN
-export const loginPin = async (phone, pin) => {
-  return request('/auth/login-pin', {
-    method: 'POST',
-    body: JSON.stringify({ phone, pin })
-  });
+// ──────────────────────────────────────────────
+// Dashboard API
+// ──────────────────────────────────────────────
+
+export const dashboardApi = {
+  async getStats() {
+    logMigration('/dashboard/stats', 'GET');
+    return fetchClient.get('/dashboard/stats');
+  },
+
+  async getActivity() {
+    logMigration('/dashboard/activity', 'GET');
+    return fetchClient.get('/dashboard/activity');
+  },
 };
 
-// Save user details (name, email)
-export const saveUserDetails = async (phone, fullName, email) => {
-  return request('/auth/user-details', {
-    method: 'POST',
-    body: JSON.stringify({ phone, full_name: fullName, email })
-  });
+// ──────────────────────────────────────────────
+// Watchtower API
+// ──────────────────────────────────────────────
+
+export const watchtowerApi = {
+  async getHealth() {
+    logMigration('/watchtower/health', 'GET');
+    return fetchClient.get('/watchtower/health');
+  },
+
+  async getMetrics() {
+    logMigration('/watchtower/metrics', 'GET');
+    return fetchClient.get('/watchtower/metrics');
+  },
+
+  async getSystemHealth() {
+    logMigration('/watchtower/system/health', 'GET');
+    return fetchClient.get('/watchtower/system/health');
+  },
 };
 
-// Save trusted contact
-export const saveTrustedContact = async (data) => {
-  return request('/auth/trusted-contact', {
-    method: 'POST',
-    body: JSON.stringify(data)
-  });
+// ──────────────────────────────────────────────
+// Guardian API
+// ──────────────────────────────────────────────
+
+export const guardianApi = {
+  async getStatus() {
+    logMigration('/guardian/status', 'GET');
+    return fetchClient.get('/guardian/status');
+  },
+
+  async getAlerts() {
+    logMigration('/guardian/alerts', 'GET');
+    return fetchClient.get('/guardian/alerts');
+  },
+
+  async triggerAlert(data) {
+    logMigration('/guardian/alert', 'POST');
+    return fetchClient.post('/guardian/alert', data);
+  },
 };
 
-// Complete onboarding
-export const completeOnboarding = async () => {
-  return request('/auth/complete-onboarding', {
-    method: 'POST'
-  });
+// ──────────────────────────────────────────────
+// Pulse API
+// ──────────────────────────────────────────────
+
+export const pulseApi = {
+  async getHealthData() {
+    logMigration('/pulse/health', 'GET');
+    return fetchClient.get('/pulse/health');
+  },
+
+  async checkin(data) {
+    logMigration('/pulse/checkin', 'POST');
+    return fetchClient.post('/pulse/checkin', data);
+  },
 };
 
-// ============= TRUSTED CONTACTS ENDPOINTS =============
+// ──────────────────────────────────────────────
+// Recovery API
+// ──────────────────────────────────────────────
 
-// Get all trusted contacts
-export const getTrustedContacts = async () => {
-  return request('/trusted-contacts', {
-    method: 'GET'
-  });
+export const recoveryApi = {
+  async getStatus() {
+    logMigration('/recovery/status', 'GET');
+    return fetchClient.get('/recovery/status');
+  },
+
+  async getIncidents() {
+    logMigration('/recovery/incidents', 'GET');
+    return fetchClient.get('/recovery/incidents');
+  },
+
+  async recover(data) {
+    logMigration('/recovery/recover', 'POST');
+    return fetchClient.post('/recovery/recover', data);
+  },
 };
 
-// Delete trusted contact
-export const deleteTrustedContact = async (id) => {
-  return request(`/trusted-contacts/${id}`, {
-    method: 'DELETE'
-  });
+// ──────────────────────────────────────────────
+// Sentinel API
+// ──────────────────────────────────────────────
+
+export const sentinelApi = {
+  async getSecurityStatus() {
+    logMigration('/sentinel/status', 'GET');
+    return fetchClient.get('/sentinel/status');
+  },
+
+  async getLogs() {
+    logMigration('/sentinel/logs', 'GET');
+    return fetchClient.get('/sentinel/logs');
+  },
 };
 
-// ============= CHECK-IN ENDPOINTS =============
+// ──────────────────────────────────────────────
+// SOS API
+// ──────────────────────────────────────────────
 
-// Send check-in
-export const sendCheckIn = async (status = 'safe', location = null) => {
-  return request('/checkin', {
-    method: 'POST',
-    body: JSON.stringify({ status, location })
-  });
+export const sosApi = {
+  async trigger(data) {
+    logMigration('/sos/trigger', 'POST');
+    return fetchClient.post('/sos/trigger', data);
+  },
 };
 
-// Get check-in status
-export const getCheckInStatus = async () => {
-  return request('/checkin/status', {
-    method: 'GET'
-  });
+// ──────────────────────────────────────────────
+// Check-in API
+// ──────────────────────────────────────────────
+
+export const checkinApi = {
+  async store(data) {
+    logMigration('/checkin/store', 'POST');
+    return fetchClient.post('/checkin/store', data);
+  },
 };
 
-// ============= SOS / DURESS ENDPOINTS =============
+// ──────────────────────────────────────────────
+// Trusted Contacts API
+// ──────────────────────────────────────────────
 
-// Activate duress mode (secret emergency)
-export const activateDuress = async (location = null) => {
-  return request('/duress/activate', {
-    method: 'POST',
-    body: JSON.stringify({ location })
-  });
+export const trustedContactsApi = {
+  async get() {
+    logMigration('/trusted-contacts', 'GET');
+    return fetchClient.get('/trusted-contacts');
+  },
+
+  async store(data) {
+    logMigration('/trusted-contacts', 'POST');
+    return fetchClient.post('/trusted-contacts', data);
+  },
+
+  async delete(id) {
+    logMigration(`/trusted-contacts/${id}`, 'DELETE');
+    return fetchClient.delete(`/trusted-contacts/${id}`);
+  },
 };
 
-// Get SOS history
-export const getSosHistory = async () => {
-  return request('/sos/history', {
-    method: 'GET'
-  });
+// ──────────────────────────────────────────────
+// Onboarding API
+// ──────────────────────────────────────────────
+
+export const onboardingApi = {
+  async getDraft() {
+    logMigration('/onboarding/draft', 'GET');
+    return fetchClient.get('/onboarding/draft');
+  },
+
+  async saveDraft(data) {
+    logMigration('/onboarding/draft', 'POST');
+    return fetchClient.post('/onboarding/draft', data);
+  },
 };
 
-// ============= DASHBOARD ENDPOINTS =============
+// ──────────────────────────────────────────────
+// Health Check API (public)
+// ──────────────────────────────────────────────
 
-// Get dashboard data
-export const getDashboard = async () => {
-  return request('/dashboard', {
-    method: 'GET'
-  });
+export const healthApi = {
+  async check() {
+    return fetchClient.get('/health');
+  },
 };
 
-// Get safety stats
-export const getSafetyStats = async () => {
-  return request('/safety/stats', {
-    method: 'GET'
-  });
+// ──────────────────────────────────────────────
+// Default export (for backward compatibility)
+// ──────────────────────────────────────────────
+
+const api = {
+  user: userApi,
+  auth: authApi,
+  dashboard: dashboardApi,
+  watchtower: watchtowerApi,
+  guardian: guardianApi,
+  pulse: pulseApi,
+  recovery: recoveryApi,
+  sentinel: sentinelApi,
+  sos: sosApi,
+  checkin: checkinApi,
+  trustedContacts: trustedContactsApi,
+  onboarding: onboardingApi,
+  health: healthApi,
 };
 
-// ============= ONBOARDING DRAFT ENDPOINTS =============
-
-// Get onboarding draft
-export const getOnboardingDraft = async () => {
-  return request('/onboarding/draft', {
-    method: 'GET'
-  });
-};
-
-// Save onboarding draft
-export const saveOnboardingDraft = async (data) => {
-  return request('/onboarding/draft', {
-    method: 'POST',
-    body: JSON.stringify(data)
-  });
-};
-
-export default {
-  checkPhone,
-  confirmPhone,
-  createPin,
-  loginPin,
-  saveUserDetails,
-  saveTrustedContact,
-  completeOnboarding,
-  getTrustedContacts,
-  deleteTrustedContact,
-  sendCheckIn,
-  getCheckInStatus,
-  activateDuress,
-  getSosHistory,
-  getDashboard,
-  getSafetyStats,
-  getOnboardingDraft,
-  saveOnboardingDraft
-};
+export default api;

@@ -1,15 +1,20 @@
+// KIN Platform — Main App
 import React from 'react';
-import { RouterProvider } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import router from './router';
-import './index.css';
+import { BrowserRouter } from 'react-router-dom';
+import { ConnectivityProvider } from './foundation/context/ConnectivityContext';
+// ... existing imports
 
 function App() {
-    return (
-        <AuthProvider>
-            <RouterProvider router={router} />
-        </AuthProvider>
-    );
+  return (
+    <ConnectivityProvider>
+      <BrowserRouter>
+        {/* Existing app content */}
+        <div className="app">
+          {/* Your routes and components */}
+        </div>
+      </BrowserRouter>
+    </ConnectivityProvider>
+  );
 }
 
 export default App;
