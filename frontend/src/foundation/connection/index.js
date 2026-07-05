@@ -9,5 +9,6 @@ export { default as HealthMonitor } from './HealthMonitor';
 export { default as OfflineManager } from './OfflineManager';
 export { default as DiagnosticsService } from './DiagnosticsService';
 
-// Also export the singleton instance
+// Export singleton instances
 export { default as environmentManager } from './EnvironmentManager';
+export { default as fetchClient } from './FetchClient';
