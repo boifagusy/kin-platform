@@ -1,46 +1,51 @@
 // KIN Platform — ConnectionManager
 // Central connection state management
 
-import EnvironmentManager from './EnvironmentManager';
+import configService from '../config/ConfigService';
 import FetchClient from './FetchClient';
 import HealthMonitor from './HealthMonitor';
 import OfflineManager from './OfflineManager';
 import DiagnosticsService from './DiagnosticsService';
+import EventBus, { Events } from '../events/EventBus';
+import connectionMetrics from '../metrics/ConnectionMetrics';
 
 class ConnectionManager {
     constructor() {
         this.state = {
-            status: 'unknown', // 'unknown', 'connecting', 'connected', 'degraded', 'offline', 'error'
+            status: 'unknown',
             isConnected: false,
             isOffline: false,
             isDegraded: false,
             lastChecked: null,
             diagnostics: null,
             environment: null,
+            platform: null,
             apiUrl: null,
         };
         this.subscribers = [];
         this.initialized = false;
-        this.environment = EnvironmentManager;
+        this.config = configService;
         this.client = FetchClient;
         this.healthMonitor = null;
         this.offlineManager = null;
         this.diagnostics = null;
+        this.eventBus = EventBus;
+        this.metrics = connectionMetrics;
     }
 
-    // Initialize the connection manager
     async initialize() {
         if (this.initialized) {
             return;
         }
 
-        // Detect environment
-        const env = this.environment.detect();
-        this.state.environment = env.name;
-        this.state.apiUrl = this.environment.getApiUrl();
+        // Get config
+        const config = this.config.getConfig();
+        this.state.environment = config.env;
+        this.state.platform = config.platform;
+        this.state.apiUrl = this.config.getApiUrl();
 
-        // Update fetch client base URL
-        this.client.setBaseURL(this.environment.getApiUrl());
+        // Update fetch client
+        this.client.setBaseURL(this.config.getBackendUrl());
 
         // Initialize offline manager
         this.offlineManager = new OfflineManager({
@@ -52,7 +57,10 @@ class ConnectionManager {
         this.diagnostics = new DiagnosticsService();
 
         // Initialize health monitor
+        const healthConfig = this.config.getHealthConfig();
         this.healthMonitor = new HealthMonitor({
+            interval: healthConfig.interval,
+            timeout: healthConfig.timeout,
             onHealthy: () => this.handleHealthy(),
             onDegraded: (data) => this.handleDegraded(data),
             onUnhealthy: (data) => this.handleUnhealthy(data),
@@ -70,22 +78,26 @@ class ConnectionManager {
             lastChecked: new Date().toISOString(),
         });
 
+        // Publish boot event
+        this.eventBus.publish(Events.SYSTEM_BOOT, {
+            environment: config.env,
+            platform: config.platform,
+            apiUrl: this.state.apiUrl,
+        });
+
         this.initialized = true;
         this.notifySubscribers();
     }
 
-    // Get current state
     getState() {
         return { ...this.state };
     }
 
-    // Set state and notify subscribers
     setState(updates) {
         this.state = { ...this.state, ...updates };
         this.notifySubscribers();
     }
 
-    // Subscribe to state changes
     subscribe(callback) {
         this.subscribers.push(callback);
         return () => {
@@ -93,7 +105,6 @@ class ConnectionManager {
         };
     }
 
-    // Notify all subscribers
     notifySubscribers() {
         const state = this.getState();
         for (const callback of this.subscribers) {
@@ -105,7 +116,6 @@ class ConnectionManager {
         }
     }
 
-    // Handle healthy status
     handleHealthy() {
         this.setState({
             status: 'connected',
@@ -114,9 +124,10 @@ class ConnectionManager {
             isDegraded: false,
             lastChecked: new Date().toISOString(),
         });
+        this.eventBus.publish(Events.HEALTH_HEALTHY, { timestamp: Date.now() });
+        this.metrics.recordSuccess(0);
     }
 
-    // Handle degraded status
     handleDegraded(data) {
         this.setState({
             status: 'degraded',
@@ -126,9 +137,9 @@ class ConnectionManager {
             lastChecked: new Date().toISOString(),
             diagnostics: data,
         });
+        this.eventBus.publish(Events.HEALTH_DEGRADED, { data, timestamp: Date.now() });
     }
 
-    // Handle unhealthy status
     handleUnhealthy(data) {
         this.setState({
             status: 'error',
@@ -138,18 +149,16 @@ class ConnectionManager {
             lastChecked: new Date().toISOString(),
             diagnostics: data,
         });
+        this.eventBus.publish(Events.HEALTH_UNHEALTHY, { data, timestamp: Date.now() });
+        this.metrics.recordFailure(new Error('Backend unhealthy'));
     }
 
-    // Handle online event
     handleOnline() {
-        this.setState({
-            isOffline: false,
-        });
-        // Try to reconnect
+        this.setState({ isOffline: false });
+        this.eventBus.publish(Events.CONNECTION_ONLINE, { timestamp: Date.now() });
         this.healthMonitor.checkNow();
     }
 
-    // Handle offline event
     handleOffline() {
         this.setState({
             status: 'offline',
@@ -158,17 +167,20 @@ class ConnectionManager {
             isDegraded: false,
             lastChecked: new Date().toISOString(),
         });
+        this.eventBus.publish(Events.CONNECTION_OFFLINE, { timestamp: Date.now() });
     }
 
-    // Manual health check
     async checkHealth() {
         if (this.healthMonitor) {
-            return await this.healthMonitor.checkNow();
+            const startTime = Date.now();
+            const result = await this.healthMonitor.checkNow();
+            const duration = Date.now() - startTime;
+            this.metrics.recordLatency(duration);
+            return result;
         }
         return null;
     }
 
-    // Get diagnostics
     getDiagnostics() {
         if (this.diagnostics) {
             return this.diagnostics.collect();
@@ -176,30 +188,33 @@ class ConnectionManager {
         return null;
     }
 
-    // Retry connection
     async retryConnection() {
-        this.setState({
-            status: 'connecting',
-        });
+        this.setState({ status: 'connecting' });
+        this.eventBus.publish(Events.CONNECTION_RETRY, { timestamp: Date.now() });
+        this.metrics.recordReconnect();
         await this.healthMonitor.checkNow();
     }
 
-    // Check if connected
     isConnected() {
         return this.state.isConnected && !this.state.isOffline;
     }
 
-    // Get API URL
     getApiUrl() {
         return this.state.apiUrl;
     }
 
-    // Get environment
     getEnvironment() {
         return this.state.environment;
     }
+
+    getPlatform() {
+        return this.state.platform;
+    }
+
+    getMetrics() {
+        return this.metrics.getMetrics();
+    }
 }
 
-// Singleton instance
 const connectionManager = new ConnectionManager();
 export default connectionManager;

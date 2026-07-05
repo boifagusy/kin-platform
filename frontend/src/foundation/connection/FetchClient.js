@@ -1,51 +1,48 @@
 // KIN Platform — FetchClient
 // Single HTTP client wrapper around native fetch()
 
-import EnvironmentManager from './EnvironmentManager';
+import configService from '../config/ConfigService';
 import RetryManager from './RetryManager';
+import EventBus, { Events } from '../events/EventBus';
+import connectionMetrics from '../metrics/ConnectionMetrics';
 
 class FetchClient {
     constructor(config = {}) {
-        this.baseURL = config.baseURL || EnvironmentManager.getApiUrl();
+        const backendUrl = configService.getBackendUrl();
+        this.baseURL = config.baseURL || backendUrl;
         this.timeout = config.timeout || 30000;
         this.defaultHeaders = config.headers || {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
         };
-        this.retryConfig = config.retry || { 
-            maxAttempts: 3, 
-            baseDelay: 2000,
-            maxDelay: 30000,
+        const retryConfig = configService.getRetryConfig();
+        this.retryConfig = config.retry || {
+            maxAttempts: retryConfig.maxAttempts,
+            baseDelay: retryConfig.baseDelay,
+            maxDelay: retryConfig.maxDelay,
         };
-        this.interceptors = { 
-            request: [], 
-            response: [], 
-            error: [] 
-        };
+        this.interceptors = { request: [], response: [], error: [] };
         this.retryManager = new RetryManager(this.retryConfig);
+        this.eventBus = EventBus;
+        this.metrics = connectionMetrics;
     }
 
-    // Add request interceptor
     addRequestInterceptor(callback) {
         this.interceptors.request.push(callback);
     }
 
-    // Add response interceptor
     addResponseInterceptor(callback) {
         this.interceptors.response.push(callback);
     }
 
-    // Add error interceptor
     addErrorInterceptor(callback) {
         this.interceptors.error.push(callback);
     }
 
-    // Main request method
     async request(url, options = {}) {
         const fullUrl = this.baseURL + url;
-        let lastError = null;
+        const startTime = Date.now();
 
-        // Build request
         const requestOptions = {
             ...options,
             headers: {
@@ -55,46 +52,50 @@ class FetchClient {
             signal: this.createTimeoutSignal(this.timeout),
         };
 
-        // Run request interceptors
         let modifiedOptions = requestOptions;
         for (const interceptor of this.interceptors.request) {
             modifiedOptions = interceptor(modifiedOptions);
         }
 
-        // Execute with retry
-        const result = await this.retryManager.execute(async () => {
-            try {
+        try {
+            const result = await this.retryManager.execute(async () => {
                 const response = await fetch(fullUrl, modifiedOptions);
 
-                // Run response interceptors
                 let modifiedResponse = response;
                 for (const interceptor of this.interceptors.response) {
                     modifiedResponse = interceptor(modifiedResponse);
                 }
 
-                // Check if response is ok
                 if (!response.ok) {
                     const error = await this.normalizeError(response);
                     throw error;
                 }
 
-                // Parse response
                 const data = await response.json();
+                const duration = Date.now() - startTime;
+                this.metrics.recordSuccess(duration);
+                this.eventBus.publish(Events.METRICS_UPDATE, { duration });
+
                 return data;
+            });
 
-            } catch (error) {
-                // Run error interceptors
-                for (const interceptor of this.interceptors.error) {
-                    interceptor(error);
-                }
-                throw error;
+            return result;
+        } catch (error) {
+            const duration = Date.now() - startTime;
+            this.metrics.recordFailure(error);
+            this.eventBus.publish(Events.METRICS_FAILURE, { 
+                error: error.message,
+                duration,
+                url 
+            });
+
+            for (const interceptor of this.interceptors.error) {
+                interceptor(error);
             }
-        });
-
-        return result;
+            throw error;
+        }
     }
 
-    // HTTP methods
     async get(url, options = {}) {
         return this.request(url, { ...options, method: 'GET' });
     }
@@ -139,11 +140,9 @@ class FetchClient {
         return this.request(url, { ...options, method: 'DELETE' });
     }
 
-    // Create timeout signal
     createTimeoutSignal(timeout) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
-        // Cleanup timeout on abort
         const originalAbort = controller.abort;
         controller.abort = function() {
             clearTimeout(timeoutId);
@@ -152,7 +151,6 @@ class FetchClient {
         return controller.signal;
     }
 
-    // Normalize error
     async normalizeError(response) {
         let data;
         try {
@@ -181,39 +179,29 @@ class FetchClient {
     }
 
     isRetryable(status) {
-        // Network errors (status 0) are retryable
         if (status === 0) return true;
-        // 5xx server errors are retryable
         if (status >= 500) return true;
-        // 429 rate limit is retryable
         if (status === 429) return true;
-        // 401 may be retryable (with token refresh)
         if (status === 401) return true;
-        // 404 is not retryable
         return false;
     }
 
-    // Update base URL (for environment changes)
     setBaseURL(url) {
         this.baseURL = url;
     }
 
-    // Update headers
     setHeaders(headers) {
         this.defaultHeaders = { ...this.defaultHeaders, ...headers };
     }
 
-    // Add auth token
     setAuthToken(token) {
         this.defaultHeaders['Authorization'] = `Bearer ${token}`;
     }
 
-    // Remove auth token
     clearAuthToken() {
         delete this.defaultHeaders['Authorization'];
     }
 }
 
-// Singleton instance
 const fetchClient = new FetchClient();
 export default fetchClient;

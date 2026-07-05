@@ -10,7 +10,9 @@ export { Events } from './events/EventBus';
 
 // Connection
 export { default as ConnectionManager } from './connection/ConnectionManager';
+export { default as connectionManager } from './connection/ConnectionManager';
 export { default as FetchClient } from './connection/FetchClient';
+export { default as fetchClient } from './connection/FetchClient';
 export { default as RetryManager } from './connection/RetryManager';
 export { default as HealthMonitor } from './connection/HealthMonitor';
 export { default as OfflineManager } from './connection/OfflineManager';
