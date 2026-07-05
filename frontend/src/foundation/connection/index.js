@@ -12,3 +12,4 @@ export { default as DiagnosticsService } from './DiagnosticsService';
 // Export singleton instances
 export { default as environmentManager } from './EnvironmentManager';
 export { default as fetchClient } from './FetchClient';
+export { default as connectionManager } from './ConnectionManager';
