@@ -116,9 +116,6 @@ class DashboardSnapshotService
             'safe_zones' => $safeZones,
             'pending_tasks' => $this->getPendingTasks($user),
             'snapshot_generated_at' => now()->toISOString(),
-            'unread_alerts' => SafetyIncident::where('user_id', $user->id)
-                ->where('status', 'active')
-                ->count(),
             // ✅ NEW FIELDS FOR SAFETY STATUS
             'phone_verified' => !empty($user->phone_verified_at),
             'pin_created' => !empty($user->login_pin_hash),

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import BottomNav from "../../components/dashboard/BottomNav";
 import { FaArrowLeft, FaBell, FaSync } from "react-icons/fa";
 
 const API_BASE = import.meta.env.VITE_API_URL;
@@ -182,6 +183,7 @@ function AlertsScreenV2() {
           </div>
         )}
       </div>
+    <BottomNav activeTab="alerts" />
     </div>
   );
 }

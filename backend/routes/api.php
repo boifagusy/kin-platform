@@ -19,6 +19,8 @@ use App\Http\Controllers\Api\V1\OnboardingDraftController;
 
 Route::prefix('v1')->group(function () {
     Route::get('/location', [LocationController::class, 'show']);
+    Route::post('/location', [LocationController::class, 'store']);
+    Route::post('/location', [LocationController::class, 'store']);
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:otp');
     Route::post('/auth/confirm-phone', [AuthController::class, 'confirmPhone']);
     Route::post('/auth/create-pin', [AuthController::class, 'createPin']);
@@ -90,3 +92,26 @@ Route::prefix('pulse')->middleware(['auth:sanctum'])->group(function () {
 });
 
 
+
+// ============================================
+// USER PREFERENCES ROUTES
+// ============================================
+
+Route::prefix('v1')->group(function () {
+    Route::middleware(['auth:sanctum'])->group(function () {
+    });
+});
+
+// ============================================
+// USER PREFERENCES ROUTES
+// ============================================
+
+Route::prefix('v1')->group(function () {
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::get('/user/preferences', [App\Http\Controllers\Api\V1\UserPreferenceController::class, 'index']);
+        Route::get('/user/preferences/category/{category}', [App\Http\Controllers\Api\V1\UserPreferenceController::class, 'category']);
+        Route::patch('/user/preferences', [App\Http\Controllers\Api\V1\UserPreferenceController::class, 'update']);
+        Route::delete('/user/preferences/{category}/{key}', [App\Http\Controllers\Api\V1\UserPreferenceController::class, 'reset']);
+        Route::delete('/user/preferences/category/{category}', [App\Http\Controllers\Api\V1\UserPreferenceController::class, 'resetCategory']);
+    });
+});

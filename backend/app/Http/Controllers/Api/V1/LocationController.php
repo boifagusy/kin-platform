@@ -50,6 +50,12 @@ class LocationController extends Controller
             'speed' => 'nullable|numeric',
             'heading' => 'nullable|numeric',
             'timestamp' => 'nullable|integer',
+            'device_trust' => 'nullable|numeric',
+            'device_fingerprint' => 'nullable|string',
+            'battery_level' => 'nullable|integer',
+            'is_charging' => 'nullable|boolean',
+            'network_type' => 'nullable|string',
+            'confidence' => 'nullable|numeric',
         ]);
 
         $user = $request->user();
@@ -61,19 +67,34 @@ class LocationController extends Controller
             'speed' => $request->speed,
             'heading' => $request->heading,
             'timestamp' => $request->timestamp ?? time(),
+            'device_trust' => $request->device_trust,
+            'battery_level' => $request->battery_level,
+            'network_type' => $request->network_type,
+            'confidence' => $request->confidence,
         ]);
         $user->save();
+
+        // Flag suspicious activity based on device trust
+        $isSuspicious = ($request->device_trust !== null && $request->device_trust < 50) ||
+                        ($request->confidence !== null && $request->confidence < 30);
 
         ActivityLog::create([
             'user_id' => $user->id,
             'type' => 'LOCATION_UPDATE',
-            'status' => 'recorded',
+            'status' => $isSuspicious ? 'suspicious' : 'recorded',
             'details' => json_encode([
                 'latitude' => $request->latitude,
                 'longitude' => $request->longitude,
                 'accuracy' => $request->accuracy,
                 'speed' => $request->speed,
                 'heading' => $request->heading,
+                'device_trust' => $request->device_trust,
+                'device_fingerprint' => $request->device_fingerprint,
+                'battery_level' => $request->battery_level,
+                'is_charging' => $request->is_charging,
+                'network_type' => $request->network_type,
+                'confidence' => $request->confidence,
+                'is_suspicious' => $isSuspicious,
             ]),
             'occurred_at' => now(),
         ]);

@@ -21,6 +21,14 @@ function WelcomeScreenV3() {
   const timeAgo = formatTimeAgo(draft?.updated_at);
   const hasExistingDraft = hasDraft();
 
+  // Returning user — skip welcome screen, go straight to PIN login
+  useEffect(() => {
+    const storedPhone = localStorage.getItem("kin_phone");
+    if (storedPhone) {
+      navigate("/login-pin", { state: { phone: storedPhone }, replace: true });
+    }
+  }, [navigate]);
+
   const handleGetStarted = () => {
     navigate("/login");
   };

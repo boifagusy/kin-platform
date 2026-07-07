@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import BottomNav from "../../components/dashboard/BottomNav";
 import { 
   FaArrowLeft, 
   FaShieldAlt, 
@@ -53,7 +54,7 @@ function ProfileScreen() {
       const data = await response.json();
       if (data.success) {
         setUser(data.data.user);
-        setSafetyScore(95);
+        setSafetyScore(data.data.safety_score || 0);
         const hasDuressTask = data.data.pending_tasks?.some(t => t.id === 'duress_pin');
         setHasDuressPin(!hasDuressTask);
       }
@@ -251,6 +252,7 @@ function ProfileScreen() {
           KIN v1.0.0 • Protecting what matters
         </p>
       </div>
+    <BottomNav activeTab="profile" />
     </div>
   );
 }

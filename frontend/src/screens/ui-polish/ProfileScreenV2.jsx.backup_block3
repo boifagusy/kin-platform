@@ -32,21 +32,22 @@ function ProfileScreenV2() {
           "Accept": "application/json"
         }
       });
-
+      
       if (response.status === 401) {
         handleSignOut();
         return;
       }
 
       const resData = await response.json();
+      alert("API RESPONSE: " + JSON.stringify(resData.data?.user));
       if (resData.success && resData.data) {
         const data = resData.data;
         setUser(data.user);
         setSafetyScore(data.safety_score || 0);
         setScoreLabel(data.score_label || "Good");
-        const hasDuressTask = data.pending_tasks?.some(t => t.id === 'duress_pin');
+                const hasDuressTask = data.pending_tasks?.some(t => t.id === 'duress_pin');
         setHasDuressPin(!hasDuressTask);
-        setContactsCount(data.user?.contacts_count || 0);
+        setContactsCount(data.user?.contacts_count || 0); 
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -86,16 +87,15 @@ function ProfileScreenV2() {
             <FaArrowLeft className="text-[#1A5632]" />
           </button>
           <h1 className="text-lg font-bold text-[#1A1A1A]">Profile</h1>
-          <div className="w-10" />
+          <div className="w-10" /> 
         </div>
       </div>
 
       <div className="px-4 py-6 space-y-5 max-w-md mx-auto">
         {/* Premium Profile Card */}
         <div className="relative bg-white rounded-3xl p-6 shadow-lg shadow-[#1A5632]/5 border border-white overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-[#1A5632]/5 rounded-full blur-2xl -mr-10 -mt-10" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#D4A017]/5 rounded-full blur-2xl -ml-10 -mb-10" />
-
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[#1A5632]/5 rounded-full blur-2xl -mr-10 -mt-10" />          <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#D4A017]/5 rounded-full blur-2xl -ml-10 -mb-10" />
+          
           <div className="relative flex flex-col items-center">
             <div className="relative">
               <div className="w-28 h-28 rounded-full bg-gradient-to-br from-[#1A5632] to-[#0E3A22] flex items-center justify-center text-white text-4xl font-bold shadow-lg ring-4 ring-white">
@@ -107,10 +107,10 @@ function ProfileScreenV2() {
                 </svg>
               </div>
             </div>
-
+            
             <h2 className="text-2xl font-bold text-[#1A1A1A] mt-4 tracking-tight">{userName}</h2>
             <p className="text-sm text-[#6C757D] mt-1">{user?.phone || phone}</p>
-
+            
             <div className={`mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-full border ${scoreBg}`}>
               <FaShieldAlt className={`${scoreColor} text-sm`} />
               <span className={`text-sm font-bold ${scoreColor}`}>{safetyScore}%</span>
@@ -143,9 +143,8 @@ function ProfileScreenV2() {
 
         {/* Settings Sections */}
         <div className="space-y-2">
-          <h3 className="text-xs font-bold text-[#6C757D] uppercase tracking-wider px-2 mb-2">Security & Safety</h3>
-          <div className="bg-white rounded-2xl shadow-sm border border-[#E9ECEF]/50 overflow-hidden divide-y divide-[#E9ECEF]/50">
-
+          <h3 className="text-xs font-bold text-[#6C757D] uppercase tracking-wider px-2 mb-2">Security & Safety</h3>          <div className="bg-white rounded-2xl shadow-sm border border-[#E9ECEF]/50 overflow-hidden divide-y divide-[#E9ECEF]/50">
+            
             <button onClick={() => navigate("/forgot-pin")} className="w-full flex items-center justify-between p-4 active:bg-[#F4F9F5] transition text-left">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center">
@@ -165,20 +164,6 @@ function ProfileScreenV2() {
                   <span className="text-sm font-medium text-[#1A1A1A]">Duress PIN</span>
                   <p className="text-xs text-[#6C757D]">{hasDuressPin ? "Configured" : "Not set"}</p>
                 </div>
-              </div>
-              <FaChevronRight className="text-[#C8D1CB] text-sm" />
-            </button>
-
-            {/* ✅ NEW: Safety Settings Button */}
-            <button
-              onClick={() => navigate("/safety-settings", { state: { phone } })}
-              className="w-full flex items-center justify-between p-4 active:bg-[#F4F9F5] transition text-left"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center">
-                  <FaShieldAlt className="text-teal-600 text-sm" />
-                </div>
-                <span className="text-sm font-medium text-[#1A1A1A]">Safety Settings</span>
               </div>
               <FaChevronRight className="text-[#C8D1CB] text-sm" />
             </button>
@@ -207,7 +192,6 @@ function ProfileScreenV2() {
             </button>
           </div>
         </div>
-
         {/* Sign Out */}
         <button
           onClick={handleSignOut}

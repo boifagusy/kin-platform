@@ -1,0 +1,189 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+
+// Import with error handling
+let useUserPreference = () => ({ 
+  preferences: {}, 
+  loading: false, 
+  update: async () => {}, 
+  error: null 
+});
+
+try {
+  const hook = require('../../hooks/useUserPreference');
+  useUserPreference = hook.useUserPreference || hook.default || (() => ({}));
+} catch (e) {
+  console.error('Failed to load useUserPreference:', e);
+}
+
+// Simple fallback toggle
+const SettingToggle = ({ label, description, value, onChange }) => {
+  return (
+    <div className="flex items-center justify-between py-4 border-b border-[#E9ECEF] last:border-0">
+      <div className="flex-1 pr-4">
+        <p className="text-sm font-medium text-[#1A1A1A]">{label}</p>
+        {description && (
+          <p className="text-xs text-[#6C757D] mt-0.5">{description}</p>
+        )}
+      </div>
+      <button
+        onClick={() => onChange(!value)}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
+          value ? 'bg-[#1A5632]' : 'bg-[#CED4DA]'
+        }`}
+        role="switch"
+      >
+        <span
+          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
+            value ? 'translate-x-6' : 'translate-x-0.5'
+          }`}
+        />
+      </button>
+    </div>
+  );
+};
+
+const SettingSection = ({ title, description, children }) => {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-[#E9ECEF] overflow-hidden">
+      <div className="px-4 py-3 border-b border-[#E9ECEF]">
+        <h3 className="text-sm font-semibold text-[#1A1A1A]">{title}</h3>
+        {description && (
+          <p className="text-xs text-[#6C757D] mt-0.5">{description}</p>
+        )}
+      </div>
+      <div className="px-4">{children}</div>
+    </div>
+  );
+};
+
+const SafetySettingsScreen = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const phone = location.state?.phone || localStorage.getItem('kin_phone') || '';
+
+  // Use the hook safely
+  let preferences = {};
+  let loading = false;
+  let update = async () => {};
+  let error = null;
+
+  try {
+    const result = useUserPreference();
+    preferences = result.preferences || {};
+    loading = result.loading || false;
+    update = result.update || (async () => {});
+    error = result.error || null;
+  } catch (e) {
+    error = e.message;
+    console.error('Hook error:', e);
+  }
+
+  const [saving, setSaving] = useState({});
+
+  const handleToggle = async (category, key, value) => {
+    const updateKey = `${category}.${key}`;
+    setSaving(prev => ({ ...prev, [updateKey]: true }));
+    try {
+      await update(category, { [key]: value });
+    } catch (err) {
+      console.error('Failed to update preference:', err);
+    } finally {
+      setSaving(prev => ({ ...prev, [updateKey]: false }));
+    }
+  };
+
+  const getValue = (category, key) => {
+    return preferences?.[category]?.[key];
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F0F7F2] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-10 h-10 border-3 border-[#1A5632] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-[#1A5632] text-sm">Loading settings...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#F0F7F2] pb-20">
+      {/* Header */}
+      <div className="bg-white px-5 py-4 border-b border-[#E9ECEF] sticky top-0 z-10 flex items-center gap-4">
+        <button onClick={() => navigate(-1)} className="text-[#1A5632] text-xl">
+          ←
+        </button>
+        <h1 className="text-lg font-bold text-[#1A5632]">Safety Settings</h1>
+      </div>
+
+      <div className="px-5 py-6 max-w-md mx-auto space-y-6">
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+            <p className="text-sm text-red-600">⚠️ Error: {error}</p>
+          </div>
+        )}
+
+        <SettingSection title="Safety" description="Manage your safety monitoring preferences">
+          <SettingToggle
+            label="Safety Monitoring"
+            description="Enable or disable all safety monitoring features"
+            value={getValue('safety', 'monitoring') ?? true}
+            onChange={(val) => handleToggle('safety', 'monitoring', val)}
+          />
+          <SettingToggle
+            label="Background Monitoring"
+            description="Keep monitoring active in the background"
+            value={getValue('safety', 'background_service') ?? true}
+            onChange={(val) => handleToggle('safety', 'background_service', val)}
+          />
+          <SettingToggle
+            label="Location Tracking"
+            description="Share your location during monitoring"
+            value={getValue('safety', 'location_tracking') ?? true}
+            onChange={(val) => handleToggle('safety', 'location_tracking', val)}
+          />
+        </SettingSection>
+
+        <SettingSection title="Emergency" description="Configure emergency response settings">
+          <SettingToggle
+            label="SOS Power Button"
+            description="Enable SOS by pressing the power button quickly"
+            value={getValue('safety', 'sos_power_button') ?? false}
+            onChange={(val) => handleToggle('safety', 'sos_power_button', val)}
+          />
+          <SettingToggle
+            label="Battery Optimization"
+            description="Prevent Android from optimizing battery"
+            value={getValue('safety', 'battery_optimization') ?? false}
+            onChange={(val) => handleToggle('safety', 'battery_optimization', val)}
+          />
+        </SettingSection>
+
+        <SettingSection title="Notifications" description="Control how you receive alerts">
+          <SettingToggle
+            label="Sound"
+            description="Play sound for notifications"
+            value={getValue('notifications', 'sound') ?? true}
+            onChange={(val) => handleToggle('notifications', 'sound', val)}
+          />
+          <SettingToggle
+            label="Vibration"
+            description="Vibrate for notifications"
+            value={getValue('notifications', 'vibration') ?? true}
+            onChange={(val) => handleToggle('notifications', 'vibration', val)}
+          />
+          <SettingToggle
+            label="Reminder Alerts"
+            description="Receive reminders for check-ins"
+            value={getValue('notifications', 'reminders') ?? true}
+            onChange={(val) => handleToggle('notifications', 'reminders', val)}
+          />
+        </SettingSection>
+      </div>
+    </div>
+  );
+};
+
+export default SafetySettingsScreen;

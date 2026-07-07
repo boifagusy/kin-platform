@@ -1,6 +1,6 @@
 import { FaBell } from "react-icons/fa";
 
-function HeaderV2({ greeting, userName }) {
+function HeaderV2({ greeting, userName, onBellClick, unreadCount = 0 }) {
   // Extract just the first name (e.g., "John Doe" -> "John")
   const firstName = userName ? userName.split(' ')[0] : '';
 
@@ -12,8 +12,16 @@ function HeaderV2({ greeting, userName }) {
           <span className="material-symbols-outlined text-[#1A5632] text-2xl">shield</span>
           <span className="text-lg font-black text-[#1A5632] tracking-[0.15em]">KIN</span>
         </div>
-        <button className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#F0F7F2] transition-colors">
+        <button
+          onClick={onBellClick}
+          className="relative w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#F0F7F2] transition-colors"
+        >
           <FaBell className="text-[#1A5632] text-lg" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
         </button>
       </div>
 

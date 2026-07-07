@@ -12,6 +12,7 @@ import SetupCard from "../../components/dashboard/SetupCard";
 import EmergencyModal from "../../components/dashboard/EmergencyModal";
 import BottomNav from "../../components/dashboard/BottomNav";
 import { getCurrentLocation, getBatteryLevel } from "../../utils/location";
+import KinSafety from "../../capacitor/kin-safety";
 import { startNotificationChecker, stopNotificationChecker, scheduleSOSNotification } from "../../services/notificationService";
 import { enqueue, retryQueue } from "../../services/offlineQueueService";
 
@@ -28,6 +29,16 @@ function DashboardScreenV2() {
   const [showAssistanceOptions, setShowAssistanceOptions] = useState(false);
   const [showEmergencyConfirm, setShowEmergencyConfirm] = useState(false);
   const [offline, setOffline] = useState(!navigator.onLine);
+  const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
+
+  useEffect(() => {
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: "geolocation" }).then((result) => {
+        setLocationPermissionGranted(result.state === "granted");
+        result.onchange = () => setLocationPermissionGranted(result.state === "granted");
+      }).catch(() => setLocationPermissionGranted(false));
+    }
+  }, []);
   const [activeTab, setActiveTab] = useState("home");
 
   // Trusted Contact handlers
@@ -71,8 +82,8 @@ function DashboardScreenV2() {
         });
         const data = await res.json();
         if (data.success) setDashboard(data);
-        // Clear onboarding draft
-        clearDraft();
+    // Clear onboarding draft
+    clearDraft();
       } catch (err) {
         console.error(err);
       } finally {
@@ -92,7 +103,7 @@ function DashboardScreenV2() {
   }, [phone, navigate]);
 
   const tasks = dashboard?.pending_tasks || [];
-  const locationEnabled = !tasks.find(t => t.id === "location");
+  const locationEnabled = locationPermissionGranted;
   const homeZoneAdded = !tasks.find(t => t.id === "safe_zones");
   const duressPinCreated = !tasks.find(t => t.id === "duress_pin");
 
@@ -116,32 +127,12 @@ function DashboardScreenV2() {
   const safeZones = dashboard?.safe_zones || [];
   const recentCheckIn = dashboard?.last_checkin || false;
 
-  // ✅ UPDATED: Safety Status with Emojis and Real Data
   const breakdownItems = [
-    { 
-      label: "📱 Phone Verified", 
-      status: dashboard?.data?.phone_verified || false 
-    },
-    { 
-      label: "🔐 PIN Created", 
-      status: dashboard?.data?.pin_created || false 
-    },
-    { 
-      label: "👤 Trusted Contact", 
-      status: contactsCount > 0 
-    },
-    { 
-      label: "🛡️ Duress PIN", 
-      status: duressPinCreated 
-    },
-    { 
-      label: "📍 Location Enabled", 
-      status: locationEnabled 
-    },
-    { 
-      label: "✅ Recent Check-In", 
-      status: recentCheckIn !== false 
-    },
+    { label: "Location Enabled", status: locationEnabled },
+    { label: "Trusted Contact Added", status: dashboard?.has_verified_contact ?? (contactsCount > 0) },
+    { label: "Safe Zones Added", status: homeZoneAdded },
+    { label: "Duress PIN Created", status: duressPinCreated },
+    { label: "Recent Check-In", status: recentCheckIn !== false },
   ];
 
   const handleSafeCheckInState = () => {
@@ -185,7 +176,11 @@ function DashboardScreenV2() {
       try {
         const response = await fetch(`${API_BASE}/checkin`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("kin_token")}`,
+            "Accept": "application/json",
+          },
           body: JSON.stringify(checkinBody),
         });
 
@@ -221,6 +216,11 @@ function DashboardScreenV2() {
   };
 
   const handleEmergency = () => {
+    const hasContact = dashboard?.has_verified_contact ?? (contactsCount > 0);
+    if (!hasContact) {
+      alert("Add a trusted contact first to enable SOS.");
+      return;
+    }
     setShowEmergencyConfirm(true);
   };
 
@@ -241,12 +241,24 @@ function DashboardScreenV2() {
       console.warn("Battery error:", err);
     }
 
+    // Get device safety context for false-alarm prevention
+    let safetyContext = null;
+    try {
+      safetyContext = await KinSafety.getSafetyStatus();
+    } catch (err) {
+      console.warn("KinSafety unavailable:", err.message);
+    }
+
     const sosBody = {
       phone: phone,
       latitude: locationData?.latitude,
       longitude: locationData?.longitude,
       accuracy: locationData?.accuracy,
-      battery_level: batteryLevel,
+      battery_level: safetyContext?.battery ?? batteryLevel,
+      device_trust: safetyContext?.deviceTrust ?? null,
+      device_fingerprint: safetyContext?.fingerprint ?? null,
+      confidence: safetyContext?.confidence ?? null,
+      network_type: safetyContext?.network ?? null,
     };
 
     // No network at all -- skip the request entirely and queue immediately.
@@ -260,7 +272,11 @@ function DashboardScreenV2() {
     try {
       const response = await fetch(`${API_BASE}/sos`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("kin_token")}`,
+          "Accept": "application/json",
+        },
         body: JSON.stringify(sosBody),
       });
 
@@ -305,7 +321,7 @@ function DashboardScreenV2() {
 
   return (
     <div className="min-h-screen bg-[#F0F7F2] pb-20">
-      <HeaderV2 greeting={greeting} userName={userName} />
+      <HeaderV2 greeting={greeting} userName={userName} onBellClick={() => navigate("/alerts", { state: { phone } })} unreadCount={dashboard?.unread_alerts || 0} />
 
       {offline && (
         <div className="bg-yellow-100 p-3 text-center">
@@ -324,6 +340,8 @@ function DashboardScreenV2() {
           onEmergency={handleEmergency}
           onUpdateStatus={() => setCheckInState("default")}
           loading={checkInLoading}
+          hasTrustedContact={dashboard?.has_verified_contact ?? (contactsCount > 0)}
+          onAddContact={() => navigate("/network", { state: { phone } })}
         />
 
         {showAssistanceOptions && (
@@ -344,7 +362,6 @@ function DashboardScreenV2() {
 
         {tasks.length > 0 && <SetupCard tasks={tasks} />}
 
-        {/* ✅ UPDATED: Safety Status with Emojis */}
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-[#E9ECEF]">
           <h3 className="text-sm font-semibold text-[#1A1A1A] mb-3">Safety Status</h3>
           <div className="space-y-2">
@@ -408,10 +425,10 @@ function DashboardScreenV2() {
         />
       )}
 
-      <BottomNav
-        onSOS={handleEmergency}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
+      <BottomNav 
+        onSOS={handleEmergency} 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
       />
     </div>
   );

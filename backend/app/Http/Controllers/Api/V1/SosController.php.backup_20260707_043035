@@ -108,10 +108,6 @@ class SosController extends Controller
                 'accuracy' => 'nullable|numeric',
                 'battery_level' => 'nullable|integer|min:0|max:100',
                 'is_duress' => 'nullable|boolean',
-                'device_trust' => 'nullable|numeric',
-                'device_fingerprint' => 'nullable|string',
-                'confidence' => 'nullable|numeric',
-                'network_type' => 'nullable|string',
             ]);
 
             // Verify active safety network exists
@@ -142,10 +138,6 @@ class SosController extends Controller
             }
 
             // Create SOS event
-            // Flag suspicious SOS based on device trust
-            $isSuspicious = ($request->device_trust !== null && $request->device_trust < 50) ||
-                            ($request->confidence !== null && $request->confidence < 30);
-
             $sos = SosEvent::create([
                 'user_id' => $user->id,
                 'latitude' => $request->latitude,
@@ -163,17 +155,10 @@ class SosController extends Controller
                 'type' => 'sos',
                 'status' => 'active',
                 'is_duress' => $request->is_duress ?? false,
-                'description' => $request->is_duress
-                    ? 'Duress SOS triggered'
-                    : ($isSuspicious ? 'SOS triggered — low device trust (possible false alarm)' : 'SOS triggered by user'),
+                'description' => $request->is_duress ? 'Duress SOS triggered' : 'SOS triggered by user',
                 'location' => json_encode([
                     'lat' => $request->latitude,
                     'lng' => $request->longitude,
-                    'accuracy' => $request->accuracy,
-                    'network_type' => $request->network_type,
-                    'device_trust' => $request->device_trust,
-                    'device_fingerprint' => $request->device_fingerprint,
-                    'is_suspicious' => $isSuspicious,
                 ]),
                 'confidence_score' => app(SafetyScoreService::class)->getForUser($user),
             ]);

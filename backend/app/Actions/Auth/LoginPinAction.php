@@ -77,6 +77,8 @@ class LoginPinAction
         return [
             'success' => true,
             'user_id' => $user->id,
+            'name' => $user->name,
+            'phone' => $user->phone,
             'onboarding_completed' => $user->onboarding_completed,
             'token' => $token,
             'token_type' => 'Bearer',

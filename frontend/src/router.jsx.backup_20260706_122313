@@ -1,37 +1,19 @@
 import { createBrowserRouter } from 'react-router-dom';
-import SafetySettingsScreen from "../screens/settings/SafetySettingsScreen";
 import App from './App';
-import SafetySettingsScreen from "../screens/settings/SafetySettingsScreen";
 import ProtectedRoute from './components/auth/ProtectedRoute';
-import SafetySettingsScreen from "../screens/settings/SafetySettingsScreen";
 import WelcomeScreenV3 from './screens/ui-polish/WelcomeScreenV3';
-import SafetySettingsScreen from "../screens/settings/SafetySettingsScreen";
 import PhoneEntryScreenV2 from './screens/ui-polish/PhoneEntryScreenV2';
-import SafetySettingsScreen from "../screens/settings/SafetySettingsScreen";
 import CreatePinScreenV2 from './screens/ui-polish/CreatePinScreenV2';
-import SafetySettingsScreen from "../screens/settings/SafetySettingsScreen";
 import LoginPinScreenV2 from './screens/ui-polish/LoginPinScreenV2';
-import SafetySettingsScreen from "../screens/settings/SafetySettingsScreen";
 import UserDetailsScreenV2 from './screens/ui-polish/UserDetailsScreenV2';
-import SafetySettingsScreen from "../screens/settings/SafetySettingsScreen";
 import TrustedContactScreenV2 from './screens/ui-polish/TrustedContactScreenV2';
-import SafetySettingsScreen from "../screens/settings/SafetySettingsScreen";
 import DuressPinSetupScreenV2 from './screens/ui-polish/DuressPinSetupScreenV2';
-import SafetySettingsScreen from "../screens/settings/SafetySettingsScreen";
 import DashboardScreenV2 from './screens/ui-polish/DashboardScreenV2';
-import SafetySettingsScreen from "../screens/settings/SafetySettingsScreen";
 import CheckInSettingsScreen from './screens/settings/CheckInSettingsScreen';
-import SafetySettingsScreen from "../screens/settings/SafetySettingsScreen";
 import ContinueSetupScreen from './screens/onboarding/ContinueSetupScreen';
-import SafetySettingsScreen from "../screens/settings/SafetySettingsScreen";
 import AlertsScreenV2 from './screens/ui-polish/AlertsScreenV2';
-import SafetySettingsScreen from "../screens/settings/SafetySettingsScreen";
 import AlertDetailScreenV2 from './screens/ui-polish/AlertDetailScreenV2';
-import SafetySettingsScreen from "../screens/settings/SafetySettingsScreen";
 import NetworkScreen from './screens/network/NetworkScreen';
-import SafetySettingsScreen from "../screens/settings/SafetySettingsScreen";
-import ProfileScreenV2 from './screens/ui-polish/ProfileScreenV2';
-import SafetySettingsScreen from "../screens/settings/SafetySettingsScreen";
 
 const router = createBrowserRouter([
     {
@@ -64,13 +46,7 @@ const router = createBrowserRouter([
                 element: <ProtectedRoute><NetworkScreen /></ProtectedRoute>
             },
             {
-                path: 'profile',
-                element: <ProtectedRoute><ProfileScreenV2 /></ProtectedRoute>
-            },
-            {
                 path: 'settings/check-in',
-            { path: "safety-settings", element: <SafetySettingsScreen /> },
-            { path: "safety-settings", element: <SafetySettingsScreen /> },
                 element: <ProtectedRoute><CheckInSettingsScreen /></ProtectedRoute>
             },
             {

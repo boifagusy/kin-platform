@@ -3,7 +3,6 @@ import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import SafetySettingsScreen from "./screens/settings/SafetySettingsScreen";
 import { ConnectivityProvider } from './foundation/context/ConnectivityContext';
-<Route path="/safety-settings" element={<SafetySettingsScreen />} />
 import { UserPreferenceProvider } from './context/UserPreferenceContext';
 // ... existing imports
 

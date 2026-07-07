@@ -12,6 +12,7 @@ import SetupCard from "../../components/dashboard/SetupCard";
 import EmergencyModal from "../../components/dashboard/EmergencyModal";
 import BottomNav from "../../components/dashboard/BottomNav";
 import { getCurrentLocation, getBatteryLevel } from "../../utils/location";
+import KinSafety from "../../capacitor/kin-safety";
 import { startNotificationChecker, stopNotificationChecker, scheduleSOSNotification } from "../../services/notificationService";
 import { enqueue, retryQueue } from "../../services/offlineQueueService";
 
@@ -29,6 +30,55 @@ function DashboardScreenV2() {
   const [showEmergencyConfirm, setShowEmergencyConfirm] = useState(false);
   const [offline, setOffline] = useState(!navigator.onLine);
   const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
+  const [showAddZoneModal, setShowAddZoneModal] = useState(false);
+  const [zoneName, setZoneName] = useState("");
+  const [zoneAddress, setZoneAddress] = useState("");
+  const [zoneSaving, setZoneSaving] = useState(false);
+  const [zoneError, setZoneError] = useState("");
+
+  const handleTaskClick = (task) => {
+    if (task.id === "safe_zones") {
+      setShowAddZoneModal(true);
+    } else if (task.id === "trusted_contact") {
+      navigate("/network", { state: { phone } });
+    } else if (task.id === "duress_pin") {
+      navigate("/settings/duress-pin", { state: { phone } });
+    }
+  };
+
+  const handleAddZone = async () => {
+    if (!zoneName.trim() || zoneSaving) return;
+    setZoneSaving(true);
+    setZoneError("");
+    try {
+      const response = await fetch(`${API_BASE}/safe-zones`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("kin_token")}`,
+          "Accept": "application/json",
+        },
+        body: JSON.stringify({ name: zoneName, address: zoneAddress || null }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setShowAddZoneModal(false);
+        setZoneName("");
+        setZoneAddress("");
+        const refreshRes = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)}`, {
+          headers: { "Authorization": `Bearer ${localStorage.getItem("kin_token")}`, "Accept": "application/json" },
+        });
+        const refreshData = await refreshRes.json();
+        if (refreshData.success) setDashboard(refreshData.data);
+      } else {
+        setZoneError(data.error || "Failed to add safe zone");
+      }
+    } catch (err) {
+      setZoneError("Could not reach the server.");
+    } finally {
+      setZoneSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (navigator.permissions && navigator.permissions.query) {
@@ -240,12 +290,24 @@ function DashboardScreenV2() {
       console.warn("Battery error:", err);
     }
 
+    // Get device safety context for false-alarm prevention
+    let safetyContext = null;
+    try {
+      safetyContext = await KinSafety.getSafetyStatus();
+    } catch (err) {
+      console.warn("KinSafety unavailable:", err.message);
+    }
+
     const sosBody = {
       phone: phone,
       latitude: locationData?.latitude,
       longitude: locationData?.longitude,
       accuracy: locationData?.accuracy,
-      battery_level: batteryLevel,
+      battery_level: safetyContext?.battery ?? batteryLevel,
+      device_trust: safetyContext?.deviceTrust ?? null,
+      device_fingerprint: safetyContext?.fingerprint ?? null,
+      confidence: safetyContext?.confidence ?? null,
+      network_type: safetyContext?.network ?? null,
     };
 
     // No network at all -- skip the request entirely and queue immediately.
@@ -308,7 +370,7 @@ function DashboardScreenV2() {
 
   return (
     <div className="min-h-screen bg-[#F0F7F2] pb-20">
-      <HeaderV2 greeting={greeting} userName={userName} />
+      <HeaderV2 greeting={greeting} userName={userName} onBellClick={() => navigate("/alerts", { state: { phone } })} unreadCount={dashboard?.unread_alerts || 0} />
 
       {offline && (
         <div className="bg-yellow-100 p-3 text-center">
@@ -347,7 +409,7 @@ function DashboardScreenV2() {
           onReplace={handleReplaceContact}
         />
 
-        {tasks.length > 0 && <SetupCard tasks={tasks} />}
+        {tasks.length > 0 && <SetupCard tasks={tasks} onTaskClick={handleTaskClick} />}
 
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-[#E9ECEF]">
           <h3 className="text-sm font-semibold text-[#1A1A1A] mb-3">Safety Status</h3>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import BottomNav from "../../components/dashboard/BottomNav";
 import { FaArrowLeft, FaUserCircle, FaShareAlt, FaSync, FaTrash, FaClock, FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
 
 const API_BASE = import.meta.env.VITE_API_URL;
@@ -442,6 +443,7 @@ Thanks for helping keep ${userName} safe.
           </div>
         </div>
       )}
+    <BottomNav activeTab="network" />
     </div>
   );
 }
