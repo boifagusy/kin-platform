@@ -62,7 +62,7 @@ class UserPreferenceService
             $result[$category] = [];
             foreach ($keys as $key => $config) {
                 $pref = $preferences->firstWhere(function ($p) use ($category, $key) {
-                    return $p->category === $category && $p->preference_key === $key;
+                    return $p->category === $category && $p->key === $key;
                 });
                 $result[$category][$key] = $pref ? $pref->typed_value : $config['default'];
             }
@@ -75,7 +75,7 @@ class UserPreferenceService
     {
         $preference = UserPreference::where('user_id', $user->id)
             ->where('category', $category)
-            ->where('preference_key', $key)
+            ->where('key', $key)
             ->first();
 
         if ($preference) {
@@ -94,7 +94,7 @@ class UserPreferenceService
             [
                 'user_id' => $user->id,
                 'category' => $category,
-                'preference_key' => $key,
+                'key' => $key,
             ],
             [
                 'value_type' => $type,
@@ -114,7 +114,7 @@ class UserPreferenceService
     {
         UserPreference::where('user_id', $user->id)
             ->where('category', $category)
-            ->where('preference_key', $key)
+            ->where('key', $key)
             ->delete();
     }
 

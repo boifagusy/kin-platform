@@ -12,7 +12,7 @@ class UserPreference extends Model
     protected $fillable = [
         'user_id',
         'category',
-        'preference_key',
+        'key',           // matches the table column
         'value_type',
         'value',
     ];

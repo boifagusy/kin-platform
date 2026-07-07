@@ -151,19 +151,6 @@ function ProfileScreen() {
               </div>
               <FaChevronRight className="text-gray-400 text-sm" />
             </button>
-
-            <button
-              onClick={() => navigate("/safety-settings", { state: { phone } })}
-              className="w-full flex items-center justify-between p-4 active:bg-[#F4F9F5] transition text-left"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center">
-                  <FaShieldAlt className="text-teal-600 text-sm" />
-                </div>
-                <span className="text-sm font-medium text-[#1A1A1A]">Safety Settings</span>
-              </div>
-              <FaChevronRight className="text-[#C8D1CB] text-sm" />
-            </button>
             
             <button 
               onClick={() => navigate("/settings/duress-pin", { state: { phone } })}

@@ -1,27 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useUserPreference } from '../../hooks/useUserPreference';
 
-// Fallback if hook fails
-const useSafeUserPreference = () => {
-  try {
-    return useUserPreference();
-  } catch (e) {
-    console.error('Hook error:', e);
-    return {
-      preferences: {},
-      loading: false,
-      update: async () => {},
-      error: e.message || 'Hook failed'
-    };
-  }
-};
+// Import with error handling
+let useUserPreference = () => ({ 
+  preferences: {}, 
+  loading: false, 
+  update: async () => {}, 
+  error: null 
+});
 
+try {
+  const hook = require('../../hooks/useUserPreference');
+  useUserPreference = hook.useUserPreference || hook.default || (() => ({}));
+} catch (e) {
+  console.error('Failed to load useUserPreference:', e);
+}
+
+// Controlled toggle with visual feedback
 const SettingToggle = ({ label, description, value, onChange }) => {
   const [loading, setLoading] = useState(false);
 
+  // Debug: show current value
+  console.log(`🔍 Toggle ${label}: value = ${value}`);
+
   const handleClick = async () => {
-    if (loading) return;
+
+
     setLoading(true);
     try {
       await onChange(!value);
@@ -40,21 +44,35 @@ const SettingToggle = ({ label, description, value, onChange }) => {
           <p className="text-xs text-[#6C757D] mt-0.5">{description}</p>
         )}
       </div>
-      <button
-        onClick={handleClick}
-        disabled={loading}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-          value ? 'bg-[#1A5632]' : 'bg-[#CED4DA]'
-        } ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-        role="switch"
-        aria-checked={value}
-      >
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => {
+  console.log('👆 Button clicked');
+  handleClick();
+}}
+          disabled={loading}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
+            value ? 'bg-[#1A5632]' : 'bg-[#CED4DA]'
+          } ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+          role="switch"
+          aria-checked={value}
+        >
         <span
           className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
-            value ? 'translate-x-6' : 'translate-x-0'
+            value ? 'translate-x-20' : 'translate-x-0'
           }`}
+          onClick={() => {
+            console.log('🔍 SLIDER: value =', value);
+            console.log('🔍 SLIDER: class =', value ? 'translate-x-20' : 'translate-x-0');
+          }}
         />
-      </button>
+        {loading && (
+          <span className="absolute inset-0 flex items-center justify-center">
+            <span className="h-3 w-3 rounded-full border-2 border-white border-t-transparent animate-spin" />
+          </span>
+        )}
+        </button>
+      </div>
     </div>
   );
 };
@@ -78,13 +96,43 @@ const SafetySettingsScreen = () => {
   const location = useLocation();
   const phone = location.state?.phone || localStorage.getItem('kin_phone') || '';
 
-  // Use the safe hook
-  const { preferences, loading, update, error } = useSafeUserPreference();
+  // Use the hook safely
+  let preferences = {};
+  let loading = false;
+  let update = async () => {};
+  let error = null;
 
+  try {
+    const result = useUserPreference();
+    preferences = result.preferences || {};
+    loading = result.loading || false;
+    update = result.update || (async () => {});
+    error = result.error || null;
+  } catch (e) {
+    error = e.message;
+    console.error('Hook error:', e);
+  }
+
+  const [saving, setSaving] = useState({});
+  // Local state for immediate visual feedback
+  const [localToggles, setLocalToggles] = useState({});
+
+  // Sync local toggles when preferences load
+  useEffect(() => {
+    if (preferences) {
+      setLocalToggles(preferences);
+    }
+  }, [preferences]);
+
+  const getToggleValue = (category, key) => {
+    return localToggles?.[category]?.[key] ?? preferences?.[category]?.[key] ?? true;
+  };
+  // Local copy of toggle states for immediate visual feedback
   const [localValues, setLocalValues] = useState({});
 
+  // Sync local values when preferences load
   useEffect(() => {
-    if (preferences && Object.keys(preferences).length > 0) {
+    if (preferences) {
       setLocalValues(preferences);
     }
   }, [preferences]);
@@ -94,26 +142,50 @@ const SafetySettingsScreen = () => {
   };
 
   const handleToggle = async (category, key, value) => {
+  console.log('🔄 Toggle clicked:', category, key, value);
+    console.log('🔄 Toggle clicked:', category, key, value);
+    
+    // Update local state IMMEDIATELY for visual feedback
     setLocalValues(prev => ({
       ...prev,
-      [category]: { ...prev?.[category], [key]: value }
-    }));
-
-    try {
-      const result = await update(category, { [key]: value });
-      if (!result?.success) {
-        setLocalValues(prev => ({
-          ...prev,
-          [category]: { ...prev?.[category], [key]: !value }
-        }));
+      [category]: {
+        ...prev?.[category],
+        [key]: value
       }
-    } catch (err) {
+    }));
+    
+    const updateKey = `${category}.${key}`;
+    setSaving(prev => ({ ...prev, [updateKey]: true }));
+    try {
+      console.log('📤 Updating:', category, key, value);
+      const result = await update(category, { [key]: value });
+      console.log('📥 Result:', result);
+      console.log('✅ Update successful');
+      // Sync local with server response
       setLocalValues(prev => ({
         ...prev,
-        [category]: { ...prev?.[category], [key]: !value }
+        [category]: {
+          ...prev?.[category],
+          [key]: value
+        }
       }));
-      console.error('Update failed:', err);
+    } catch (err) {
+      console.error('❌ Failed:', err);
+      // Rollback on error
+      setLocalValues(prev => ({
+        ...prev,
+        [category]: {
+          ...prev?.[category],
+          [key]: !value
+        }
+      }));
+    } finally {
+      setSaving(prev => ({ ...prev, [updateKey]: false }));
     }
+  };
+
+  const getValue = (category, key) => {
+    return preferences?.[category]?.[key];
   };
 
   if (loading) {
@@ -129,15 +201,18 @@ const SafetySettingsScreen = () => {
 
   return (
     <div className="min-h-screen bg-[#F0F7F2] pb-20">
+      {/* Header */}
       <div className="bg-white px-5 py-4 border-b border-[#E9ECEF] sticky top-0 z-10 flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="text-[#1A5632] text-xl">←</button>
+        <button onClick={() => navigate(-1)} className="text-[#1A5632] text-xl">
+          ←
+        </button>
         <h1 className="text-lg font-bold text-[#1A5632]">Safety Settings</h1>
       </div>
 
       <div className="px-5 py-6 max-w-md mx-auto space-y-6">
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
-            <p className="text-sm text-red-600">⚠️ {error}</p>
+            <p className="text-sm text-red-600">⚠️ Error: {error}</p>
           </div>
         )}
 

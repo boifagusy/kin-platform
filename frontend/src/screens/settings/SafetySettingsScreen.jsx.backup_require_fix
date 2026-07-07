@@ -1,22 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useUserPreference } from '../../hooks/useUserPreference';
 
-// Fallback if hook fails
-const useSafeUserPreference = () => {
-  try {
-    return useUserPreference();
-  } catch (e) {
-    console.error('Hook error:', e);
-    return {
-      preferences: {},
-      loading: false,
-      update: async () => {},
-      error: e.message || 'Hook failed'
-    };
-  }
-};
-
+// Simple, working toggle
 const SettingToggle = ({ label, description, value, onChange }) => {
   const [loading, setLoading] = useState(false);
 
@@ -78,11 +63,28 @@ const SafetySettingsScreen = () => {
   const location = useLocation();
   const phone = location.state?.phone || localStorage.getItem('kin_phone') || '';
 
-  // Use the safe hook
-  const { preferences, loading, update, error } = useSafeUserPreference();
+  // Use the hook safely
+  let preferences = {};
+  let loading = false;
+  let update = async () => {};
+  let error = null;
 
+  try {
+    const hook = require('../../hooks/useUserPreference');
+    const result = hook.useUserPreference ? hook.useUserPreference() : {};
+    preferences = result.preferences || {};
+    loading = result.loading || false;
+    update = result.update || (async () => {});
+    error = result.error || null;
+  } catch (e) {
+    error = e.message;
+    console.error('Hook error:', e);
+  }
+
+  // Local state for immediate visual feedback
   const [localValues, setLocalValues] = useState({});
 
+  // Sync local values when preferences load
   useEffect(() => {
     if (preferences && Object.keys(preferences).length > 0) {
       setLocalValues(preferences);
@@ -90,29 +92,44 @@ const SafetySettingsScreen = () => {
   }, [preferences]);
 
   const getLocalValue = (category, key) => {
-    return localValues?.[category]?.[key] ?? preferences?.[category]?.[key] ?? true;
+    const val = localValues?.[category]?.[key];
+    const prefVal = preferences?.[category]?.[key];
+    return val !== undefined ? val : prefVal !== undefined ? prefVal : true;
   };
 
   const handleToggle = async (category, key, value) => {
+    // Update local state immediately for visual feedback
     setLocalValues(prev => ({
       ...prev,
-      [category]: { ...prev?.[category], [key]: value }
+      [category]: {
+        ...prev?.[category],
+        [key]: value
+      }
     }));
 
     try {
       const result = await update(category, { [key]: value });
-      if (!result?.success) {
+      // After successful API call, update local state again with the result
+      if (result && result.success) {
+        // Already updated via the context's state, but keep local in sync
         setLocalValues(prev => ({
           ...prev,
-          [category]: { ...prev?.[category], [key]: !value }
+          [category]: {
+            ...prev?.[category],
+            [key]: value
+          }
         }));
       }
     } catch (err) {
+      // Rollback on error
+      console.error('❌ Failed to update:', err);
       setLocalValues(prev => ({
         ...prev,
-        [category]: { ...prev?.[category], [key]: !value }
+        [category]: {
+          ...prev?.[category],
+          [key]: !value
+        }
       }));
-      console.error('Update failed:', err);
     }
   };
 
@@ -129,15 +146,18 @@ const SafetySettingsScreen = () => {
 
   return (
     <div className="min-h-screen bg-[#F0F7F2] pb-20">
+      {/* Header */}
       <div className="bg-white px-5 py-4 border-b border-[#E9ECEF] sticky top-0 z-10 flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="text-[#1A5632] text-xl">←</button>
+        <button onClick={() => navigate(-1)} className="text-[#1A5632] text-xl">
+          ←
+        </button>
         <h1 className="text-lg font-bold text-[#1A5632]">Safety Settings</h1>
       </div>
 
       <div className="px-5 py-6 max-w-md mx-auto space-y-6">
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
-            <p className="text-sm text-red-600">⚠️ {error}</p>
+            <p className="text-sm text-red-600">⚠️ Error: {error}</p>
           </div>
         )}
 

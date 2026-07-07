@@ -1,37 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from 'react-router-dom';
+// KIN OS — Safety Settings Screen
+// Status: Production Foundation
+// Purpose: User preferences for safety features
+
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useUserPreference } from '../../hooks/useUserPreference';
 
-// Fallback if hook fails
-const useSafeUserPreference = () => {
-  try {
-    return useUserPreference();
-  } catch (e) {
-    console.error('Hook error:', e);
-    return {
-      preferences: {},
-      loading: false,
-      update: async () => {},
-      error: e.message || 'Hook failed'
-    };
-  }
-};
-
-const SettingToggle = ({ label, description, value, onChange }) => {
-  const [loading, setLoading] = useState(false);
-
-  const handleClick = async () => {
-    if (loading) return;
-    setLoading(true);
-    try {
-      await onChange(!value);
-    } catch (err) {
-      console.error('Toggle failed:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+const SettingToggle = ({ label, description, value, onChange, loading }) => {
   return (
     <div className="flex items-center justify-between py-4 border-b border-[#E9ECEF] last:border-0">
       <div className="flex-1 pr-4">
@@ -41,7 +16,7 @@ const SettingToggle = ({ label, description, value, onChange }) => {
         )}
       </div>
       <button
-        onClick={handleClick}
+        onClick={() => !loading && onChange(!value)}
         disabled={loading}
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
           value ? 'bg-[#1A5632]' : 'bg-[#CED4DA]'
@@ -51,9 +26,14 @@ const SettingToggle = ({ label, description, value, onChange }) => {
       >
         <span
           className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
-            value ? 'translate-x-6' : 'translate-x-0'
+            value ? 'translate-x-6' : 'translate-x-0.5'
           }`}
         />
+        {loading && (
+          <span className="absolute inset-0 flex items-center justify-center">
+            <span className="h-3 w-3 rounded-full border-2 border-white border-t-transparent animate-spin" />
+          </span>
+        )}
       </button>
     </div>
   );
@@ -75,45 +55,27 @@ const SettingSection = ({ title, description, children }) => {
 
 const SafetySettingsScreen = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const phone = location.state?.phone || localStorage.getItem('kin_phone') || '';
-
-  // Use the safe hook
-  const { preferences, loading, update, error } = useSafeUserPreference();
-
-  const [localValues, setLocalValues] = useState({});
-
-  useEffect(() => {
-    if (preferences && Object.keys(preferences).length > 0) {
-      setLocalValues(preferences);
-    }
-  }, [preferences]);
-
-  const getLocalValue = (category, key) => {
-    return localValues?.[category]?.[key] ?? preferences?.[category]?.[key] ?? true;
-  };
+  const { preferences, loading, update, error } = useUserPreference();
+  const [saving, setSaving] = useState({});
 
   const handleToggle = async (category, key, value) => {
-    setLocalValues(prev => ({
-      ...prev,
-      [category]: { ...prev?.[category], [key]: value }
-    }));
-
+    const updateKey = `${category}.${key}`;
+    setSaving(prev => ({ ...prev, [updateKey]: true }));
     try {
-      const result = await update(category, { [key]: value });
-      if (!result?.success) {
-        setLocalValues(prev => ({
-          ...prev,
-          [category]: { ...prev?.[category], [key]: !value }
-        }));
-      }
+      await update(category, { [key]: value });
     } catch (err) {
-      setLocalValues(prev => ({
-        ...prev,
-        [category]: { ...prev?.[category], [key]: !value }
-      }));
-      console.error('Update failed:', err);
+      console.error('Failed to update preference:', err);
+    } finally {
+      setSaving(prev => ({ ...prev, [updateKey]: false }));
     }
+  };
+
+  const getValue = (category, key) => {
+    return preferences?.[category]?.[key];
+  };
+
+  const isSaving = (category, key) => {
+    return saving[`${category}.${key}`] || false;
   };
 
   if (loading) {
@@ -129,8 +91,11 @@ const SafetySettingsScreen = () => {
 
   return (
     <div className="min-h-screen bg-[#F0F7F2] pb-20">
+      {/* Header */}
       <div className="bg-white px-5 py-4 border-b border-[#E9ECEF] sticky top-0 z-10 flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="text-[#1A5632] text-xl">←</button>
+        <button onClick={() => navigate(-1)} className="text-[#1A5632] text-xl">
+          ←
+        </button>
         <h1 className="text-lg font-bold text-[#1A5632]">Safety Settings</h1>
       </div>
 
@@ -141,60 +106,93 @@ const SafetySettingsScreen = () => {
           </div>
         )}
 
+        {/* Safety Section */}
         <SettingSection title="Safety" description="Manage your safety monitoring preferences">
           <SettingToggle
             label="Safety Monitoring"
             description="Enable or disable all safety monitoring features"
-            value={getLocalValue('safety', 'monitoring') ?? true}
+            value={getValue('safety', 'monitoring') ?? true}
             onChange={(val) => handleToggle('safety', 'monitoring', val)}
+            loading={isSaving('safety', 'monitoring')}
           />
           <SettingToggle
             label="Background Monitoring"
-            description="Keep monitoring active in the background"
-            value={getLocalValue('safety', 'background_service') ?? true}
+            description="Keep monitoring active even when the app is in the background"
+            value={getValue('safety', 'background_service') ?? true}
             onChange={(val) => handleToggle('safety', 'background_service', val)}
+            loading={isSaving('safety', 'background_service')}
           />
           <SettingToggle
             label="Location Tracking"
             description="Share your location during monitoring"
-            value={getLocalValue('safety', 'location_tracking') ?? true}
+            value={getValue('safety', 'location_tracking') ?? true}
             onChange={(val) => handleToggle('safety', 'location_tracking', val)}
+            loading={isSaving('safety', 'location_tracking')}
           />
         </SettingSection>
 
+        {/* Emergency Section */}
         <SettingSection title="Emergency" description="Configure emergency response settings">
           <SettingToggle
             label="SOS Power Button"
             description="Enable SOS by pressing the power button quickly"
-            value={getLocalValue('safety', 'sos_power_button') ?? false}
+            value={getValue('safety', 'sos_power_button') ?? false}
             onChange={(val) => handleToggle('safety', 'sos_power_button', val)}
+            loading={isSaving('safety', 'sos_power_button')}
           />
           <SettingToggle
             label="Battery Optimization"
-            description="Prevent Android from optimizing battery"
-            value={getLocalValue('safety', 'battery_optimization') ?? false}
+            description="Prevent Android from optimizing battery for safety monitoring"
+            value={getValue('safety', 'battery_optimization') ?? false}
             onChange={(val) => handleToggle('safety', 'battery_optimization', val)}
+            loading={isSaving('safety', 'battery_optimization')}
           />
         </SettingSection>
 
+        {/* Notifications Section */}
         <SettingSection title="Notifications" description="Control how you receive alerts">
           <SettingToggle
             label="Sound"
             description="Play sound for notifications"
-            value={getLocalValue('notifications', 'sound') ?? true}
+            value={getValue('notifications', 'sound') ?? true}
             onChange={(val) => handleToggle('notifications', 'sound', val)}
+            loading={isSaving('notifications', 'sound')}
           />
           <SettingToggle
             label="Vibration"
             description="Vibrate for notifications"
-            value={getLocalValue('notifications', 'vibration') ?? true}
+            value={getValue('notifications', 'vibration') ?? true}
             onChange={(val) => handleToggle('notifications', 'vibration', val)}
+            loading={isSaving('notifications', 'vibration')}
           />
           <SettingToggle
             label="Reminder Alerts"
-            description="Receive reminders for check-ins"
-            value={getLocalValue('notifications', 'reminders') ?? true}
+            description="Receive reminders for check-ins and safety tasks"
+            value={getValue('notifications', 'reminders') ?? true}
             onChange={(val) => handleToggle('notifications', 'reminders', val)}
+            loading={isSaving('notifications', 'reminders')}
+          />
+        </SettingSection>
+
+        {/* Privacy Section */}
+        <SettingSection title="Privacy" description="Manage your privacy preferences">
+          <SettingToggle
+            label="Share Safety Status"
+            description="Share your safety status with trusted contacts"
+            value={getValue('privacy', 'share_status') ?? true}
+            onChange={(val) => handleToggle('privacy', 'share_status', val)}
+            loading={isSaving('privacy', 'share_status')}
+          />
+        </SettingSection>
+
+        {/* Appearance Section */}
+        <SettingSection title="Appearance" description="Customize how the app looks">
+          <SettingToggle
+            label="Dark Mode"
+            description="Use dark theme"
+            value={getValue('appearance', 'dark_mode') ?? false}
+            onChange={(val) => handleToggle('appearance', 'dark_mode', val)}
+            loading={isSaving('appearance', 'dark_mode')}
           />
         </SettingSection>
       </div>
