@@ -1,0 +1,112 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+ROOT=~/kin_project
+
+cd "$ROOT" || exit 1
+
+MODE="${1:-default}"
+
+echo "=========================================="
+echo "           KIN AI BOOTSTRAP"
+echo "=========================================="
+echo
+
+echo "Repository"
+pwd
+echo
+
+echo "Git Branch"
+git branch --show-current 2>/dev/null
+echo
+
+echo "Git Status"
+git status --short
+echo
+
+echo "Recent Commits"
+git log --oneline -5
+echo
+
+echo "Open Agent Sessions"
+[ -f AGENT_LOG.md ] && tail -40 AGENT_LOG.md || echo "No AGENT_LOG.md"
+echo
+
+echo "Core Documents"
+for f in \
+docs/00_START_HERE.md \
+docs/AI_CONTEXT.md \
+docs/PROJECT_STATUS.md \
+docs/FEATURE_REGISTRY.md \
+docs/CODEMAP.md \
+docs/PROTECTED_FILES.md
+do
+    [ -f "$f" ] && echo "✓ $f"
+done
+echo
+
+case "$MODE" in
+
+frontend)
+echo "========== FRONTEND =========="
+find frontend/src -type f | sort
+;;
+
+backend)
+echo "========== BACKEND =========="
+find backend/app -type f | sort
+;;
+
+docs)
+echo "========== DOCS =========="
+find docs -type f | sort
+;;
+
+location)
+echo "========== LOCATION =========="
+grep -Rni "location" frontend backend docs 2>/dev/null
+;;
+
+sos)
+echo "========== SOS =========="
+grep -Rni "SOS" frontend backend docs 2>/dev/null
+;;
+
+auth)
+echo "========== AUTH =========="
+grep -Rni "auth" frontend backend docs 2>/dev/null
+;;
+
+ui)
+echo "========== UI =========="
+find frontend/src/screens frontend/src/components -type f 2>/dev/null | sort
+;;
+
+build)
+echo "========== BUILD =========="
+tail -100 docs/BUILD_LOG.md 2>/dev/null
+;;
+
+git)
+echo "========== GIT =========="
+git status
+echo
+git diff --stat
+echo
+git log --oneline -10
+;;
+
+*)
+if [ -d "$MODE" ]; then
+    echo "========== DIRECTORY =========="
+    find "$MODE" -type f | sort
+elif [ -f "$MODE" ]; then
+    echo "========== FILE =========="
+    sed -n '1,250p' "$MODE"
+fi
+;;
+esac
+
+echo
+echo "=========================================="
+echo "Bootstrap Complete"
+echo "=========================================="

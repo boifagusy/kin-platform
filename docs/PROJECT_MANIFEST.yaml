@@ -1,0 +1,65 @@
+project:
+  name: KIN
+  version: 1.0
+  status: Active
+  branch: recovery/auth-integration
+
+repository:
+  frontend: frontend
+  backend: backend
+  docs: docs
+  scripts: scripts
+  plugins: plugins
+
+bootstrap:
+  script: scripts/ai-bootstrap.sh
+  entry: docs/00_START_HERE.md
+  context: docs/AI_CONTEXT.md
+  session: docs/SESSION_STATE.md
+  decisions: docs/DECISIONS.md
+
+governance:
+  protocol: docs/KIN_PROTECTION_PROTOCOL.md
+  protected: docs/PROTECTED_FILES.md
+  codemap: docs/CODEMAP.md
+  project_status: docs/PROJECT_STATUS.md
+  feature_registry: docs/FEATURE_REGISTRY.md
+
+storage:
+  auth: localStorage
+  preferences: localStorage
+  offline_queue: IndexedDB
+  location_history: IndexedDB
+
+location:
+  primary: Capacitor Geolocation
+  fallback: navigator.geolocation
+  native: Android FusedLocationProviderClient
+
+build:
+  frontend:
+    - npm install
+    - npm run build
+  backend:
+    - composer install
+    - php artisan test
+    - php artisan migrate --pretend
+
+reports:
+  required:
+    - Session Start
+    - Pre-flight
+    - Discovery
+    - Root Cause
+    - Modification Report
+    - Implementation
+    - Build Report
+    - Runtime Verification
+    - Session End
+
+rules:
+  - Search repository before asking for files
+  - Read source before editing
+  - Update living documents only
+  - Git is the source of history
+  - Never modify protected files without checking protocol

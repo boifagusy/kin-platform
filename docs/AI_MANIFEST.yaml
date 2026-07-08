@@ -1,0 +1,50 @@
+project: KIN
+
+bootstrap:
+
+  - docs/00_START_HERE.md
+  - docs/AI_CONTEXT.md
+  - docs/PROJECT_STATUS.md
+  - docs/CODEMAP.md
+  - docs/FEATURE_REGISTRY.md
+  - docs/PROTECTED_FILES.md
+
+build:
+
+  frontend: npm run build
+
+  backend:
+
+    - php artisan test
+    - php artisan migrate --pretend
+
+storage:
+
+  auth: localStorage
+
+  preferences: localStorage
+
+  offline_queue: IndexedDB
+
+  location_history: IndexedDB
+
+location:
+
+  provider: Capacitor Geolocation
+
+  fallback: navigator.geolocation
+
+  native: FusedLocationProviderClient
+
+report:
+
+  - Session Start
+  - Pre-flight
+  - Discovery
+  - Root Cause
+  - Modification
+  - Implementation
+  - Build
+  - Runtime Verification
+  - Session End
+
