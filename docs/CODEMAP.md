@@ -20,7 +20,21 @@
 - admin/sidebar.blade.php (Fixed v2.0)
 
 
-## src/services/ — Location & Storage Services
+## src/services/ — Core Services
+
+| File | Purpose | Status |
+|------|---------|--------|
+| StorageAdapter.js | Abstract storage interface | ✅ Production |
+| IndexedDBAdapter.js | IndexedDB implementation | ✅ Production |
+| LocalStorageAdapter.js | localStorage implementation | ✅ Production |
+| LocationQueue.js | FIFO queue with persistence + retry | ✅ Production |
+| SyncQueue.js | Background sync for queue | ✅ Production |
+| NetworkDetection.js | Network state monitoring | ✅ Production |
+| BackgroundLocationService.js | Background location with queue integration | ✅ Production |
+| SOSButton.jsx | SOS trigger component | ✅ Production |
+| useSOS.js | SOS hook | ✅ Production |
+
+ — Location & Storage Services
 
 | File | Purpose | Status |
 |------|---------|--------|
