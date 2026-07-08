@@ -18,3 +18,15 @@
 
 ## Partials
 - admin/sidebar.blade.php (Fixed v2.0)
+
+
+## src/services/ — Location & Storage Services
+
+| File | Purpose | Status |
+|------|---------|--------|
+| StorageAdapter.js | Abstract storage interface | ✅ Production |
+| IndexedDBAdapter.js | IndexedDB implementation | ✅ Production |
+| LocalStorageAdapter.js | localStorage implementation | ✅ Production |
+| LocationQueue.js | FIFO queue with persistence | ✅ Production |
+| trustedContactService.js | Trusted contact state management | ✅ Production |
+| dashboardService.js | Dashboard safety status | ✅ Production |

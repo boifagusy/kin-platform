@@ -32,7 +32,7 @@
 Current Version: **v1.0**
 Protocol Version: **v2**
 Bootstrap Version: **v1.0**
-Last Updated: **2026-07-08**
+Last Updated: 2026-07-08
 
 ## Milestones
 
