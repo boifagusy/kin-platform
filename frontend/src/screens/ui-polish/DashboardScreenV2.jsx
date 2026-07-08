@@ -12,9 +12,9 @@ import SetupCard from "../../components/dashboard/SetupCard";
 import EmergencyModal from "../../components/dashboard/EmergencyModal";
 import BottomNav from "../../components/dashboard/BottomNav";
 import { getCurrentLocation, getBatteryLevel } from "../../utils/location";
-import KinSafety from "../../capacitor/kin-safety";
 import { startNotificationChecker, stopNotificationChecker, scheduleSOSNotification } from "../../services/notificationService";
 import { enqueue, retryQueue } from "../../services/offlineQueueService";
+import trustedContactService from "../../services/trustedContactService.js";
 
 const API_BASE = import.meta.env.VITE_API_URL;
 
@@ -29,65 +29,6 @@ function DashboardScreenV2() {
   const [showAssistanceOptions, setShowAssistanceOptions] = useState(false);
   const [showEmergencyConfirm, setShowEmergencyConfirm] = useState(false);
   const [offline, setOffline] = useState(!navigator.onLine);
-  const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
-  const [showAddZoneModal, setShowAddZoneModal] = useState(false);
-  const [zoneName, setZoneName] = useState("");
-  const [zoneAddress, setZoneAddress] = useState("");
-  const [zoneSaving, setZoneSaving] = useState(false);
-  const [zoneError, setZoneError] = useState("");
-
-  const handleTaskClick = (task) => {
-    if (task.id === "safe_zones") {
-      setShowAddZoneModal(true);
-    } else if (task.id === "trusted_contact") {
-      navigate("/network", { state: { phone } });
-    } else if (task.id === "duress_pin") {
-      navigate("/settings/duress-pin", { state: { phone } });
-    }
-  };
-
-  const handleAddZone = async () => {
-    if (!zoneName.trim() || zoneSaving) return;
-    setZoneSaving(true);
-    setZoneError("");
-    try {
-      const response = await fetch(`${API_BASE}/safe-zones`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("kin_token")}`,
-          "Accept": "application/json",
-        },
-        body: JSON.stringify({ name: zoneName, address: zoneAddress || null }),
-      });
-      const data = await response.json();
-      if (data.success) {
-        setShowAddZoneModal(false);
-        setZoneName("");
-        setZoneAddress("");
-        const refreshRes = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)}`, {
-          headers: { "Authorization": `Bearer ${localStorage.getItem("kin_token")}`, "Accept": "application/json" },
-        });
-        const refreshData = await refreshRes.json();
-        if (refreshData.success) setDashboard(refreshData.data);
-      } else {
-        setZoneError(data.error || "Failed to add safe zone");
-      }
-    } catch (err) {
-      setZoneError("Could not reach the server.");
-    } finally {
-      setZoneSaving(false);
-    }
-  };
-
-  useEffect(() => {
-    if (navigator.permissions && navigator.permissions.query) {
-      navigator.permissions.query({ name: "geolocation" }).then((result) => {
-        setLocationPermissionGranted(result.state === "granted");
-        result.onchange = () => setLocationPermissionGranted(result.state === "granted");
-      }).catch(() => setLocationPermissionGranted(false));
-    }
-  }, []);
   const [activeTab, setActiveTab] = useState("home");
 
   // Trusted Contact handlers
@@ -130,7 +71,13 @@ function DashboardScreenV2() {
           headers: { "Authorization": `Bearer ${localStorage.getItem("kin_token")}` },
         });
         const data = await res.json();
-        if (data.success) setDashboard(data);
+        if (data.success) {
+          setDashboard({
+            ...data,
+            trusted_contact: data.data?.trusted_contact || null,
+            invite_status: data.data?.invite_status || null,
+          });
+        }
     // Clear onboarding draft
     clearDraft();
       } catch (err) {
@@ -152,7 +99,7 @@ function DashboardScreenV2() {
   }, [phone, navigate]);
 
   const tasks = dashboard?.pending_tasks || [];
-  const locationEnabled = locationPermissionGranted;
+  const locationEnabled = !tasks.find(t => t.id === "location");
   const homeZoneAdded = !tasks.find(t => t.id === "safe_zones");
   const duressPinCreated = !tasks.find(t => t.id === "duress_pin");
 
@@ -178,7 +125,7 @@ function DashboardScreenV2() {
 
   const breakdownItems = [
     { label: "Location Enabled", status: locationEnabled },
-    { label: "Trusted Contact Added", status: dashboard?.has_verified_contact ?? (contactsCount > 0) },
+    { label: "Trusted Contact Added", status: !!dashboard?.trusted_contact },
     { label: "Safe Zones Added", status: homeZoneAdded },
     { label: "Duress PIN Created", status: duressPinCreated },
     { label: "Recent Check-In", status: recentCheckIn !== false },
@@ -225,11 +172,7 @@ function DashboardScreenV2() {
       try {
         const response = await fetch(`${API_BASE}/checkin`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${localStorage.getItem("kin_token")}`,
-            "Accept": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(checkinBody),
         });
 
@@ -241,7 +184,13 @@ function DashboardScreenV2() {
             headers: { "Authorization": `Bearer ${localStorage.getItem("kin_token")}` },
           });
           const refreshData = await refreshRes.json();
-          if (refreshData.success) setDashboard(refreshData);
+          if (refreshData.success) {
+            setDashboard({
+              ...refreshData,
+              trusted_contact: refreshData.data?.trusted_contact || null,
+              invite_status: refreshData.data?.invite_status || null,
+            });
+          }
         } else {
           alert(data.error || "Failed to check in");
         }
@@ -265,11 +214,6 @@ function DashboardScreenV2() {
   };
 
   const handleEmergency = () => {
-    const hasContact = dashboard?.has_verified_contact ?? (contactsCount > 0);
-    if (!hasContact) {
-      alert("Add a trusted contact first to enable SOS.");
-      return;
-    }
     setShowEmergencyConfirm(true);
   };
 
@@ -290,24 +234,12 @@ function DashboardScreenV2() {
       console.warn("Battery error:", err);
     }
 
-    // Get device safety context for false-alarm prevention
-    let safetyContext = null;
-    try {
-      safetyContext = await KinSafety.getSafetyStatus();
-    } catch (err) {
-      console.warn("KinSafety unavailable:", err.message);
-    }
-
     const sosBody = {
       phone: phone,
       latitude: locationData?.latitude,
       longitude: locationData?.longitude,
       accuracy: locationData?.accuracy,
-      battery_level: safetyContext?.battery ?? batteryLevel,
-      device_trust: safetyContext?.deviceTrust ?? null,
-      device_fingerprint: safetyContext?.fingerprint ?? null,
-      confidence: safetyContext?.confidence ?? null,
-      network_type: safetyContext?.network ?? null,
+      battery_level: batteryLevel,
     };
 
     // No network at all -- skip the request entirely and queue immediately.
@@ -321,11 +253,7 @@ function DashboardScreenV2() {
     try {
       const response = await fetch(`${API_BASE}/sos`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("kin_token")}`,
-          "Accept": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(sosBody),
       });
 
@@ -365,12 +293,12 @@ function DashboardScreenV2() {
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Morning" : hour < 18 ? "Afternoon" : "Evening";
-  const userName = dashboard?.data?.user?.name?.split(" ")[0] || dashboard?.user?.name?.split(" ")[0] || "User";
+  const userName = dashboard?.user?.name?.split(" ")[0] || "User";
   const nextCheckin = dashboard?.settings?.checkin_time || "9:00 PM";
 
   return (
     <div className="min-h-screen bg-[#F0F7F2] pb-20">
-      <HeaderV2 greeting={greeting} userName={userName} onBellClick={() => navigate("/alerts", { state: { phone } })} unreadCount={dashboard?.unread_alerts || 0} />
+      <HeaderV2 greeting={greeting} userName={userName} />
 
       {offline && (
         <div className="bg-yellow-100 p-3 text-center">
@@ -389,8 +317,6 @@ function DashboardScreenV2() {
           onEmergency={handleEmergency}
           onUpdateStatus={() => setCheckInState("default")}
           loading={checkInLoading}
-          hasTrustedContact={dashboard?.has_verified_contact ?? (contactsCount > 0)}
-          onAddContact={() => navigate("/network", { state: { phone } })}
         />
 
         {showAssistanceOptions && (
@@ -402,14 +328,16 @@ function DashboardScreenV2() {
         )}
 
         {/* Trusted Contact Card */}
-        <TrustedContactCard
-          contact={dashboard?.trusted_contact}
-          inviteStatus={dashboard?.invite_status}
-          onShare={handleShareInvite}
-          onReplace={handleReplaceContact}
-        />
+        {!dashboard?.trusted_contact && (
+          <TrustedContactCard
+            contact={dashboard?.trusted_contact}
+            inviteStatus={dashboard?.invite_status}
+            onShare={handleShareInvite}
+            onReplace={handleReplaceContact}
+          />
+        )}
 
-        {tasks.length > 0 && <SetupCard tasks={tasks} onTaskClick={handleTaskClick} />}
+        {tasks.length > 0 && <SetupCard tasks={tasks} />}
 
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-[#E9ECEF]">
           <h3 className="text-sm font-semibold text-[#1A1A1A] mb-3">Safety Status</h3>
