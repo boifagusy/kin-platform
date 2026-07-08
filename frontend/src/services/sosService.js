@@ -7,6 +7,29 @@ class SOSService {
     this.isActive = false;
   }
 
+  // Cancel an SOS alert
+  async cancelSOS(sosId) {
+    try {
+      const token = localStorage.getItem('kin_token');
+      const response = await fetch(`/api/v1/sos/${sosId}/cancel`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to cancel SOS');
+      }
+      const data = await response.json();
+      this.isActive = false;
+      return data;
+    } catch (error) {
+      console.error('Cancel SOS error:', error);
+      throw error;
+    }
+  }
+
   async triggerSOS(options = {}) {
     const { silent = true, location = null } = options;
     
