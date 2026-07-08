@@ -1,4 +1,5 @@
-import React from 'react';
+import React
+import { safetyService } from "../../services/safetyService"; from 'react';
 import { FaLock, FaUserPlus, FaTimes } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 

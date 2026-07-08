@@ -74,7 +74,7 @@ class CheckInController extends Controller
             }
 
             // Dispatch event
-            event(new CheckInCompleted($result['check_in']));
+            event(new CheckInCompleted($user, $result['check_in']));
 
             return response()->json([
                 'success' => true,

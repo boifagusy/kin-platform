@@ -20,9 +20,19 @@ class QueueSosAlert
      */
     public function handle(SOSTriggered $event): void
     {
+        $location = null;
+        if ($event->sosEvent->latitude && $event->sosEvent->longitude) {
+            $location = [
+                'lat' => $event->sosEvent->latitude,
+                'lng' => $event->sosEvent->longitude,
+                'accuracy' => $event->sosEvent->accuracy,
+            ];
+        }
+
         SendSosAlertJob::dispatch(
-            $event->user->id,
-            $event->sosEvent->id
+            $event->user,
+            $location,
+            $event->sosEvent->is_duress ?? false
         );
     }
 }

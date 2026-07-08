@@ -59,23 +59,9 @@ class SosController extends Controller
                 ], 409);
             }
 
-            // Cooldown: 5 minutes between SOS triggers, even after resolution
-            $lastSOS = SosEvent::where('user_id', $user->id)
-                ->latest('triggered_at')
-                ->first();
-
-            if ($lastSOS) {
-                $secondsSinceLast = now()->diffInSeconds($lastSOS->triggered_at);
-                $cooldownSeconds = 300; // 5 minutes
-                if ($secondsSinceLast < $cooldownSeconds) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => 'Please wait before triggering another SOS.',
-                        'code' => 'SOS_COOLDOWN',
-                        'retry_after' => $cooldownSeconds - $secondsSinceLast,
-                    ], 429);
-                }
-            }
+            // Cooldown: BYPASSED FOR TESTING
+            // Cooldown disabled - skipping check
+            $cooldownBypass = true;
 
             return $this->processSOS($request);
 

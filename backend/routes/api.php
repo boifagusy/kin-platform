@@ -25,12 +25,14 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/confirm-phone', [AuthController::class, 'confirmPhone']);
     Route::post('/auth/create-pin', [AuthController::class, 'createPin']);
     Route::post('/auth/login-pin', [AuthController::class, 'loginPin']);
-    Route::post('/sos', [SosController::class, 'store']);
+    Route::post('/sos', [SosController::class, 'store'])->middleware('auth:sanctum');
 
-    Route::get('/trusted-contacts', [TrustedContactController::class, 'index']);
-    Route::post('/trusted-contacts', [TrustedContactController::class, 'store']);
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::get('/trusted-contacts', [TrustedContactController::class, 'index']);
+        Route::post('/trusted-contacts', [TrustedContactController::class, 'store']);
+        Route::delete('/trusted-contacts/{id}', [TrustedContactController::class, 'destroy']);
+    });
     Route::get('/trusted-contact/verify/{token}', [TrustedContactController::class, 'verify']);
-    Route::delete('/trusted-contacts/{id}', [TrustedContactController::class, 'destroy']);
 
     Route::get('/trusted-contact/notifications/{phone}', [IncidentController::class, 'notifications']);
 

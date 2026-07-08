@@ -103,6 +103,12 @@ class DashboardSnapshotService
                 'email' => $user->email,
                 'contacts_count' => $trustedContactsCount,
             ],
+            'trusted_contact' => $user->trustedContacts()->where('verified', true)->first() ? [
+                'id' => $user->trustedContacts()->where('verified', true)->first()->id,
+                'name' => $user->trustedContacts()->where('verified', true)->first()->name,
+                'phone' => $user->trustedContacts()->where('verified', true)->first()->phone,
+                'verified' => true,
+            ] : null,
             'safety_score' => $score,
             'score_label' => $this->getScoreLabel($score),
             'last_checkin' => $lastCheckIn?->checked_in_at,
@@ -116,7 +122,7 @@ class DashboardSnapshotService
             'safe_zones' => $safeZones,
             'pending_tasks' => $this->getPendingTasks($user),
             'snapshot_generated_at' => now()->toISOString(),
-            'unread_alerts' => SafetyIncident::where('user_id', $user->id)
+            'unread_alerts' => \App\Models\SafetyIncident::where('user_id', $user->id)
                 ->where('status', 'active')
                 ->count(),
             // ✅ NEW FIELDS FOR SAFETY STATUS
