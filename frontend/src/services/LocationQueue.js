@@ -36,8 +36,11 @@ export class LocationQueue {
    */
   async _load() {
     if (this._cache !== null) return this._cache;
+    console.log('📂 Loading from key:', this.key);
     const data = await this.adapter.get(this.key);
+    console.log('📂 Data from adapter:', data);
     this._cache = data || [];
+    console.log('📂 Cache after load:', this._cache);
     return this._cache;
   }
 
@@ -47,6 +50,7 @@ export class LocationQueue {
    * @returns {Promise<void>}
    */
   async _save() {
+    console.log('💾 Saving to key:', this.key, 'items:', this._cache.length);
     await this.adapter.set(this.key, this._cache);
   }
 
