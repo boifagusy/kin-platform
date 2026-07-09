@@ -43,7 +43,21 @@ function PhoneEntryScreenV2() {
         }
       );
 
-      const data = await response.json();
+      const rawText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch (parseErr) {
+        alert(
+          "DEBUG - Non-JSON response\n" +
+          "URL: " + API_BASE + "/auth/confirm-phone\n" +
+          "Status: " + response.status + "\n" +
+          "Content-Type: " + response.headers.get("content-type") + "\n" +
+          "Body (first 200 chars): " + rawText.slice(0, 200)
+        );
+        throw parseErr;
+      }
+      console.log('📦 API Response:', data);
       setMaskedPhone(data.masked_phone);
 
       if (data.exists) {
