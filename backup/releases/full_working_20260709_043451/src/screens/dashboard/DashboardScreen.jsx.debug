@@ -1,0 +1,261 @@
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import Header from "../../components/dashboard/Header";
+import SafetyScoreCard from "../../components/dashboard/SafetyScoreCard";
+import SafetyCheckCard from "../../components/dashboard/SafetyCheckCard";
+import AssistanceOptions from "../../components/dashboard/AssistanceOptions";
+import MetricsRow from "../../components/dashboard/MetricsRow";
+import ActivityTimeline from "../../components/dashboard/ActivityTimeline";
+import SetupCard from "../../components/dashboard/SetupCard";
+import SafeZonesCard from "../../components/dashboard/SafeZonesCard";
+import PromotionCard from "../../components/dashboard/PromotionCard";
+import EmergencyModal from "../../components/dashboard/EmergencyModal";
+import BottomNav from "../../components/dashboard/BottomNav";
+import { getCurrentLocation, getBatteryLevel } from "../../utils/location";
+import { startNotificationChecker, stopNotificationChecker } from "../../services/notificationService";
+
+function DashboardScreen() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const phone = location.state?.phone || localStorage.getItem("kin_phone");
+  const [dashboard, setDashboard] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [checkInLoading, setCheckInLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("home");
+  const [checkInState, setCheckInState] = useState("default");
+  const [showAssistanceOptions, setShowAssistanceOptions] = useState(false);
+  const [showEmergencyConfirm, setShowEmergencyConfirm] = useState(false);
+
+  useEffect(() => {
+    if (!phone) {
+      navigate("/login");
+      return;
+    }
+
+    async function loadDashboard() {
+      try {
+        const res = await fetch(`http://127.0.0.1:8000/api/v1/dashboard?phone=${encodeURIComponent(phone)}`);
+        const data = await res.json();
+        if (data.success) setDashboard(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadDashboard();
+    
+    // Start notification checker for reminders
+    startNotificationChecker(phone);
+    
+    // Cleanup on component unmount
+    return () => {
+      stopNotificationChecker();
+    };
+  }, [phone, navigate]);
+
+  const tasks = dashboard?.pending_tasks || [];
+  const locationEnabled = !tasks.find(t => t.id === "location");
+  const homeZoneAdded = !tasks.find(t => t.id === "safe_zones");
+  const duressPinCreated = !tasks.find(t => t.id === "duress_pin");
+
+  let calculatedScore = 60;
+  if (locationEnabled) calculatedScore += 15;
+  if (homeZoneAdded) calculatedScore += 15;
+  if (duressPinCreated) calculatedScore += 10;
+  if (checkInState === 'safe') calculatedScore = Math.min(calculatedScore + 5, 100);
+
+  const actualSafetyScore = dashboard?.safety_score || calculatedScore;
+  const displayScore = checkInState === 'safe' ? Math.min(actualSafetyScore + 5, 100) : actualSafetyScore;
+
+  const getScoreLabel = (score) => {
+    if (score >= 90) return "Excellent";
+    if (score >= 70) return "Good";
+    if (score >= 50) return "Fair";
+    return "Needs Attention";
+  };
+
+  const handleSafeCheckInState = () => {
+    setCheckInState("safe");
+    setShowAssistanceOptions(false);
+  };
+
+  const handleSafeCheckInWithLocation = async () => {
+    try {
+      setCheckInLoading(true);
+      
+      let locationData = null;
+      try {
+        locationData = await getCurrentLocation();
+        console.log("Location captured:", locationData);
+      } catch (err) {
+        console.warn("Location error:", err.message);
+      }
+      
+      let batteryLevel = null;
+      try {
+        batteryLevel = await getBatteryLevel();
+        console.log("Battery level:", batteryLevel);
+      } catch (err) {
+        console.warn("Battery error:", err);
+      }
+      
+      const response = await fetch("http://127.0.0.1:8000/api/v1/checkin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: phone,
+          status: "safe",
+          latitude: locationData?.latitude,
+          longitude: locationData?.longitude,
+          battery_level: batteryLevel,
+        }),
+      });
+      
+      const data = await response.json();
+      console.log("Check-in response:", data);
+      
+      if (data.success) {
+        handleSafeCheckInState();
+        // Refresh dashboard to show new activity
+        const refreshRes = await fetch(`http://127.0.0.1:8000/api/v1/dashboard?phone=${encodeURIComponent(phone)}`);
+        const refreshData = await refreshRes.json();
+        if (refreshData.success) setDashboard(refreshData);
+      } else {
+        alert(data.error || "Failed to check in");
+      }
+    } catch (error) {
+      console.error("Check-in error:", error);
+      alert("Failed to check in. Please try again.");
+    } finally {
+      setCheckInLoading(false);
+    }
+  };
+
+  const handleNeedAssistance = () => {
+    setCheckInState("assistance");
+    setShowAssistanceOptions(true);
+  };
+
+  const handleEmergency = () => {
+    alert("🔥 SOS tapped!");
+    console.log("🔴 SOS: handleEmergency called");
+    console.log("🔴 Current showEmergencyConfirm:", showEmergencyConfirm);
+    setShowEmergencyConfirm(true);
+  };
+
+  const confirmEmergency = async () => {
+    console.log("🔴 SOS: confirmEmergency called");
+    setShowEmergencyConfirm(false);
+    
+    try {
+      let locationData = null;
+      try {
+        locationData = await getCurrentLocation();
+      } catch (err) {
+        console.warn("Location error:", err);
+      }
+      
+      const response = await fetch("http://127.0.0.1:8000/api/v1/sos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: phone,
+          latitude: locationData?.latitude,
+          longitude: locationData?.longitude,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setCheckInState("emergency");
+        alert("🚨 SOS ACTIVATED! Your trusted contacts are being notified.");
+      } else {
+        alert(data.error || "Failed to send SOS");
+      }
+    } catch (error) {
+      console.error("SOS error:", error);
+      alert("Failed to send SOS. Please try again.");
+    }
+  };
+
+  const handleCallContact = () => alert("Calling your trusted contact...");
+  const handleShareLocation = () => alert("Sharing your live location...");
+  const handleSendAlert = () => alert("Alert sent to your safety network.");
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#F0F7F2", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ width: 40, height: 40, border: "3px solid #1A5632", borderTop: "3px solid transparent", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 10px" }}></div>
+          <div style={{ color: "#1A5632" }}>Loading KIN...</div>
+        </div>
+      </div>
+    );
+  }
+
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Morning" : hour < 18 ? "Afternoon" : "Evening";
+  const userName = dashboard?.user?.name?.split(" ")[0] || "User";
+  const nextCheckin = dashboard?.settings?.checkin_time || "9:00 PM";
+  const contactsCount = dashboard?.user?.contacts_count || 0;
+  const promotions = [];
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#F0F7F2", paddingBottom: 80 }}>
+      <Header greeting={greeting} userName={userName} />
+      <div style={{ padding: "16px 20px", maxWidth: 500, margin: "0 auto" }}>
+        <SafetyScoreCard score={displayScore} label={getScoreLabel(displayScore)} />
+        <SafetyCheckCard
+          checkInState={checkInState}
+          nextCheckin={nextCheckin}
+          onSafe={handleSafeCheckInWithLocation}
+          onAssistance={handleNeedAssistance}
+          onSOS={handleEmergency}
+          onUpdateStatus={() => setCheckInState("default")}
+          loading={checkInLoading}
+        />
+        {showAssistanceOptions && (
+          <AssistanceOptions
+            onCall={handleCallContact}
+            onShareLocation={handleShareLocation}
+            onSendAlert={handleSendAlert}
+          />
+        )}
+        <MetricsRow nextCheckin={nextCheckin} contactsCount={contactsCount} />
+        
+        <ActivityTimeline
+          activities={dashboard?.activities || []}
+          totalCount={dashboard?.activities_total || 0}
+          onViewAll={() => alert("Full activity history - Coming soon!")}
+        />
+        
+        <SetupCard tasks={tasks} />
+        <SafeZonesCard />
+        {promotions.length > 0 ? promotions.map((promo) => (
+          <PromotionCard key={promo.id} title={promo.title} description={promo.description} />
+        )) : (
+          <PromotionCard title="Invite Family & Friends" description="Get 3 months free" />
+        )}
+      </div>
+      {showEmergencyConfirm && (
+        <EmergencyModal onConfirm={confirmEmergency} onCancel={() => setShowEmergencyConfirm(false)} />
+      )}
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} onSOS={handleEmergency} />
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes ping {
+          0% { transform: scale(0.95); opacity: 0.75; }
+          70% { transform: scale(1.3); opacity: 0; }
+          100% { transform: scale(0.95); opacity: 0; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+export default DashboardScreen;
