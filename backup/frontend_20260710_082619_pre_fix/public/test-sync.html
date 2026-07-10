@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>🧪 Sync Test Harness</title>
+  <style>
+    body { font-family: system-ui; padding: 20px; max-width: 600px; margin: 0 auto; }
+    button { padding: 10px 20px; margin: 5px; cursor: pointer; border: none; border-radius: 8px; font-size: 14px; }
+    .btn-enqueue { background: #4CAF50; color: white; }
+    .btn-sync { background: #2196F3; color: white; }
+    .btn-clear { background: #f44336; color: white; }
+    .btn-status { background: #FF9800; color: white; }
+    pre { background: #f5f5f5; padding: 10px; border-radius: 8px; overflow-x: auto; }
+    .status { padding: 10px; border-radius: 8px; margin: 10px 0; }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .info { background: #d1ecf1; color: #0c5460; }
+  </style>
+</head>
+<body>
+  <h1>🧪 Sync Test Harness</h1>
+  <p>Test LocationQueue + SyncQueue without the Dashboard</p>
+
+  <div id="status" class="status info">Ready</div>
+
+  <button class="btn-enqueue" id="enqueueSos">📥 Enqueue SOS</button>
+  <button class="btn-enqueue" id="enqueueCheckin">📥 Enqueue Check-in</button>
+  <button class="btn-sync" id="syncNow">📤 Sync Now</button>
+  <button class="btn-status" id="checkStatus">📊 Check Queue</button>
+  <button class="btn-clear" id="clearQueue">🗑️ Clear Queue</button>
+
+  <h3>📋 Logs</h3>
+  <pre id="logs">Ready for testing...</pre>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "./src/services/LocationQueue.js": "./src/services/LocationQueue.js",
+      "./src/services/SyncQueue.js": "./src/services/SyncQueue.js",
+      "./src/services/NetworkDetection.js": "./src/services/NetworkDetection.js"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import { LocationQueue } from './src/services/LocationQueue.js';
+    import { SyncQueue } from './src/services/SyncQueue.js';
+    import networkDetection from './src/services/NetworkDetection.js';
+
+    const API_BASE = 'http://localhost:8000/api/v1';
+    const queue = new LocationQueue();
+    const logs = document.getElementById('logs');
+    const statusEl = document.getElementById('status');
+
+    function log(msg) {
+      logs.textContent += '\n' + msg;
+      logs.scrollTop = logs.scrollHeight;
+      console.log(msg);
+    }
+
+    function setStatus(msg, type = 'info') {
+      statusEl.textContent = msg;
+      statusEl.className = `status ${type}`;
+    }
+
+    async function checkQueue() {
+      try {
+        const size = await queue.size();
+        const items = await queue.getAll();
+        log(`📊 Queue size: ${size}`);
+        if (items.length > 0) {
+          log(`📋 Items: ${JSON.stringify(items, null, 2)}`);
+        }
+        setStatus(`Queue size: ${size}`, size > 0 ? 'info' : 'success');
+        return { size, items };
+      } catch (e) {
+        log(`❌ Error: ${e.message}`);
+        setStatus(`Error: ${e.message}`, 'error');
+        return null;
+      }
+    }
+
+    // Enqueue SOS
+    document.getElementById('enqueueSos').onclick = async () => {
+      log('📥 Enqueueing SOS...');
+      try {
+        await queue.enqueue({
+          type: 'sos',
+          phone: '+2348086448522',
+          latitude: 6.5244,
+          longitude: 3.3792,
+          timestamp: Date.now(),
+          test: true
+        });
+        log('✅ SOS enqueued!');
+        await checkQueue();
+        setStatus('SOS enqueued ✅', 'success');
+      } catch (e) {
+        log(`❌ Error: ${e.message}`);
+        setStatus(`Error: ${e.message}`, 'error');
+      }
+    };
+
+    // Enqueue Check-in
+    document.getElementById('enqueueCheckin').onclick = async () => {
+      log('📥 Enqueueing Check-in...');
+      try {
+        await queue.enqueue({
+          type: 'checkin',
+          phone: '+2348086448522',
+          status: 'safe',
+          latitude: 6.5244,
+          longitude: 3.3792,
+          timestamp: Date.now(),
+          test: true
+        });
+        log('✅ Check-in enqueued!');
+        await checkQueue();
+        setStatus('Check-in enqueued ✅', 'success');
+      } catch (e) {
+        log(`❌ Error: ${e.message}`);
+        setStatus(`Error: ${e.message}`, 'error');
+      }
+    };
+
+    // Sync Now
+    document.getElementById('syncNow').onclick = async () => {
+      log('📤 Syncing...');
+      try {
+        const syncQueue = new SyncQueue(queue, async (item) => {
+          log(`📤 Syncing item: ${item.type} → ${API_BASE}/${item.type}`);
+          
+          const endpoint = `${API_BASE}/${item.type === 'sos' ? 'sos' : 'checkin'}`;
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('kin_token')}`,
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify(item),
+          });
+
+          const responseText = await response.text();
+          log(`📤 Response: ${response.status} ${responseText}`);
+
+          if (!response.ok) {
+            throw new Error(`Upload failed: ${response.status} - ${responseText}`);
+          }
+
+          return true;
+        });
+
+        const result = await syncQueue.drain(10, 500);
+        log(`📊 Sync result: ${result.synced} synced, ${result.failed} failed`);
+        setStatus(`✅ Synced: ${result.synced}, Failed: ${result.failed}`, result.failed === 0 ? 'success' : 'error');
+        await checkQueue();
+      } catch (e) {
+        log(`❌ Sync error: ${e.message}`);
+        setStatus(`Error: ${e.message}`, 'error');
+      }
+    };
+
+    // Check Status
+    document.getElementById('checkStatus').onclick = async () => {
+      log('📊 Checking queue...');
+      await checkQueue();
+    };
+
+    // Clear Queue
+    document.getElementById('clearQueue').onclick = async () => {
+      log('🗑️ Clearing queue...');
+      try {
+        await queue.clear();
+        log('✅ Queue cleared!');
+        await checkQueue();
+        setStatus('Queue cleared ✅', 'success');
+      } catch (e) {
+        log(`❌ Error: ${e.message}`);
+        setStatus(`Error: ${e.message}`, 'error');
+      }
+    };
+
+    // Initial status
+    log('🧪 Test Harness Ready');
+    log('📶 Network Status:', networkDetection.getStatus());
+    checkQueue();
+  </script>
+</body>
+</html>

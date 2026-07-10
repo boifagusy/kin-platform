@@ -23,7 +23,8 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/confirm-phone', [AuthController::class, 'confirmPhone']);
     Route::post('/auth/create-pin', [AuthController::class, 'createPin']);
     Route::post('/auth/login-pin', [AuthController::class, 'loginPin']);
-    Route::post('/sos', [SosController::class, 'store']);
+   Route::post('/sos', [SosController::class, 'store'])->middleware('auth:sanctum');
+
 
     Route::get('/trusted-contacts', [TrustedContactController::class, 'index']);
     Route::post('/trusted-contacts', [TrustedContactController::class, 'store']);
@@ -63,4 +64,57 @@ Route::prefix('v1')->group(function () {
     Route::get('/health', [HealthController::class, 'index']);
     Route::get('/ping', [HealthController::class, 'ping']);
     Route::get('/check-reminder', [ReminderController::class, 'check']);
+});
+
+// ============================================================
+// Sync Endpoint (catch-all for queued items)
+// ============================================================
+Route::post('/sync', function (Request $request) {
+    $data = $request->all();
+    $type = $data['type'] ?? 'unknown';
+    
+    // Route to appropriate handler based on type
+    if ($type === 'sos') {
+        // Forward to SOS controller
+        $controller = new App\Http\Controllers\Api\V1\SosController();
+        return $controller->store($request);
+    } elseif ($type === 'checkin') {
+        // Forward to CheckIn controller
+        $controller = new App\Http\Controllers\Api\V1\CheckInController();
+        return $controller->store($request);
+    }
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Item queued for processing',
+        'data' => $data
+    ]);
+});
+
+// ============================================================
+// Sync Endpoint (catch-all for queued items)
+// ============================================================
+Route::post('/sync', function (Request $request) {
+    $data = $request->all();
+    $type = $data['type'] ?? 'unknown';
+    
+    // Route to appropriate handler based on type
+    if ($type === 'sos') {
+        $controller = new App\Http\Controllers\Api\V1\SosController();
+        return $controller->store($request);
+    } elseif ($type === 'checkin') {
+        $controller = new App\Http\Controllers\Api\V1\CheckInController();
+        return $controller->store($request);
+    }
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Item queued for processing',
+        'data' => $data
+    ]);
+})->middleware('auth:sanctum');
+
+// Health endpoint for NetworkDetection
+Route::get('/health', function () {
+    return response()->json(['status' => 'ok']);
 });

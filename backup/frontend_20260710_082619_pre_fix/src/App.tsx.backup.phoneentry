@@ -1,0 +1,52 @@
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+} from "react-router-dom";
+
+import WelcomeScreen from "./screens/onboarding/WelcomeScreen";
+import PhoneEntryScreen from "./screens/auth/PhoneEntryScreen";
+import LoginPinScreen from "./screens/auth/LoginPinScreen";
+import CreatePinScreen from "./screens/auth/CreatePinScreen";
+import UserDetailsScreen from "./screens/auth/UserDetailsScreen";
+import TrustedContactScreen from "./screens/auth/TrustedContactScreen";
+import DashboardScreen from "./screens/dashboard/DashboardScreen";
+import TailwindTest from "./pages/TailwindTest";
+import CheckInSettingsScreen from "./screens/settings/CheckInSettingsScreen";
+import WelcomeScreenV2 from "./screens/ui-polish/WelcomeScreenV2";
+import SplashScreenV2 from "./screens/ui-polish/SplashScreenV2";
+import LoadingScreen from "./components/ui/LoadingScreen";
+import DuressPinSetupScreen from "./screens/settings/DuressPinSetupScreen";
+import NetworkScreen from "./screens/network/NetworkScreen";
+import AlertsScreen from "./screens/alerts/AlertsScreen";
+import ForgotPinScreen from "./screens/auth/ForgotPinScreen";
+import ProfileScreen from "./screens/profile/ProfileScreen";
+import MapScreen from "./screens/map/MapScreen";
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<WelcomeScreen />} />
+        <Route path="/login" element={<PhoneEntryScreen />} />
+        <Route path="/login-pin" element={<LoginPinScreen />} />
+        <Route path="/create-pin" element={<CreatePinScreen />} />
+        <Route path="/user-details" element={<UserDetailsScreen />} />
+        <Route path="/trusted-contact" element={<TrustedContactScreen />} />
+        <Route path="/checkin-settings" element={<CheckInSettingsScreen />} />
+        <Route path="/dashboard" element={<DashboardScreen />} />
+        <Route path="/tailwind-test" element={<TailwindTest />} />
+        <Route path="/settings/checkin" element={<CheckInSettingsScreen />} />
+        <Route path="/settings/duress-pin" element={<DuressPinSetupScreen />} />
+        <Route path="/network" element={<NetworkScreen />} />
+        <Route path="/alerts" element={<AlertsScreen />} />
+        <Route path="/forgot-pin" element={<ForgotPinScreen />} />
+        <Route path="/profile" element={<ProfileScreen />} />
+        <Route path="/map" element={<MapScreen />} />
+        <Route path="/ui-lab/welcome-v2" element={<WelcomeScreenV2 />} />
+        <Route path="/ui-lab/splash-v2" element={<SplashScreenV2 />} />
+        <Route path="/ui-lab/loading-v2" element={<LoadingScreen message="default" />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}

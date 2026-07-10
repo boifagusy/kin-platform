@@ -1,0 +1,139 @@
+.login-page {
+  min-height: 100vh;
+  background: var(--kin-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--kin-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  padding: 32px 24px;
+}
+
+.login-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.logo-circle {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: #EAF4EC;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-title {
+  text-align: center;
+  font-size: 52px;
+  color: var(--kin-primary);
+  font-weight: 700;
+}
+
+.login-subtitle {
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 40px;
+  color: var(--kin-text-light);
+  font-size: 18px;
+}
+
+.field-label {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.phone-wrapper {
+  display: flex;
+  border: 1px solid #D1D5DB;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: white;
+}
+
+.country-code {
+  width: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid #E5E7EB;
+  font-weight: 600;
+}
+
+.phone-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 18px;
+  font-size: 18px;
+}
+
+.helper-text {
+  text-align: center;
+  color: var(--kin-text-light);
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.help-link {
+  text-align: center;
+  color: var(--kin-primary);
+  margin-top: 28px;
+  font-weight: 600;
+}
+
+.error-text {
+  color: var(--kin-danger);
+  text-align: center;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.success-text {
+  color: var(--kin-success);
+  text-align: center;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.login-btn {
+  margin-top: 24px;
+}
+
+.login-btn:disabled {
+  background: #B7D4BF;
+  cursor: not-allowed;
+}
+
+.error-text {
+  color: var(--kin-danger);
+  text-align: center;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.success-text {
+  color: var(--kin-success);
+  text-align: center;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.login-btn {
+  margin-top: 24px;
+}
+
+.login-btn:disabled {
+  background: #B7D4BF;
+  cursor: not-allowed;
+}
