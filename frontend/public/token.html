@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Token Viewer</title>
+</head>
+<body>
+  <h1>🔑 Token Viewer</h1>
+  <p><strong>Token:</strong> <span id="token">Not found</span></p>
+  <p><strong>Phone:</strong> <span id="phone">Not found</span></p>
+  <p><strong>User ID:</strong> <span id="userId">Not found</span></p>
+  <button onclick="refresh()">Refresh</button>
+
+  <script>
+    function refresh() {
+      const token = localStorage.getItem('kin_token');
+      const phone = localStorage.getItem('kin_phone');
+      const userId = localStorage.getItem('kin_user_id');
+      
+      document.getElementById('token').textContent = token || 'Not found';
+      document.getElementById('phone').textContent = phone || 'Not found';
+      document.getElementById('userId').textContent = userId || 'Not found';
+    }
+    refresh();
+  </script>
+</body>
+</html>

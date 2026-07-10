@@ -15,6 +15,7 @@ dependencies {
     implementation project(':kin-device')
     implementation project(':kin-heartbeat')
     implementation project(':kin-location')
+    implementation project(':kin-network')
     implementation project(':kin-notifications')
     implementation project(':kin-security')
 

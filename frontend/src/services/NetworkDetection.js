@@ -151,6 +151,40 @@ export class NetworkDetection {
     return this.status.online;
   }
 
+
+  /**
+   * Check if backend is reachable
+   * @returns {Promise<boolean>}
+   */
+  async isBackendReachable() {
+    const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
+    try {
+      const response = await fetch(`${API_BASE}/health`, {
+        method: 'HEAD',
+        signal: AbortSignal.timeout(3000)
+      });
+      return response.ok;
+    } catch (err) {
+      alert(`DEBUG isBackendReachable failed:\nname: ${err.name}\nmessage: ${err.message}`);
+      return false;
+    }
+  }
+
+  /**
+   * Check if truly online (internet + backend reachable)
+   * @returns {Promise<boolean>}
+   */
+  async isTrulyOnline() {
+    const online = this.isOnline();
+    const reachable = await this.isBackendReachable();
+    console.log('📡 isTrulyOnline:', { online, reachable });
+    return online && reachable;
+  }
+
+  isOnline() {
+    return this.status.online;
+  }
+
   /**
    * Check if offline
    * @returns {boolean}

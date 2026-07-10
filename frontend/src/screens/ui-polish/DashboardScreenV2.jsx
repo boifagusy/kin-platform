@@ -14,8 +14,8 @@ import BottomNav from "../../components/dashboard/BottomNav";
 import { getCurrentLocation, getBatteryLevel } from "../../utils/location";
 import { startNotificationChecker, stopNotificationChecker, scheduleSOSNotification } from "../../services/notificationService";
 import trustedContactService from '../../services/trustedContactService.js';
-import sosService from '../../services/sosService.js';
 import { enqueue, retryQueue } from "../../services/offlineQueueService";
+import safetyService from '../../services/SafetyService.js';
 
 const API_BASE = import.meta.env.VITE_API_URL;
 
@@ -70,15 +70,6 @@ function DashboardScreenV2() {
     };
   }, []);
 
-  // Subscribe to trusted contact changes
-  useEffect(() => {
-    const unsubscribe = trustedContactService.subscribe(() => {
-      setTrustedContactStatus(Date.now());
-    });
-    trustedContactService.loadStatus();
-    return unsubscribe;
-  }, []);
-
   useEffect(() => {
     if (!phone) {
       navigate("/login");
@@ -87,8 +78,11 @@ function DashboardScreenV2() {
 
     async function loadDashboard() {
       try {
-        const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)}`, {
-          headers: { "Authorization": `Bearer ${localStorage.getItem("kin_token")}` },
+
+const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)}`, {
+
+
+  headers: { "Authorization": `Bearer ${localStorage.getItem("kin_token")}` },
         });
         const data = await res.json();
         if (data.success) {
@@ -98,8 +92,8 @@ function DashboardScreenV2() {
             has_verified_contact: data.data?.has_verified_contact || false,
           });
         }
-    // Clear onboarding draft
-    clearDraft();
+        // Clear onboarding draft
+        clearDraft();
       } catch (err) {
         console.error(err);
       } finally {
@@ -174,66 +168,34 @@ function DashboardScreenV2() {
         console.warn("Battery error:", err);
       }
 
-      const payload = {
-        type: 'checkin',
-        phone: phone,
-        status: "safe",
-        latitude: locationData?.latitude,
-        longitude: locationData?.longitude,
-        battery_level: batteryLevel,
-        timestamp: Date.now()
-      };
+      // Use SafetyService — single source of truth
+      const result = await safetyService.checkIn(phone, locationData, batteryLevel);
 
-      const queue = new LocationQueue();
-      
-      // Try to send if online
-      if (navigator.onLine) {
-        try {
-          const response = await fetch(`${API_BASE}/checkin`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${localStorage.getItem("kin_token")}`,
-              "Accept": "application/json",
-            },
-            body: JSON.stringify(payload),
-          });
-          const data = await response.json();
-          if (data.success) {
-            handleSafeCheckInState();
-            const refreshRes = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)}`, {
-              headers: { "Authorization": `Bearer ${localStorage.getItem("kin_token")}` },
-            });
-            const refreshData = await refreshRes.json();
-            if (refreshData.success) setDashboard(refreshData);
-            alert("✅ Check-in successful!");
-            return;
-          }
-        } catch (error) {
-          console.warn("Check-in send failed, queueing:", error);
-        }
+      if (result.state === 'SENT') {
+        handleSafeCheckInState();
+
+ const refreshRes = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)}`, {      
+
+  headers: { "Authorization": `Bearer ${localStorage.getItem("kin_token")}` },
+        });
+        const refreshData = await refreshRes.json();
+        if (refreshData.success) setDashboard(refreshData);
+        alert("✅ Check-in successful!");
+      } else if (result.state === 'QUEUED') {
+        handleSafeCheckInState();
+        alert("📴 Check-in saved. Will send automatically when online.");
+      } else {
+        alert("Failed to check in. Please try again.");
       }
-      
-      // Queue for later
-      await queue.enqueue(payload);
-      handleSafeCheckInState();
-      alert("📴 Check-in saved. Will send automatically when online.");
-      
+
     } catch (error) {
       console.error("Check-in error:", error);
+      console.error("  error.message:", error.message);
+      console.error("  error.stack:", error.stack);
       alert("Failed to check in. Please try again.");
     } finally {
       setCheckInLoading(false);
     }
-  };
-
-  const handleNeedAssistance = () => {
-    setCheckInState("assistance");
-    setShowAssistanceOptions(true);
-  };
-
-  const handleEmergency = () => {
-    setShowEmergencyConfirm(true);
   };
 
   const confirmEmergency = async () => {
@@ -253,19 +215,28 @@ function DashboardScreenV2() {
       console.warn("Battery error:", err);
     }
 
-    // Use sosService with LocationQueue
-    const result = await sosService.triggerSOS(phone, locationData, batteryLevel, { silent: false });
+    // Use SafetyService — single source of truth
+    const result = await safetyService.triggerSOS(phone, locationData, batteryLevel, { silent: false });
 
-    if (result.queued) {
-      setCheckInState("emergency");
-      alert("\ud83d\udcf4 SOS saved. Will send automatically when online.");
-    } else if (result.success) {
-      setCheckInState("emergency");
+    setCheckInState("emergency");
+    
+    if (result.state === 'SENT') {
       scheduleSOSNotification("Trusted Contacts", "", result.data?.sos_id).catch((err) => console.warn("SOS notification error:", err));
-      alert("\ud83d\udea8 SOS ACTIVATED! Your trusted contacts are being notified.");
+      alert("🚨 SOS ACTIVATED! Your trusted contacts are being notified.");
+    } else if (result.state === 'QUEUED') {
+      alert("📴 SOS saved. Will send automatically when online.");
     } else {
       alert("Failed to send SOS. Please try again.");
     }
+  };
+
+  const handleNeedAssistance = () => {
+    setCheckInState("assistance");
+    setShowAssistanceOptions(true);
+  };
+
+  const handleEmergency = () => {
+    setShowEmergencyConfirm(true);
   };
 
   const handleCallContact = () => alert("Calling your trusted contact...");
@@ -394,13 +365,14 @@ function DashboardScreenV2() {
         />
       )}
 
-      <BottomNav 
-        onSOS={handleEmergency} 
-        activeTab={activeTab} 
-        onTabChange={setActiveTab} 
+      <BottomNav
+        onSOS={handleEmergency}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
       />
     </div>
   );
 }
 
 export default DashboardScreenV2;
+

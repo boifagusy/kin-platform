@@ -1,4 +1,4 @@
-// SOS Service with LocationQueue integration
+// SOS Service with LocationQueue integration — Always queue first, then sync
 import { LocationQueue } from './LocationQueue.js';
 import networkDetection from './NetworkDetection.js';
 
@@ -13,7 +13,7 @@ class SOSService {
 
   async triggerSOS(phone, locationData = null, batteryLevel = null, options = {}) {
     const { silent = false } = options;
-    
+
     console.log('🆘 SOS Triggered:', { phone, silent, locationData });
 
     const payload = {
@@ -37,38 +37,50 @@ class SOSService {
       location: locationData
     }));
 
-    // Try to send immediately if online
-    if (networkDetection.isOnline()) {
+    // ALWAYS QUEUE FIRST (like test harness)
+    await this.queue.enqueue(payload);
+    console.log('📦 SOS enqueued');
+
+    // Then try to sync immediately if online
+    const trulyOnline = await networkDetection.isTrulyOnline();
+    console.log('📡 isTrulyOnline:', trulyOnline);
+    
+    if (trulyOnline) {
       try {
-        const response = await fetch(`${API_BASE}/sos`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('kin_token')}`,
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify(payload)
+        // Import SyncQueue dynamically
+        const { SyncQueue } = await import('./SyncQueue.js');
+        const syncQueue = new SyncQueue(this.queue, async (item) => {
+          const response = await fetch(`${API_BASE}/sos`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('kin_token')}`,
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify(item)
+          });
+          if (!response.ok) {
+            throw new Error(`Upload failed: ${response.status}`);
+          }
+          return true;
         });
-        const data = await response.json();
-        if (data.success) {
-          console.log('✅ SOS sent immediately');
+        
+        const result = await syncQueue.drain(1, 500);
+        if (result.synced > 0) {
+          console.log('✅ SOS synced immediately');
           return {
             success: true,
             queued: false,
-            data,
+            synced: true,
             silent,
             message: silent ? 'Silent SOS triggered' : 'SOS Alert Sent'
           };
         }
       } catch (error) {
-        console.warn('SOS send failed, queueing:', error);
+        console.warn('SOS sync failed, item remains queued:', error);
       }
     }
 
-    // Queue for later
-    await this.queue.enqueue(payload);
-    console.log('📦 SOS queued for later sync');
-    
     return {
       success: true,
       queued: true,

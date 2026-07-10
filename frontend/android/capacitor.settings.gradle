@@ -20,6 +20,9 @@ project(':kin-heartbeat').projectDir = new File('../../plugins/kin-heartbeat/and
 include ':kin-location'
 project(':kin-location').projectDir = new File('../../plugins/kin-location/android')
 
+include ':kin-network'
+project(':kin-network').projectDir = new File('../../plugins/kin-network/android')
+
 include ':kin-notifications'
 project(':kin-notifications').projectDir = new File('../../plugins/kin-notifications/android')
 
