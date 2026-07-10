@@ -14,6 +14,7 @@ import BottomNav from "../../components/dashboard/BottomNav";
 import { getCurrentLocation, getBatteryLevel } from "../../utils/location";
 import { startNotificationChecker, stopNotificationChecker, scheduleSOSNotification } from "../../services/notificationService";
 import trustedContactService from '../../services/trustedContactService.js';
+import { enqueue, retryQueue } from "../../services/offlineQueueService";
 import safetyService from '../../services/SafetyService.js';
 
 const API_BASE = import.meta.env.VITE_API_URL;
@@ -55,7 +56,10 @@ function DashboardScreenV2() {
   useEffect(() => {
     const handleOnline = () => {
       setOffline(false);
-      // Auto-sync handled by SafetySyncManager
+      retryQueue(API_BASE).then(({ sent, failed }) => {
+        if (sent > 0) console.log(`Sent ${sent} queued request(s) after reconnecting`);
+        if (failed > 0) console.warn(`${failed} queued request(s) still pending`);
+      });
     };
     const handleOffline = () => setOffline(true);
     window.addEventListener("online", handleOnline);

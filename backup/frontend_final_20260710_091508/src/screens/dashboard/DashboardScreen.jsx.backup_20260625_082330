@@ -13,8 +13,7 @@ import EmergencyModal from "../../components/dashboard/EmergencyModal";
 import BottomNav from "../../components/dashboard/BottomNav";
 import { getCurrentLocation, getBatteryLevel } from "../../utils/location";
 import { startNotificationChecker, stopNotificationChecker, scheduleSOSNotification } from "../../services/notificationService";
-import trustedContactService from '../../services/trustedContactService.js';
-import safetyService from '../../services/SafetyService.js';
+import { enqueue, retryQueue } from "../../services/offlineQueueService";
 
 const API_BASE = import.meta.env.VITE_API_URL;
 
@@ -30,7 +29,6 @@ function DashboardScreenV2() {
   const [showEmergencyConfirm, setShowEmergencyConfirm] = useState(false);
   const [offline, setOffline] = useState(!navigator.onLine);
   const [activeTab, setActiveTab] = useState("home");
-  const [trustedContactStatus, setTrustedContactStatus] = useState(Date.now());
 
   // Trusted Contact handlers
   const handleShareInvite = () => {
@@ -43,19 +41,13 @@ function DashboardScreenV2() {
     alert("Replace contact - coming soon!");
   };
 
-  // Subscribe to trusted contact changes
-  useEffect(() => {
-    const unsubscribe = trustedContactService.subscribe(() => {
-      setTrustedContactStatus(Date.now());
-    });
-    trustedContactService.loadStatus();
-    return unsubscribe;
-  }, []);
-
   useEffect(() => {
     const handleOnline = () => {
       setOffline(false);
-      // Auto-sync handled by SafetySyncManager
+      retryQueue(API_BASE).then(({ sent, failed }) => {
+        if (sent > 0) console.log(`Sent ${sent} queued request(s) after reconnecting`);
+        if (failed > 0) console.warn(`${failed} queued request(s) still pending`);
+      });
     };
     const handleOffline = () => setOffline(true);
     window.addEventListener("online", handleOnline);
@@ -74,22 +66,13 @@ function DashboardScreenV2() {
 
     async function loadDashboard() {
       try {
-
-const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)}`, {
-
-
-  headers: { "Authorization": `Bearer ${localStorage.getItem("kin_token")}` },
+        const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)}`, {
+          headers: { "Authorization": `Bearer ${localStorage.getItem("kin_token")}` },
         });
         const data = await res.json();
-        if (data.success) {
-          setDashboard({
-            ...data,
-            trusted_contact: data.data?.trusted_contact || null,
-            has_verified_contact: data.data?.has_verified_contact || false,
-          });
-        }
-        // Clear onboarding draft
-        clearDraft();
+        if (data.success) setDashboard(data);
+    // Clear onboarding draft
+    clearDraft();
       } catch (err) {
         console.error(err);
       } finally {
@@ -135,7 +118,7 @@ const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)
 
   const breakdownItems = [
     { label: "Location Enabled", status: locationEnabled },
-    { label: "Trusted Contact Added", status: trustedContactService.isVerifiedContactAvailable() },
+    { label: "Trusted Contact Added", status: contactsCount > 0 },
     { label: "Safe Zones Added", status: homeZoneAdded },
     { label: "Duress PIN Created", status: duressPinCreated },
     { label: "Recent Check-In", status: recentCheckIn !== false },
@@ -164,34 +147,62 @@ const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)
         console.warn("Battery error:", err);
       }
 
-      // Use SafetyService — single source of truth
-      const result = await safetyService.checkIn(phone, locationData, batteryLevel);
+      const checkinBody = {
+        phone: phone,
+        status: "safe",
+        latitude: locationData?.latitude,
+        longitude: locationData?.longitude,
+        battery_level: batteryLevel,
+      };
 
-      if (result.state === 'SENT') {
+      if (!navigator.onLine) {
+        enqueue("/api/v1/checkin", checkinBody, "checkin");
         handleSafeCheckInState();
-
- const refreshRes = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)}`, {      
-
-  headers: { "Authorization": `Bearer ${localStorage.getItem("kin_token")}` },
-        });
-        const refreshData = await refreshRes.json();
-        if (refreshData.success) setDashboard(refreshData);
-        alert("✅ Check-in successful!");
-      } else if (result.state === 'QUEUED') {
-        handleSafeCheckInState();
-        alert("📴 Check-in saved. Will send automatically when online.");
-      } else {
-        alert("Failed to check in. Please try again.");
+        alert("\u26a0\ufe0f No internet connection. Your check-in has been saved and will be sent automatically once you're back online.");
+        return;
       }
 
+      try {
+        const response = await fetch(`${API_BASE}/checkin`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(checkinBody),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          handleSafeCheckInState();
+          const refreshRes = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)}`, {
+            headers: { "Authorization": `Bearer ${localStorage.getItem("kin_token")}` },
+          });
+          const refreshData = await refreshRes.json();
+          if (refreshData.success) setDashboard(refreshData);
+        } else {
+          alert(data.error || "Failed to check in");
+        }
+      } catch (fetchError) {
+        console.error("Check-in network error:", fetchError);
+        alert("DEBUG ERROR NAME: " + fetchError.name + " | MESSAGE: " + fetchError.message);
+        enqueue("/api/v1/checkin", checkinBody, "checkin");
+        handleSafeCheckInState();
+        alert("\u26a0\ufe0f Could not reach the server. Your check-in has been saved and will be sent automatically once connection is restored.");
+      }
     } catch (error) {
       console.error("Check-in error:", error);
-      console.error("  error.message:", error.message);
-      console.error("  error.stack:", error.stack);
       alert("Failed to check in. Please try again.");
     } finally {
       setCheckInLoading(false);
     }
+  };
+
+  const handleNeedAssistance = () => {
+    setCheckInState("assistance");
+    setShowAssistanceOptions(true);
+  };
+
+  const handleEmergency = () => {
+    setShowEmergencyConfirm(true);
   };
 
   const confirmEmergency = async () => {
@@ -211,28 +222,46 @@ const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)
       console.warn("Battery error:", err);
     }
 
-    // Use SafetyService — single source of truth
-    const result = await safetyService.triggerSOS(phone, locationData, batteryLevel, { silent: false });
+    const sosBody = {
+      phone: phone,
+      latitude: locationData?.latitude,
+      longitude: locationData?.longitude,
+      accuracy: locationData?.accuracy,
+      battery_level: batteryLevel,
+    };
 
-    setCheckInState("emergency");
-    
-    if (result.state === 'SENT') {
-      scheduleSOSNotification("Trusted Contacts", "", result.data?.sos_id).catch((err) => console.warn("SOS notification error:", err));
-      alert("🚨 SOS ACTIVATED! Your trusted contacts are being notified.");
-    } else if (result.state === 'QUEUED') {
-      alert("📴 SOS saved. Will send automatically when online.");
-    } else {
-      alert("Failed to send SOS. Please try again.");
+    // No network at all -- skip the request entirely and queue immediately.
+    if (!navigator.onLine) {
+      setCheckInState("emergency");
+      alert("\u26a0\ufe0f No internet connection. Your SOS has been saved and will be sent automatically once you're back online.");
+      return;
     }
-  };
 
-  const handleNeedAssistance = () => {
-    setCheckInState("assistance");
-    setShowAssistanceOptions(true);
-  };
+    try {
+      const response = await fetch(`${API_BASE}/sos`, {
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem("kin_token")}` },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sosBody),
+      });
 
-  const handleEmergency = () => {
-    setShowEmergencyConfirm(true);
+      const data = await response.json();
+
+      if (data.success) {
+        setCheckInState("emergency");
+        scheduleSOSNotification("Trusted Contacts", "", data.data?.sos_id).catch((err) => console.warn("SOS notification error:", err));
+        alert("\ud83d\udea8 SOS ACTIVATED! Your trusted contacts are being notified.");
+      } else {
+        alert(data.error || "Failed to send SOS");
+      }
+    } catch (error) {
+      // Real network failure (e.g. request timed out, connection dropped
+      // mid-flight) even though navigator.onLine said we were connected.
+      console.error("SOS error:", error);
+      alert("DEBUG SOS ERROR NAME: " + error.name + " | MESSAGE: " + error.message);
+      setCheckInState("emergency");
+      alert("\u26a0\ufe0f Could not reach the server. Your SOS has been saved and will be sent automatically once connection is restored.");
+    }
   };
 
   const handleCallContact = () => alert("Calling your trusted contact...");
@@ -257,7 +286,7 @@ const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)
 
   return (
     <div className="min-h-screen bg-[#F0F7F2] pb-20">
-      <HeaderV2 greeting={greeting} userName={userName} onBellClick={() => navigate("/alerts", { state: { phone } })} unreadCount={dashboard?.unread_alerts || 0} />
+      <HeaderV2 greeting={greeting} userName={userName} />
 
       {offline && (
         <div className="bg-yellow-100 p-3 text-center">
@@ -287,14 +316,12 @@ const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)
         )}
 
         {/* Trusted Contact Card */}
-        {!trustedContactService.isVerifiedContactAvailable() && (
-          <TrustedContactCard
-            contact={trustedContactService.getVerifiedContact()}
-            inviteStatus={dashboard?.invite_status}
-            onShare={handleShareInvite}
-            onReplace={handleReplaceContact}
-          />
-        )}
+        <TrustedContactCard
+          contact={dashboard?.trusted_contact}
+          inviteStatus={dashboard?.invite_status}
+          onShare={handleShareInvite}
+          onReplace={handleReplaceContact}
+        />
 
         {tasks.length > 0 && <SetupCard tasks={tasks} />}
 
@@ -361,14 +388,13 @@ const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)
         />
       )}
 
-      <BottomNav
-        onSOS={handleEmergency}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
+      <BottomNav 
+        onSOS={handleEmergency} 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
       />
     </div>
   );
 }
 
 export default DashboardScreenV2;
-
