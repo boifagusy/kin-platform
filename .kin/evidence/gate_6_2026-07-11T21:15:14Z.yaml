@@ -1,0 +1,10 @@
+policy: gate_6
+timestamp: 2026-07-11T21:15:14Z
+results:
+  - role_assigned: NOT MET
+  - active_brick: NOT MET
+  - architecture_approved: met
+  - previous_gate_passed: met
+  - validation_passed: met
+  - 
+verdict: FAIL

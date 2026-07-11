@@ -58,3 +58,15 @@ clipboard_status() {
     count=$(ls -1 "$(get_clipboard_dir)"/*.txt 2>/dev/null | wc -l | tr -d ' ')
     echo "✓ Clipboard active | History: ${count:-0}"
 }
+
+# Copy file contents to clipboard
+clipboard_copy_file() {
+    local file="$1"
+    if [ ! -f "$file" ]; then
+        echo "File not found: $file"
+        return 1
+    fi
+    local content
+    content="$(cat "$file")"
+    clipboard_copy "file" "$content"
+}

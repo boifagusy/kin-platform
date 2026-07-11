@@ -1,0 +1,9 @@
+# Deployment Policy
+action: deploy
+requires:
+  - release_checklist
+  - clean_git
+  - all_tests_passing
+  - manager_approval
+  - gate_11_completed
+outcome: [pending, passed, failed]

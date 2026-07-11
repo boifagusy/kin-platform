@@ -1,0 +1,11 @@
+# Gate 6 — Brick Development Policy
+gate: 6
+name: Brick Development
+lifecycle: [not_started, in_progress, testing, validated, completed]
+requires:
+  - role_assigned
+  - active_brick
+  - architecture_approved
+  - previous_gate_passed
+  - validation_passed
+outcome: [pending, passed, failed, waived]

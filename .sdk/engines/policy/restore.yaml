@@ -1,0 +1,8 @@
+# Restore Policy
+action: restore
+requires:
+  - recipe_exists
+  - backup_created
+  - dependencies_satisfied
+  - verification_defined
+outcome: [pending, passed, failed]

@@ -23,15 +23,15 @@ source "$SDK_ROOT/engines/governance/levels.sh" 2>/dev/null
 
 COMMAND="$1"; shift
 
-# Determine level — Level 0 bypasses governance entirely
-CMD_LEVEL=$(governance_level "$COMMAND")
-
-if [ "$CMD_LEVEL" -gt 0 ] && [ -f "$GOVERNANCE_ENGINE" ]; then
-    source "$GOVERNANCE_ENGINE" 2>/dev/null
-    governance_check "$COMMAND" "${1:-}" || exit 1
+# Clip is Level 1 — bypasses full governance
+if [ "$COMMAND" != "clip" ]; then
+    CMD_LEVEL=$(governance_level "$COMMAND")
+    if [ "$CMD_LEVEL" -gt 0 ] && [ -f "$GOVERNANCE_ENGINE" ]; then
+        source "$GOVERNANCE_ENGINE" 2>/dev/null
+        governance_check "$COMMAND" "${1:-}" || exit 1
+    fi
 fi
 
-# Dispatch
 case "$COMMAND" in
     status|doctor|install|work)
         execute_plugin "$COMMAND" ;;
@@ -45,6 +45,7 @@ case "$COMMAND" in
         case "${1:-status}" in
             status)  clipboard_status ;;
             copy)    shift; clipboard_copy "manual" "$*" ;;
+            file)    shift; clipboard_copy_file "$1" ;;
             history) clipboard_history "${2:-10}" ;;
             last)    clipboard_last ;;
             *)       clipboard_status ;;

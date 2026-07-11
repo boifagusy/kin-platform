@@ -1,0 +1,9 @@
+# Gate 0 — Bootstrap Policy
+gate: 0
+name: Bootstrap
+lifecycle: [not_started, in_progress, completed]
+requires:
+  - git_repository
+  - sdk_installed
+  - doctor_passes
+outcome: [pending, passed, failed]
