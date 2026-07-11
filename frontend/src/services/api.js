@@ -14,7 +14,7 @@ const getHeaders = () => ({
 });
 
 // Generic request handler
-async function request(endpoint, options = {}) {
+export async function request(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
   console.log('📡 API Request:', url);
 

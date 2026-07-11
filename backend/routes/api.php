@@ -26,15 +26,14 @@ Route::prefix('v1')->group(function () {
    Route::post('/sos', [SosController::class, 'store'])->middleware('auth:sanctum');
 
 
-    Route::get('/trusted-contacts', [TrustedContactController::class, 'index']);
-    Route::post('/trusted-contacts', [TrustedContactController::class, 'store']);
-    Route::get('/trusted-contact/verify/{token}', [TrustedContactController::class, 'verify']);
-    Route::delete('/trusted-contacts/{id}', [TrustedContactController::class, 'destroy']);
+ 
+Route::get('/trusted-contacts', [TrustedContactController::class, 'index'])->middleware('auth:sanctum');
+Route::post('/trusted-contacts', [TrustedContactController::class, 'store'])->middleware('auth:sanctum');
+Route::delete('/trusted-contacts/{id}', [TrustedContactController::class, 'destroy'])->middleware('auth:sanctum');
 
-    Route::get('/incidents', [IncidentController::class, 'index']);
-    Route::get('/incidents/{id}', [IncidentController::class, 'show']);
-    Route::post('/incidents/{id}/resolve', [IncidentController::class, 'markResolved']);
-
+    Route::get('/incidents', [IncidentController::class, 'index'])->middleware('auth:sanctum');
+Route::get('/incidents/{id}', [IncidentController::class, 'show'])->middleware('auth:sanctum');
+Route::post('/incidents/{id}/resolve', [IncidentController::class, 'markResolved'])->middleware('auth:sanctum');
     Route::get('/trusted-contact/notifications/{phone}', [IncidentController::class, 'notifications']);
 
     Route::post('/auth/user-details', [AuthController::class, 'userDetails']);
