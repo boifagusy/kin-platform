@@ -1,48 +1,36 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 # Clipboard Engine — Kernel Service
-# Does NOT know about project layout. That's the engine's job.
+# Termux requires file-based input for termux-clipboard-set
 
-# Platform detection
 clipboard_detect_platform() {
-    if [ -d "/data/data/com.termux" ]; then echo "termux"
-    elif command -v xclip >/dev/null 2>&1; then echo "linux"
-    elif command -v pbcopy >/dev/null 2>&1; then echo "macos"
-    elif command -v clip.exe >/dev/null 2>&1; then echo "windows"
-    else echo "unknown"; fi
+    [ -d "/data/data/com.termux" ] && echo "termux" && return
+    command -v xclip >/dev/null 2>&1 && echo "linux" && return
+    command -v pbcopy >/dev/null 2>&1 && echo "macos" && return
+    command -v clip.exe >/dev/null 2>&1 && echo "windows" && return
+    echo "unknown"
 }
 
-# Service available?
 clipboard_available() {
-    local p; p="$(clipboard_detect_platform)"
-    case "$p" in
-        termux) command -v termux-clipboard-set >/dev/null 2>&1 ;;
-        linux)  command -v xclip >/dev/null 2>&1 ;;
-        macos)  command -v pbcopy >/dev/null 2>&1 ;;
-        windows) command -v clip.exe >/dev/null 2>&1 ;;
-        *) return 1 ;;
-    esac
+    command -v termux-clipboard-set >/dev/null 2>&1
 }
 
-# Raw copy to system clipboard (no history, no config — pure function)
+# Write content to system clipboard
+# Takes content as argument (not stdin) to avoid pipe issues
 clipboard_write() {
-    local p; p="$(clipboard_detect_platform)"
-    case "$p" in
-        termux) termux-clipboard-set ;;
-        linux)  xclip -selection clipboard ;;
-        macos)  pbcopy ;;
-        windows) clip.exe ;;
-        *) return 1 ;;
-    esac
+    local content="$1"
+    local tmp="$HOME/.clipboard_tmp_$$"
+    echo "$content" > "$tmp"
+    termux-clipboard-set < "$tmp" 2>/dev/null
+    local rc=$?
+    rm -f "$tmp"
+    return $rc
 }
 
-# Strip ANSI codes
 clipboard_strip_ansi() {
     sed 's/\x1b\[[0-9;]*m//g'
 }
 
-# Notify if available
 clipboard_notify() {
-    local msg="${1:-Copied to clipboard}"
-    termux-notification -t "Engineering OS" -c "$msg" 2>/dev/null || true
+    termux-notification -t "Engineering OS" -c "${1:-Copied to clipboard}" 2>/dev/null || true
 }
