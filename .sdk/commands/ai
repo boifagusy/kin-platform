@@ -15,23 +15,27 @@ if [ $# -eq 0 ]; then
 KIN Engineering SDK v${SDK_VERSION}
 
 Commands:
-  work       Daily engineering dashboard
-  status     Show project status
-  doctor     Run environment diagnostics
-  validate   Validate system health
-  session    Manage AI sessions
-  role       Manage AI roles
+  work       Daily dashboard
+  status     Project status
+  doctor     Environment check
+  validate   System validation
+  session    Session management
+  role       Role assignment
   gate       Gate management
   brick      Brick management
-  workflow   Workflow management
+  workflow   Workflow operations
   event      Event system
   audit      Audit trail
   knowledge  Knowledge base
   git        Git operations
-  github     GitHub operations
+  github     GitHub integration
   release    Release management
-  install    Install SDK into a project
-  plugins    List available plugins
+  install    Install into project
+  help       Help system
+  tutorial   Guided walkthrough
+  examples   Real workflows
+  explain    Explain concepts
+  plugins    List plugins
 
 Environment: Termux-first
 HELP
@@ -46,7 +50,7 @@ ARG="${3:-}"
 case "$COMMAND" in
     status|doctor|install|work)
         execute_plugin "$COMMAND" ;;
-    session|role|gate|brick|workflow|event|audit|knowledge|git|github|release|validate)
+    session|role|gate|brick|workflow|event|audit|knowledge|git|github|release|validate|help|tutorial|examples|explain)
         execute_plugin "$COMMAND" && main "$ACTION" "$ARG" ;;
     plugins)
         list_plugins ;;

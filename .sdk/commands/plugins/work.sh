@@ -1,26 +1,29 @@
-# Description: Engineering Manager Console — the only command you need
+# Description: Engineering Command Center v4.0 — Production Ready
 # Requires: state gate workflow validate git brick knowledge audit
 
 work_main() {
-    # Load all engines
     source "$SDK_ROOT/engines/gate/engine.sh" 2>/dev/null
     source "$SDK_ROOT/engines/workflow/engine.sh" 2>/dev/null
     source "$SDK_ROOT/engines/validate/engine.sh" 2>/dev/null
     source "$SDK_ROOT/engines/git/engine.sh" 2>/dev/null
     source "$SDK_ROOT/engines/brick/engine.sh" 2>/dev/null
     source "$SDK_ROOT/engines/audit/engine.sh" 2>/dev/null
-    source "$SDK_ROOT/engines/knowledge/engine.sh" 2>/dev/null
     source "$SDK_ROOT/kernel/state.sh" 2>/dev/null
+    source "$SDK_ROOT/kernel/yaml.sh" 2>/dev/null
     
-    # Gather state
-    local project_name gate gate_name brick role session_status
-    local sdk_version health_score branch changes
-    local waiting blocked blocked_reason
+    # ── State ──
+    local project_name sdk_version gate gate_name gate_status gate_purpose
+    local brick brick_status brick_locked locked_by
+    local role session_status waiting blocked blocked_reason
+    local branch changes hour greeting
+    local session_started session_duration
     
     project_name="$(basename "$(get_project_root 2>/dev/null)")"
     sdk_version="$(grep "version:" "$SDK_ROOT/sdk.yaml" 2>/dev/null | head -1 | sed 's/.*: //')"
     gate="$(gate_current 2>/dev/null)"
     gate_name="$(gate_name "$gate" 2>/dev/null)"
+    gate_status="$(gate_status 2>/dev/null)"
+    gate_purpose="$(gate_description "$gate" 2>/dev/null)"
     brick="$(state_read "brick.yaml" "active_brick" 2>/dev/null | tr -d ' ')"
     role="$(state_read "ai.yaml" "active_role" 2>/dev/null | tr -d ' ')"
     session_status="$(state_read "session.yaml" "status" 2>/dev/null | tr -d ' ')"
@@ -29,157 +32,178 @@ work_main() {
     blocked_reason="$(state_read "gate.yaml" "blocked_reason" 2>/dev/null | tr -d ' ')"
     branch="$(git_branch 2>/dev/null)"
     changes=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
-    health_score=$(validate_project 2>/dev/null | grep "Score:" | tr -d ' ' | sed 's/Score://')
+    session_started="$(state_read "session.yaml" "started" 2>/dev/null | tr -d ' ')"
+    
+    # Session duration
+    if [ -n "$session_started" ] && [ "$session_started" != "unknown" ]; then
+        local started_epoch now_epoch diff_min
+        started_epoch=$(date -d "${session_started}" +%s 2>/dev/null || echo 0)
+        now_epoch=$(date +%s)
+        diff_min=$(( (now_epoch - started_epoch) / 60 ))
+        session_duration="${diff_min} min"
+    else
+        session_duration="--"
+    fi
+    
+    hour=$(date +%H)
+    if [ "$hour" -lt 12 ]; then greeting="Good Morning"
+    elif [ "$hour" -lt 17 ]; then greeting="Good Afternoon"
+    else greeting="Good Evening"
+    fi
+    
+    # ── Brick details ──
+    local bf=0 ff=0 tf=0 df=0
+    if [ "${brick:-none}" != "none" ] && [ -f "bricks/$brick/brick.yaml" ]; then
+        brick_status="$(yaml_get_nested "bricks/$brick/brick.yaml" "brick" "status" 2>/dev/null)"
+        brick_locked="$(yaml_get_nested "bricks/$brick/brick.yaml" "brick" "locked" 2>/dev/null)"
+        locked_by="$(yaml_get_nested "bricks/$brick/brick.yaml" "brick" "locked_by" 2>/dev/null)"
+        bf=$(find "bricks/$brick/backend" -type f 2>/dev/null | wc -l | tr -d ' ')
+        ff=$(find "bricks/$brick/frontend" -type f 2>/dev/null | wc -l | tr -d ' ')
+        tf=$(find "bricks/$brick/tests" -type f 2>/dev/null | wc -l | tr -d ' ')
+        df=$(find "bricks/$brick/docs" -type f 2>/dev/null | wc -l | tr -d ' ')
+    fi
+    
+    # ── Brick count ──
+    local total_bricks=0
+    if [ -d "bricks" ]; then
+        total_bricks=$(ls -1d bricks/*/ 2>/dev/null | wc -l | tr -d ' ')
+    fi
+    
+    # ── Health ──
+    local k_ok="✅" w_ok="✅" g_ok="✅" b_ok="✅" v_ok="✅" git_ok="✅"
+    [ -f "$SDK_ROOT/kernel/common.sh" ] || k_ok="❌"
+    [ -f "$SDK_ROOT/engines/workflow/engine.sh" ] || w_ok="❌"
+    [ -f "$SDK_ROOT/engines/gate/engine.sh" ] || g_ok="❌"
+    [ -f "$SDK_ROOT/engines/brick/engine.sh" ] || b_ok="❌"
+    [ -f "$SDK_ROOT/engines/validate/engine.sh" ] || v_ok="❌"
+    git rev-parse --git-dir >/dev/null 2>&1 || git_ok="❌"
+    
+    # ── Inbox ──
+    local inbox=0
+    [ "$blocked" = "true" ] && inbox=$((inbox + 1))
+    [ "$gate" = "3" ] || [ "$gate" = "11" ] && inbox=$((inbox + 1))
+    [ "${role:-unassigned}" = "unassigned" ] && inbox=$((inbox + 1))
+    
+    # ── Active locks ──
+    local lock_count=0 lock_info=""
+    if [ -d "bricks" ]; then
+        for bd in bricks/*/; do
+            [ -f "$bd/brick.yaml" ] || continue
+            local lk lkb
+            lk=$(yaml_get_nested "$bd/brick.yaml" "brick" "locked" 2>/dev/null)
+            if [ "$lk" = "true" ]; then
+                lkb=$(yaml_get_nested "$bd/brick.yaml" "brick" "locked_by" 2>/dev/null)
+                lock_info="${lock_info}  $(basename "$bd") → ${lkb}\n"
+                lock_count=$((lock_count + 1))
+            fi
+        done
+    fi
+    
+    # ── Footer status ──
+    local footer="Engineering OS Ready"
+    [ "$blocked" = "true" ] && footer="⛔ ${blocked_reason}"
+    [ "${role:-unassigned}" = "unassigned" ] && footer="Awaiting role assignment"
+    [ "${brick:-none}" != "none" ] && [ "$gate" -ge 6 ] && footer="${brick} — Gate ${gate} in Progress"
     
     clear 2>/dev/null || true
     
-    # HEADER
+    # ═══════════════ HEADER ═══════════════
     cat << HEADER
 ╔══════════════════════════════════════════════════════════════╗
-║              ENGINEERING OS — MANAGEMENT CONSOLE             ║
+║              ENGINEERING OS — COMMAND CENTER                 ║
 ╠══════════════════════════════════════════════════════════════╣
-║ Project:  ${project_name}                                      ║
-║ SDK:      v${sdk_version}                                          ║
-║ Health:   ${health_score:-?}%                                            ║
-║ Git:      ${branch} (${changes} files)                                  ║
-║ Session:  ${session_status:-inactive}                                          ║
-╠══════════════════════════════════════════════════════════════╣
+║  ${greeting}, Engineering Manager.                              ║
 ║                                                            ║
-║  GATE ${gate} — ${gate_name}                                         ║
-║  BRICK: ${brick:-none}                                             ║
-║  ROLE:  ${role:-unassigned}                                          ║
+║  Project:   ${project_name}     SDK: v${sdk_version}     Health: All ${k_ok}  ║
+║  Git:       ${branch} (${changes} files)     Session: ${session_duration}         ║
+║                                                            ║
+║  CURRENT GATE: ${gate} — ${gate_name}                              ║
+║  Status:     ${gate_status}     Purpose: ${gate_purpose}                  ║
+║                                                            ║
+║  Manager: Idowu              AI Role: ${role:-unassigned}                 ║
+║  Brick:    ${brick:-none}              Bricks: ${total_bricks} total              ║
 ║                                                            ║
 HEADER
 
-    # INBOX — Pending Decisions & Blockers
-    echo "╠══════════════════════════════════════════════════════════════╣"
-    echo "║  📋 INBOX                                                  ║"
-    
-    local inbox_count=0
-    
-    # Blockers
-    if [ "$blocked" = "true" ]; then
-        echo "║  ⛔ BLOCKED: ${blocked_reason}                              ║"
-        inbox_count=$((inbox_count + 1))
-    fi
-    
-    # Pending approvals (Gates 3 and 11 require approval)
-    if [ "$gate" = "3" ] || [ "$gate" = "11" ]; then
-        echo "║  ✋ APPROVAL NEEDED: Gate $gate — $(gate_name "$gate")       ║"
-        inbox_count=$((inbox_count + 1))
-    fi
-    
-    # Dirty git
-    if [ "${changes:-0}" -gt 10 ]; then
-        echo "║  💾 UNCOMMITTED: $changes files changed                     ║"
-        inbox_count=$((inbox_count + 1))
-    fi
-    
-    # No active brick
-    if [ "${brick:-none}" = "none" ] && [ "$gate" -ge 5 ]; then
-        echo "║  🧱 NO ACTIVE BRICK — ai brick create <name>               ║"
-        inbox_count=$((inbox_count + 1))
-    fi
-    
-    # No role assigned
-    if [ "${role:-unassigned}" = "unassigned" ]; then
-        echo "║  👤 NO ROLE — ai role set <role>                           ║"
-        inbox_count=$((inbox_count + 1))
-    fi
-    
-    # Waiting for something
-    if [ -n "$waiting" ] && [ "$waiting" != "null" ] && [ "$waiting" != "initialization" ]; then
-        echo "║  ⏳ WAITING: $waiting                                       ║"
-        inbox_count=$((inbox_count + 1))
-    fi
-    
-    if [ $inbox_count -eq 0 ]; then
-        echo "║  ✅ No pending items                                       ║"
-    fi
-    
-    echo "║                                                            ║"
-
-    # BRICK HEALTH (if active brick)
-    if [ "${brick:-none}" != "none" ] && [ -d "bricks/$brick" ]; then
+    # ═══════════════ INBOX ═══════════════
+    if [ $inbox -gt 0 ]; then
         echo "╠══════════════════════════════════════════════════════════════╣"
-        echo "║  🧱 BRICK HEALTH: $brick                                   ║"
-        
-        local brick_status locked locked_by
-        brick_status="$(yaml_get_nested "bricks/$brick/brick.yaml" "brick" "status" 2>/dev/null)"
-        locked="$(yaml_get_nested "bricks/$brick/brick.yaml" "brick" "locked" 2>/dev/null)"
-        locked_by="$(yaml_get_nested "bricks/$brick/brick.yaml" "brick" "locked_by" 2>/dev/null)"
-        
-        echo "║  Status:    ${brick_status:-unknown}                        ║"
-        [ "$locked" = "true" ] && echo "║  Locked:    by $locked_by                                   ║"
-        
-        # File counts per directory
-        local backend_files frontend_files test_files doc_files
-        backend_files=$(find "bricks/$brick/backend" -type f 2>/dev/null | wc -l | tr -d ' ')
-        frontend_files=$(find "bricks/$brick/frontend" -type f 2>/dev/null | wc -l | tr -d ' ')
-        test_files=$(find "bricks/$brick/tests" -type f 2>/dev/null | wc -l | tr -d ' ')
-        doc_files=$(find "bricks/$brick/docs" -type f 2>/dev/null | wc -l | tr -d ' ')
-        
-        echo "║  Backend:   ${backend_files} files                                ║"
-        echo "║  Frontend:  ${frontend_files} files                                ║"
-        echo "║  Tests:     ${test_files} files                                ║"
-        echo "║  Docs:      ${doc_files} files                                ║"
+        echo "║  📋 INBOX (${inbox})                                                ║"
+        [ "$blocked" = "true" ] && echo "║  ⛔ BLOCKED: ${blocked_reason}                                  ║"
+        [ "$gate" = "3" ] || [ "$gate" = "11" ] && echo "║  ✋ Gate ${gate} requires Engineering Manager approval             ║"
+        [ "${role:-unassigned}" = "unassigned" ] && echo "║  👤 Assign AI role to proceed                                 ║"
         echo "║                                                            ║"
     fi
 
-    # GATE PROGRESS
+    # ═══════════════ ACTIVE LOCKS ═══════════════
     echo "╠══════════════════════════════════════════════════════════════╣"
-    echo "║  📊 GATE PROGRESS                                          ║"
-    
-    local completed=0 total=12
-    for ((g=0; g<gate; g++)); do
-        completed=$((completed + 1))
-    done
-    local pct=$((completed * 100 / total))
-    local bar=""
-    for ((i=0; i<pct/10; i++)); do bar="${bar}█"; done
-    for ((i=pct/10; i<10; i++)); do bar="${bar}░"; done
-    echo "║  Gates:  ${bar} ${completed}/${total} (${pct}%)                     ║"
-    echo "║                                                            ║"
-
-    # RECENT ACTIVITY
-    echo "╠══════════════════════════════════════════════════════════════╣"
-    echo "║  📜 RECENT ACTIVITY                                        ║"
-    
-    audit_list 4 2>/dev/null | grep "  \[" | while read line; do
-        printf "║ %-58s ║\n" "${line:0:58}"
-    done
-    
-    echo "║                                                            ║"
-
-    # NEXT ACTION
-    echo "╠══════════════════════════════════════════════════════════════╣"
-    echo "║                                                            ║"
-    
-    # Determine next action based on state
-    if [ "$session_status" != "active" ]; then
-        echo "║  ▶  ai session start                                       ║"
-    elif [ "${role:-unassigned}" = "unassigned" ]; then
-        echo "║  ▶  ai role set <role>                                     ║"
-    elif [ "$blocked" = "true" ]; then
-        echo "║  ▶  Resolve: ${blocked_reason}                              ║"
-    elif [ "${brick:-none}" = "none" ] && [ "$gate" -ge 5 ]; then
-        echo "║  ▶  ai brick create <name>                                 ║"
-    elif [ "$gate" -lt 11 ]; then
-        echo "║  ▶  Complete Gate $gate requirements                        ║"
-        echo "║  ▶  ai gate verify && ai gate advance                      ║"
+    if [ $lock_count -gt 0 ]; then
+        echo "║  🔒 ACTIVE LOCKS (${lock_count})                                         ║"
+        echo -e "$lock_info" | while read line; do
+            [ -n "$line" ] && printf "║ %-58s ║\n" "$line"
+        done
     else
-        echo "║  ▶  ai release create                                      ║"
+        echo "║  🔒 ACTIVE LOCKS: None                                      ║"
+    fi
+    echo "║                                                            ║"
+
+    # ═══════════════ BRICK HEALTH ═══════════════
+    if [ "${brick:-none}" != "none" ] && [ -d "bricks/$brick" ]; then
+        echo "╠══════════════════════════════════════════════════════════════╣"
+        echo "║  🧱 BRICK: ${brick}                                            ║"
+        echo "║  Status: ${brick_status:-unknown}    BE: ${bf} files  FE: ${ff} files  Tests: ${tf}  Docs: ${df}  ║"
+        [ "$brick_locked" = "true" ] && echo "║  🔒 Locked by: ${locked_by}                                      ║"
+        echo "║                                                            ║"
+    fi
+
+    # ═══════════════ VALIDATION ═══════════════
+    echo "╠══════════════════════════════════════════════════════════════╣"
+    echo "║  ✔ VALIDATION                                               ║"
+    echo "║  Kernel: ${k_ok}   Workflow: ${w_ok}   Gate: ${g_ok}   Brick: ${b_ok}   Validate: ${v_ok}   Git: ${git_ok}    ║"
+    echo "║                                                            ║"
+
+    # ═══════════════ WORKFLOW ═══════════════
+    echo "╠══════════════════════════════════════════════════════════════╣"
+    echo "║  🔄 WORKFLOW                                               ║"
+    echo "║  ← Gate ${gate} — ${gate_name} →                               ║"
+    if [ "$gate" -lt 11 ]; then
+        echo "║  Next: Gate $((gate + 1)) — $(gate_name $((gate + 1)) 2>/dev/null)                                     ║"
+    fi
+    echo "║  Target: Gate 11 — Release                                  ║"
+    echo "║                                                            ║"
+
+    # ═══════════════ PROJECT PROGRESS ═══════════════
+    local gate_pct=$((gate * 100 / 12))
+    echo "╠══════════════════════════════════════════════════════════════╣"
+    echo "║  📦 PROJECT PROGRESS                                       ║"
+    echo "║  Gates:   ${gate}/12 (${gate_pct}%)     Bricks: ${total_bricks} total              ║"
+    echo "║  Release: $(git describe --tags --abbrev=0 2>/dev/null || echo 'none')                                      ║"
+    echo "║                                                            ║"
+
+    # ═══════════════ NEXT STEP ═══════════════
+    echo "╠══════════════════════════════════════════════════════════════╣"
+    echo "║  ▶ NEXT STEP                                               ║"
+    
+    if [ "$session_status" != "active" ]; then
+        echo "║  Start a session: ai session start                          ║"
+    elif [ "${role:-unassigned}" = "unassigned" ]; then
+        echo "║  Assign AI role: ai role set architect                      ║"
+    elif [ "$blocked" = "true" ]; then
+        echo "║  Resolve blocker: ${blocked_reason}                          ║"
+    elif [ "$gate" -eq 0 ]; then
+        echo "║  Verify environment: ai doctor && ai gate verify            ║"
+    elif [ "$gate" -ge 5 ] && [ "${brick:-none}" = "none" ]; then
+        echo "║  Select brick: ai brick create <name>                       ║"
+    elif [ "$gate" -lt 11 ]; then
+        echo "║  Complete Gate ${gate} then: ai gate verify && ai gate advance  ║"
+    else
+        echo "║  Create release: ai release create                          ║"
     fi
     
-    echo "║  ▶  ai validate                                             ║"
     echo "║                                                            ║"
-    echo "╠══════════════════════════════════════════════════════════════╣"
-    echo "║  ai work │ gate │ brick │ workflow │ validate │ release     ║"
     echo "╚══════════════════════════════════════════════════════════════╝"
+    echo "  ${footer}"
     echo ""
-
-    # Show next action from workflow engine
-    workflow_next 2>/dev/null | grep "NEXT:" | sed 's/▶️  //'
 }
 
 main() { work_main "$@"; }
