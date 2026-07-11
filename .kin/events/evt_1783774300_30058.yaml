@@ -1,6 +1,0 @@
-event:
-  id: evt_1783774300_30058
-  type: gate.started
-  source: test_engine
-  timestamp: 2026-07-11T12:51:40Z
-  data: gate: 0

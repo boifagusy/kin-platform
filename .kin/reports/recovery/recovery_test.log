@@ -9,3 +9,5 @@ Started: Sat Jul 11 14:14:11 WAT 2026
 [14:14:13]   Recovery test value: reinitialized
 [14:14:13]   PASS: State management working
 [14:14:13] Test: Event history recovery
+[14:14:26]   PASS: Events preserved (71 -> 81)
+Recovery tests complete.
