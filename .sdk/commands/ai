@@ -8,38 +8,12 @@ source "$SDK_ROOT/core/lib/yaml.sh"
 source "$SDK_ROOT/core/lib/state.sh"
 source "$SDK_ROOT/core/lib/plugin.sh"
 
+# Detect --copy flag globally
+HAS_COPY=false
+for arg in "$@"; do [ "$arg" = "--copy" ] && HAS_COPY=true; done
+
 if [ $# -eq 0 ]; then
-    ./.sdk/commands/ai work 2>/dev/null || {
-        SDK_VERSION=$(read_yaml "$SDK_ROOT/sdk.yaml" "version")
-        cat << HELP
-KIN Engineering SDK v${SDK_VERSION}
-
-Commands:
-  work       Daily dashboard
-  status     Project status
-  doctor     Environment check
-  validate   System validation
-  session    Session management
-  role       Role assignment
-  gate       Gate management
-  brick      Brick management
-  workflow   Workflow operations
-  event      Event system
-  audit      Audit trail
-  knowledge  Knowledge base
-  git        Git operations
-  github     GitHub integration
-  release    Release management
-  install    Install into project
-  help       Help system
-  tutorial   Guided walkthrough
-  examples   Real workflows
-  explain    Explain concepts
-  plugins    List plugins
-
-Environment: Termux-first
-HELP
-    }
+    ./.sdk/commands/ai work 2>/dev/null
     exit 0
 fi
 
@@ -47,15 +21,36 @@ COMMAND="$1"
 ACTION="${2:-main}"
 ARG="${3:-}"
 
-case "$COMMAND" in
-    status|doctor|install|work)
-        execute_plugin "$COMMAND" ;;
-    session|role|gate|brick|workflow|event|audit|knowledge|git|github|release|validate|help|tutorial|examples|explain)
-        execute_plugin "$COMMAND" && main "$ACTION" "$ARG" ;;
-    plugins)
-        list_plugins ;;
-    *)
-        echo "Unknown command: $COMMAND"
-        echo "Run 'ai' for help"
-        exit 1 ;;
-esac
+# Remove --copy from args for plugin
+FILTERED_ARGS=()
+for a in "$@"; do [ "$a" != "--copy" ] && FILTERED_ARGS+=("$a"); done
+set -- "${FILTERED_ARGS[@]}"
+
+# Execute with optional clipboard capture
+if $HAS_COPY && [ "$COMMAND" != "clip" ]; then
+    # Run command and capture output
+    OUTPUT=$(case "$COMMAND" in
+        status|doctor|install|work) execute_plugin "$COMMAND" 2>&1 ;;
+        session|role|gate|brick|workflow|event|audit|knowledge|git|github|release|validate|help|tutorial|examples|explain|clip)
+            execute_plugin "$COMMAND" && main "$ACTION" "$ARG" 2>&1 ;;
+        plugins) list_plugins 2>&1 ;;
+        *) echo "Unknown: $COMMAND" ;;
+    esac)
+    
+    echo "$OUTPUT"
+    
+    # Copy to clipboard
+    if [ -f "$SDK_ROOT/engines/clipboard/engine.sh" ]; then
+        source "$SDK_ROOT/engines/clipboard/engine.sh" 2>/dev/null
+        echo "$OUTPUT" | clipboard_copy "$COMMAND" 2>/dev/null
+    fi
+else
+    case "$COMMAND" in
+        status|doctor|install|work)
+            execute_plugin "$COMMAND" ;;
+        clip|session|role|gate|brick|workflow|event|audit|knowledge|git|github|release|validate|help|tutorial|examples|explain)
+            execute_plugin "$COMMAND" && main "$ACTION" "$ARG" ;;
+        plugins) list_plugins ;;
+        *) echo "Unknown: $COMMAND" ;;
+    esac
+fi
