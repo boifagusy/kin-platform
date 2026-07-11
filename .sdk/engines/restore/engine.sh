@@ -1,11 +1,21 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-# Restore Engine
 RESTORE_DIR=".kin/restore"
 RECIPES_DIR="$RESTORE_DIR/recipes"
 HISTORY_DIR="$RESTORE_DIR/history"
-
 mkdir -p "$RECIPES_DIR" "$HISTORY_DIR"
+
+restore_help() {
+    echo "Usage: ai restore [list|report|verify|run <recipe>]"
+    echo ""
+    echo "  ai restore list              Available recipes"
+    echo "  ai restore report            Restoration history"
+    echo "  ai restore verify            Verify components"
+    echo "  ai restore run <recipe>      Execute recipe"
+    echo "  ai restore run <r> --dry-run Preview actions"
+    echo ""
+    restore_list
+}
 
 restore_list() {
     echo "AVAILABLE RESTORE RECIPES"
@@ -47,12 +57,9 @@ restore_verify() {
 restore_run() {
     local recipe="$1"
     local dry=false
-    
-    # Check for --dry-run
     for arg in "$@"; do [ "$arg" = "--dry-run" ] && dry=true; done
     
     local recipe_file="$RECIPES_DIR/${recipe}.sh"
-    
     if [ ! -f "$recipe_file" ]; then
         echo "Recipe not found: $recipe"
         restore_list
@@ -69,35 +76,17 @@ restore_run() {
         return 0
     fi
     
-    echo "  Executing recipe..."
+    echo "  Executing..."
     bash "$recipe_file" 2>/dev/null && echo "  ✅ Complete" || echo "  ❌ Failed"
-    
-    # Log
     echo "$(date) — $recipe" > "$HISTORY_DIR/${recipe}_$(date +%Y%m%d_%H%M%S).log"
-    echo "completed" >> "$HISTORY_DIR/${recipe}_$(date +%Y%m%d_%H%M%S).log"
 }
 
-# Main — simple if/elif instead of case to avoid syntax issues
-if [ "$1" = "list" ]; then
-    restore_list
-elif [ "$1" = "report" ]; then
-    restore_report
-elif [ "$1" = "verify" ]; then
-    restore_verify
-elif [ "$1" = "run" ]; then
-    shift
-    restore_run "$@"
-elif [ -z "$1" ] || [ "$1" = "help" ]; then
-    echo "Usage: ai restore [list|report|verify|run <recipe>]"
-    echo ""
-    echo "  ai restore list              Available recipes"
-    echo "  ai restore report            Restoration history"
-    echo "  ai restore verify            Verify components"
-    echo "  ai restore run <recipe>      Execute recipe"
-    echo "  ai restore run <r> --dry-run Preview actions"
-    echo ""
-    restore_list
-else
-    # Try as recipe name
-    restore_run "$@"
-fi
+# Clean dispatch
+case "$1" in
+    list)    restore_list ;;
+    report)  restore_report ;;
+    verify)  restore_verify ;;
+    run)     shift; restore_run "$@" ;;
+    help|"") restore_help ;;
+    *)       restore_run "$@" ;;  # Treat unknown as recipe name
+esac

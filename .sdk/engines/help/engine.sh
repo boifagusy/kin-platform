@@ -7,10 +7,6 @@ ENGINEERING OS — Help System
 USAGE
   ai <command> [subcommand] [options]
 
-RESTORE
-  ai restore       System restoration
-  ai restore verify Verify all components
-
 START HERE
   ai work          Engineering Command Center
   ai doctor        Check environment
@@ -26,6 +22,7 @@ PROJECT
 DEVELOPMENT
   ai role          Assign AI roles
   ai audit         View audit trail
+  ai restore       System restoration
 
 RELEASE
   ai git           Git operations
@@ -35,16 +32,15 @@ RELEASE
 CLIPBOARD
   ai clip copy     Copy to Android clipboard
   ai clip history  View clipboard history
-  ai clip last     Retrieve last copy
   echo 'text' | ai Pipe to clipboard
 
 LEARNING
-  ai help <topic>  Detailed help (gate, brick, role, workflow, release, clip)
+  ai help <topic>  Detailed help (gate, brick, role, workflow, release, clip, restore)
   ai tutorial 1    Guided walkthrough
   ai examples auth Real-world examples
   ai explain 6     Explain gate 6 or a brick
 
-Topics: gate, brick, role, workflow, release, clip, session, git, commands
+Topics: gate, brick, role, workflow, release, clip, restore, session, git, commands
 HELPEOF
 }
 
@@ -95,6 +91,14 @@ help_topic() {
             echo ""
             echo "  Requires: Termux:API APK from F-Droid"
             ;;
+        restore)
+            echo "RESTORE ENGINE"
+            echo "  ai restore list              Available recipes"
+            echo "  ai restore report            Restoration history"
+            echo "  ai restore verify            Verify all components"
+            echo "  ai restore run <recipe>      Execute restore"
+            echo "  ai restore run <r> --dry-run Preview actions"
+            ;;
         session)
             echo "SESSION: ai session start | stop | status"
             ;;
@@ -102,9 +106,9 @@ help_topic() {
             echo "GIT: ai git status | branch | changes | commit | tag | rollback"
             ;;
         commands)
-            echo "ALL COMMANDS: work status doctor validate session role gate brick workflow event audit knowledge git github release help tutorial examples explain clip install plugins"
+            echo "ALL COMMANDS: work status doctor validate session role gate brick workflow event audit knowledge git github release restore clip help tutorial examples explain install plugins"
             ;;
-        *) echo "Topics: gate, brick, role, workflow, release, clip, session, git, commands" ;;
+        *) echo "Topics: gate, brick, role, workflow, release, clip, restore, session, git, commands" ;;
     esac
 }
 
@@ -155,7 +159,11 @@ help_examples() {
               echo "  ai gate status | ai  # Copy gate status"
               echo "  ai clip history       # View all copies"
               echo "  ai clip last          # Retrieve & copy last" ;;
-        *) echo "EXAMPLES: ai examples auth | release | clip" ;;
+        restore) echo "EXAMPLE: System Restore"
+              echo "  ai restore verify          # Check all components"
+              echo "  ai restore run watchtower  # Full state restore"
+              echo "  ai restore run w --dry-run # Preview first" ;;
+        *) echo "EXAMPLES: ai examples auth | release | clip | restore" ;;
     esac
 }
 
