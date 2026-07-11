@@ -260,3 +260,6 @@
 [2026-07-11T13:17:43Z] [INFO] Commit: 2a607161e88f4734b9152fc2c544a891fccd07fd - Gate test_76 completed
 [2026-07-11T13:17:43Z] [ERROR] Corrupt state file: session.yaml
 [2026-07-11T13:17:43Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T13:17:45Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T13:17:45Z] [INFO] Commit: e2fb6abf4caced1852594be818dcbc8115c70ee5 - Gate test_77 completed
+[2026-07-11T13:17:45Z] [ERROR] Corrupt state file: gate.yaml
