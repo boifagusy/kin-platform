@@ -1,0 +1,6 @@
+event:
+  id: evt_1783775654_30058
+  type: gate.passed
+  source: recovery_test
+  timestamp: 2026-07-11T13:14:14Z
+  data: test_1
