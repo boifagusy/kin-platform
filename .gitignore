@@ -1,0 +1,13 @@
+
+# Engineering OS — Runtime State (project-specific, not reusable)
+.kin/state/
+.kin/events/
+.kin/cache/
+.kin/history/audit/
+.kin/reports/
+.kin/knowledge/
+.kin/recovery/
+.kin/metrics/
+
+# Keep structure but ignore content
+!.kin/**/.gitkeep
