@@ -1,6 +1,0 @@
-event:
-  id: evt_1783775849_30058
-  type: gate.passed
-  source: stress
-  timestamp: 2026-07-11T13:17:29Z
-  data: test_70

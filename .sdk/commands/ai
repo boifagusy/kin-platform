@@ -9,11 +9,13 @@ source "$SDK_ROOT/core/lib/state.sh"
 source "$SDK_ROOT/core/lib/plugin.sh"
 
 if [ $# -eq 0 ]; then
-    SDK_VERSION=$(read_yaml "$SDK_ROOT/sdk.yaml" "version")
-    cat << HELP
+    ./.sdk/commands/ai work 2>/dev/null || {
+        SDK_VERSION=$(read_yaml "$SDK_ROOT/sdk.yaml" "version")
+        cat << HELP
 KIN Engineering SDK v${SDK_VERSION}
 
 Commands:
+  work       Daily engineering dashboard
   status     Show project status
   doctor     Run environment diagnostics
   validate   Validate system health
@@ -33,6 +35,7 @@ Commands:
 
 Environment: Termux-first
 HELP
+    }
     exit 0
 fi
 
@@ -41,7 +44,7 @@ ACTION="${2:-main}"
 ARG="${3:-}"
 
 case "$COMMAND" in
-    status|doctor|install)
+    status|doctor|install|work)
         execute_plugin "$COMMAND" ;;
     session|role|gate|brick|workflow|event|audit|knowledge|git|github|release|validate)
         execute_plugin "$COMMAND" && main "$ACTION" "$ARG" ;;
