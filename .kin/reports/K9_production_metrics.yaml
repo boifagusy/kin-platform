@@ -1,0 +1,11 @@
+gate: K9_production
+started: 2026-07-11T12:37:42Z
+measurements: {}
+  - name: doctor_execution
+    value: 232
+    unit: ms
+    time: 2026-07-11T12:37:43Z
+  - name: status_execution
+    value: 223
+    unit: ms
+    time: 2026-07-11T12:37:43Z

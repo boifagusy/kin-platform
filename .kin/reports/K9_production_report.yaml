@@ -1,0 +1,38 @@
+gate: K9_production
+completed: 2026-07-11T12:37:46Z
+status: failed
+tests: []
+passed: 7
+failed: 3
+skipped: 0
+  - name: doctor_runs
+    result: fail
+    time: 2026-07-11T12:37:43Z
+  - name: status_runs
+    result: fail
+    time: 2026-07-11T12:37:43Z
+  - name: session_start
+    result: pass
+    time: 2026-07-11T12:37:44Z
+  - name: session_stop
+    result: pass
+    time: 2026-07-11T12:37:44Z
+  - name: plugin_discovery
+    result: pass
+    time: 2026-07-11T12:37:44Z
+    detail: 5 plugins found
+  - name: state_repair
+    result: pass
+    time: 2026-07-11T12:37:45Z
+  - name: logging_operational
+    result: pass
+    time: 2026-07-11T12:37:45Z
+  - name: adapter_autoload
+    result: pass
+    time: 2026-07-11T12:37:46Z
+  - name: hot_reload
+    result: pass
+    time: 2026-07-11T12:37:46Z
+  - name: state_integrity
+    result: fail
+    time: 2026-07-11T12:37:46Z

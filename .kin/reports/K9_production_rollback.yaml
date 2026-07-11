@@ -1,0 +1,4 @@
+gate: K9_production
+started: 2026-07-11T12:37:42Z
+rollback_tested: true
+rollback_passed: true

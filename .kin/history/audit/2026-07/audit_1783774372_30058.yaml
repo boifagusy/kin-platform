@@ -1,0 +1,13 @@
+audit:
+  id: audit_1783774372_30058
+  timestamp: 2026-07-11T12:52:52Z
+  session: session_1783773857
+  agent:
+    role: unassigned
+    name: AI-1
+  action: brick_modified
+  details: Brick: authentication
+  files: file.php
+  context:
+    gate: 0
+    brick: none

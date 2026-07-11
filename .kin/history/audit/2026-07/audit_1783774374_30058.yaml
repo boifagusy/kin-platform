@@ -1,0 +1,13 @@
+audit:
+  id: audit_1783774374_30058
+  timestamp: 2026-07-11T12:52:53Z
+  session: session_1783773857
+  agent:
+    role: unassigned
+    name: event
+  action: session_started
+  details: Session started
+  files: 
+  context:
+    gate: 0
+    brick: none

@@ -1,0 +1,10 @@
+bug:
+  id: BUG-1783774433
+  symptom: Login returns 404
+  root_cause: Route cache stale
+  fix: php artisan route:clear
+  bricks: authentication
+  severity: high
+  discovered: 2026-07-11T12:53:52Z
+  occurrences: 1
+  resolved: false

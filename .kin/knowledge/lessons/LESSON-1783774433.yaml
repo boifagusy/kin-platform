@@ -1,0 +1,6 @@
+lesson:
+  id: LESSON-1783774433
+  context: Gate 6 development
+  finding: Build auth before wallet
+  action: Reorder dependencies
+  date: 2026-07-11T12:53:53Z

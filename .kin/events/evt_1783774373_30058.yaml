@@ -1,0 +1,6 @@
+event:
+  id: evt_1783774373_30058
+  type: session.started
+  source: test
+  timestamp: 2026-07-11T12:52:53Z
+  data: integration test

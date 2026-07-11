@@ -1,0 +1,30 @@
+gate: K7_compatibility
+completed: 2026-07-11T12:37:41Z
+status: failed
+tests: []
+passed: 3
+failed: 1
+skipped: 2
+  - name: empty_repo_detection
+    result: fail
+    time: 2026-07-11T12:37:40Z
+    detail: backend=unknown
+unknown frontend=unknown
+unknown
+  - name: laravel_detection
+    result: skip
+    time: 2026-07-11T12:37:40Z
+    detail: Not in Laravel project (detected: node)
+  - name: react_native_detection
+    result: skip
+    time: 2026-07-11T12:37:40Z
+    detail: Not in React Native project (detected: node)
+  - name: laravel_adapter_load
+    result: pass
+    time: 2026-07-11T12:37:40Z
+  - name: react_native_adapter_load
+    result: pass
+    time: 2026-07-11T12:37:41Z
+  - name: no_hardcoded_paths
+    result: pass
+    time: 2026-07-11T12:37:41Z

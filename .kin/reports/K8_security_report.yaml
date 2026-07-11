@@ -1,0 +1,28 @@
+gate: K8_security
+completed: 2026-07-11T12:37:42Z
+status: failed
+tests: []
+passed: 4
+failed: 1
+skipped: 1
+  - name: kernel_file_permissions
+    result: pass
+    time: 2026-07-11T12:37:41Z
+    detail: No world-writable files
+  - name: path_traversal_aware
+    result: skip
+    time: 2026-07-11T12:37:41Z
+    detail: Basic path check only
+  - name: no_unsafe_eval
+    result: pass
+    time: 2026-07-11T12:37:41Z
+  - name: atomic_write_safety
+    result: fail
+    time: 2026-07-11T12:37:41Z
+  - name: input_validation
+    result: pass
+    time: 2026-07-11T12:37:41Z
+    detail: Invalid paths rejected
+  - name: plugin_validation
+    result: pass
+    time: 2026-07-11T12:37:42Z

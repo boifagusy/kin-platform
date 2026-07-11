@@ -1,0 +1,26 @@
+brick:
+  id:
+  name:
+  category:
+  version:
+  status:
+
+dependencies:
+
+inputs:
+
+outputs:
+
+database_tables:
+
+api_endpoints:
+
+frontend_pages:
+
+services:
+
+tests:
+
+rollback_plan:
+
+verification:

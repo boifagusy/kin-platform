@@ -1,0 +1,4 @@
+gate: K8_security
+started: 2026-07-11T12:37:41Z
+rollback_tested: true
+rollback_passed: true

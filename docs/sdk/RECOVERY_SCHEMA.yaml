@@ -1,0 +1,21 @@
+recovery:
+  version:
+  generated:
+
+feature:
+
+health_score:
+
+confidence:
+
+dependencies:
+
+missing_files:
+
+safe_actions:
+
+manual_actions:
+
+rollback:
+
+evidence:

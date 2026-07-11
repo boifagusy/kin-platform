@@ -1,0 +1,26 @@
+gate: K5_performance
+completed: 2026-07-11T12:37:36Z
+status: passed
+tests: []
+passed: 6
+failed: 0
+skipped: 0
+  - name: kernel_load_time
+    result: pass
+    time: 2026-07-11T12:37:34Z
+  - name: yaml_read_100_iterations
+    result: pass
+    time: 2026-07-11T12:37:35Z
+  - name: state_read_latency
+    result: pass
+    time: 2026-07-11T12:37:35Z
+  - name: state_write_latency
+    result: pass
+    time: 2026-07-11T12:37:35Z
+  - name: plugin_discovery
+    result: pass
+    time: 2026-07-11T12:37:36Z
+  - name: startup_under_5s
+    result: pass
+    time: 2026-07-11T12:37:36Z
+    detail: 53ms

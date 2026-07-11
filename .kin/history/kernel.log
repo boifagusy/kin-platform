@@ -1,0 +1,95 @@
+[2026-07-11T12:27:57Z] [INFO] State initialized: /data/data/com.termux/files/home/kin_project/.kin/state
+[2026-07-11T12:27:58Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T12:27:58Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T12:27:58Z] [INFO] Repairing state...
+[2026-07-11T12:27:58Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T12:27:58Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T12:27:58Z] [WARN] Missing state file: brick.yaml
+[2026-07-11T12:27:58Z] [WARN] 3 state files need repair - reinitializing
+[2026-07-11T12:27:59Z] [INFO] State initialized: /data/data/com.termux/files/home/kin_project/.kin/state
+[2026-07-11T12:31:20Z] [ERROR] Plugin execution failed: status::main (exit: 1)
+[2026-07-11T12:31:20Z] [ERROR] Plugin execution failed: doctor::main (exit: 1)
+[2026-07-11T12:31:20Z] [ERROR] Plugin not found: nonexistent
+[2026-07-11T12:31:20Z] [ERROR] Function not found: nonexistent_func (in status)
+[2026-07-11T12:37:37Z] [INFO] Repairing state...
+[2026-07-11T12:37:37Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T12:37:37Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T12:37:37Z] [WARN] Missing state file: brick.yaml
+[2026-07-11T12:37:37Z] [WARN] 3 state files need repair - reinitializing
+[2026-07-11T12:37:38Z] [INFO] State initialized: /data/data/com.termux/files/home/kin_project/.kin/state
+[2026-07-11T12:37:38Z] [ERROR] Plugin not found: nonexistent_plugin_xyz
+[2026-07-11T12:37:38Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T12:37:38Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T12:37:38Z] [INFO] Repairing state...
+[2026-07-11T12:37:38Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T12:37:39Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T12:37:39Z] [WARN] 2 state files need repair - reinitializing
+[2026-07-11T12:37:39Z] [INFO] State initialized: /data/data/com.termux/files/home/kin_project/.kin/state
+[2026-07-11T12:37:42Z] [ERROR] Plugin execution failed: doctor::main (exit: 1)
+[2026-07-11T12:37:43Z] [ERROR] Plugin execution failed: status::main (exit: 1)
+[2026-07-11T12:37:44Z] [INFO] State initialized: /data/data/com.termux/files/home/kin_project/.kin/state
+[2026-07-11T12:37:44Z] [INFO] Repairing state...
+[2026-07-11T12:37:44Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T12:37:44Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T12:37:45Z] [WARN] 2 state files need repair - reinitializing
+[2026-07-11T12:37:45Z] [INFO] State initialized: /data/data/com.termux/files/home/kin_project/.kin/state
+[2026-07-11T12:37:45Z] [INFO] K9 production verification test
+[2026-07-11T12:37:46Z] [INFO] Reloading plugin: status
+[2026-07-11T12:37:46Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T12:37:46Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T12:39:32Z] [INFO] State initialized: /data/data/com.termux/files/home/kin_project/.kin/state
+[2026-07-11T12:39:34Z] [INFO] Gate system initialized at Gate 0
+[2026-07-11T12:39:35Z] [WARN] Gate 0 blocked: test block
+[2026-07-11T12:39:35Z] [INFO] Gate 0 unblocked
+[2026-07-11T12:40:38Z] [INFO] State initialized: /data/data/com.termux/files/home/kin_project/.kin/state
+[2026-07-11T12:40:39Z] [INFO] Gate system initialized at Gate 0
+[2026-07-11T12:40:40Z] [WARN] Gate 0 blocked: test block
+[2026-07-11T12:40:40Z] [INFO] Gate 0 unblocked
+[2026-07-11T12:41:00Z] [INFO] State initialized: /data/data/com.termux/files/home/kin_project/.kin/state
+[2026-07-11T12:41:02Z] [INFO] Gate system initialized at Gate 0
+[2026-07-11T12:41:02Z] [WARN] Gate 0 blocked: test
+[2026-07-11T12:41:03Z] [INFO] Gate 0 unblocked
+[2026-07-11T12:44:18Z] [INFO] State initialized: /data/data/com.termux/files/home/kin_project/.kin/state
+[2026-07-11T12:46:24Z] [INFO] Brick created: test_brick
+[2026-07-11T12:46:25Z] [INFO] Brick test_brick status: in_development
+[2026-07-11T12:46:25Z] [INFO] Brick test_brick locked by AI-1
+[2026-07-11T12:46:26Z] [INFO] Brick test_brick unlocked
+[2026-07-11T12:46:26Z] [INFO] Brick test_brick now depends on authentication
+[2026-07-11T12:51:39Z] [INFO] Event system initialized
+[2026-07-11T12:51:40Z] [ERROR] Invalid event type: invalid.event
+[2026-07-11T12:53:53Z] [INFO] Bug recorded: BUG-1783774433
+[2026-07-11T12:53:53Z] [INFO] Pattern recorded: PAT-1783774433
+[2026-07-11T12:53:53Z] [INFO] Lesson recorded: LESSON-1783774433
+[2026-07-11T13:07:09Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T13:07:09Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T13:07:10Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T13:07:10Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T13:07:11Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T13:07:11Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T13:07:12Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T13:07:12Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T13:07:14Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T13:07:14Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T13:07:15Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T13:07:15Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T13:07:16Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T13:07:16Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T13:07:17Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T13:07:18Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T13:07:19Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T13:07:19Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T13:07:20Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T13:07:20Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T13:07:21Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T13:07:21Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T13:07:22Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T13:07:22Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T13:07:23Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T13:07:24Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T13:07:25Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T13:07:25Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T13:07:26Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T13:07:26Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T13:07:27Z] [ERROR] Corrupt state file: session.yaml
+[2026-07-11T13:07:27Z] [ERROR] Corrupt state file: gate.yaml
+[2026-07-11T13:12:34Z] [INFO] Event system initialized

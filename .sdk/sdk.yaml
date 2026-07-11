@@ -1,0 +1,11 @@
+sdk:
+  name: KIN Engineering SDK
+  version: 1.0.0
+  schema_version: 1
+  description: Reusable engineering operating system for multiple projects
+  compatibility:
+    termux: true
+    bash: 5.0+
+    git: required
+  author: Engineering Manager
+  created: 2026-07-11

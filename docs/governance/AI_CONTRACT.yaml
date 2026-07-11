@@ -1,0 +1,65 @@
+version: 1.0
+project: KIN Platform
+status: ACTIVE
+
+purpose: >
+  Defines the mandatory engineering rules for every AI
+  working on the KIN Platform.
+
+authority:
+  - PROJECT_DNA.yaml
+  - AI_CONTRACT.yaml
+  - BRICK_REGISTRY.yaml
+  - PROJECT_STATUS.md
+
+workflow:
+  - Bootstrap
+  - Discovery
+  - Evidence Collection
+  - Risk Assessment
+  - Approval
+  - Backup
+  - Implementation
+  - Verification
+  - Runtime Test
+  - Documentation Update
+  - Git Commit
+
+rules:
+  never_guess: true
+  evidence_required: true
+  documentation_required: true
+  test_before_completion: true
+  preserve_architecture: true
+  incremental_changes_only: true
+  update_registry: true
+
+approval_required:
+  - Authentication
+  - Database Schema
+  - API Contracts
+  - Navigation
+  - Security
+  - Build Configuration
+  - Architecture
+
+forbidden:
+  - Rewrite large files without approval
+  - Delete files without evidence
+  - Change API contracts silently
+  - Skip documentation
+  - Skip testing
+
+required_outputs:
+  - Change Report
+  - Updated Documentation
+  - Updated Agent Log
+  - Updated Project Status
+  - Verification Report
+
+success_definition:
+  - Build passes
+  - Tests pass
+  - Runtime verified
+  - Documentation updated
+  - Git ready

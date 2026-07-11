@@ -1,0 +1,21 @@
+session:
+  id:
+  date:
+  ai_role:
+  objective:
+
+files_changed:
+
+commands_run:
+
+tests_run:
+
+issues_found:
+
+issues_fixed:
+
+documentation_updated:
+
+git_commit:
+
+status:

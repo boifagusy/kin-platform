@@ -1,0 +1,13 @@
+audit:
+  id: audit_1783774370_30058
+  timestamp: 2026-07-11T12:52:50Z
+  session: session_1783773857
+  agent:
+    role: unassigned
+    name: test_agent
+  action: test_action
+  details: test details
+  files: test_file.sh
+  context:
+    gate: 0
+    brick: none

@@ -369,3 +369,20 @@ Every AI should behave the same way.
 The Engineering Manager should not need to repeat workflows.
 
 The operating system defines how engineering work is performed across the entire KIN Platform.
+
+## RULE: ARCHITECTURE FREEZE (MANDATORY)
+
+After Phase 2A approval:
+
+1. No architecture document may change during implementation
+2. Any architecture change requires:
+   - New ADR (Architecture Decision Record)
+   - Engineering Manager approval
+   - Architecture version increment
+3. Engines must implement the approved architecture exactly
+
+**Violation**: Implementation deviating from architecture is rejected.
+
+Architecture Baseline: Engineering OS v1.0
+Architecture Version: 1.0.0
+Freeze Date: 2026-07-11

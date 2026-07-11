@@ -1,0 +1,13 @@
+audit:
+  id: audit_1783774371_30058
+  timestamp: 2026-07-11T12:52:51Z
+  session: session_1783773857
+  agent:
+    role: unassigned
+    name: AI-1
+  action: gate_changed
+  details: Gate transition
+  files: 
+  context:
+    gate: 0
+    brick: none

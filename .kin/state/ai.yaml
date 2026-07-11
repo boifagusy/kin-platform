@@ -1,0 +1,6 @@
+active_role: unassigned
+current_gate: 0
+current_brick: none
+waiting_for: testing
+last_action: testing
+blocked_reason: null

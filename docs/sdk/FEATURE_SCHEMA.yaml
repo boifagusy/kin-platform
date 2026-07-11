@@ -1,0 +1,30 @@
+feature:
+  id:
+  name:
+  version:
+  owner:
+  status:
+
+dependencies:
+
+controllers:
+
+services:
+
+repositories:
+
+models:
+
+routes:
+
+database:
+
+frontend:
+
+permissions:
+
+tests:
+
+documentation:
+
+last_updated:

@@ -1,0 +1,30 @@
+gate: K6_reliability
+completed: 2026-07-11T12:37:40Z
+status: failed
+tests: []
+passed: 5
+failed: 1
+skipped: 0
+  - name: interrupted_write_cleanup
+    result: fail
+    time: 2026-07-11T12:37:36Z
+  - name: corrupt_yaml_detection
+    result: pass
+    time: 2026-07-11T12:37:37Z
+    detail: Corrupt YAML detected
+  - name: missing_state_repair
+    result: pass
+    time: 2026-07-11T12:37:38Z
+    detail: brick.yaml recreated
+  - name: missing_plugin_handling
+    result: pass
+    time: 2026-07-11T12:37:38Z
+    detail: Graceful failure
+  - name: invalid_adapter_handling
+    result: pass
+    time: 2026-07-11T12:37:38Z
+    detail: Graceful failure
+  - name: crash_recovery
+    result: pass
+    time: 2026-07-11T12:37:40Z
+    detail: State repaired after corruption

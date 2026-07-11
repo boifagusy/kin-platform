@@ -1,0 +1,7 @@
+pattern:
+  id: PAT-1783774433
+  name: Repository Pattern
+  description: Data access through repositories
+  when_to_use: Multiple data sources
+  added: 2026-07-11T12:53:53Z
+  used_count: 0

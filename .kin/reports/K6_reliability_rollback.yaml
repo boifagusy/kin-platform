@@ -1,0 +1,4 @@
+gate: K6_reliability
+started: 2026-07-11T12:37:36Z
+rollback_tested: true
+rollback_passed: true
