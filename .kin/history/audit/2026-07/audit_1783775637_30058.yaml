@@ -1,0 +1,13 @@
+audit:
+  id: audit_1783775637_30058
+  timestamp: 2026-07-11T13:13:57Z
+  session: session_1783773857
+  agent:
+    role: unassigned
+    name: event
+  action: gate_changed
+  details: Gate transition
+  files: 
+  context:
+    gate: 0
+    brick: none
