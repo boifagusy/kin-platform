@@ -7,6 +7,10 @@ ENGINEERING OS — Help System
 USAGE
   ai <command> [subcommand] [options]
 
+RESTORE
+  ai restore       System restoration
+  ai restore verify Verify all components
+
 START HERE
   ai work          Engineering Command Center
   ai doctor        Check environment
@@ -28,13 +32,19 @@ RELEASE
   ai github        GitHub integration
   ai release       Release management
 
+CLIPBOARD
+  ai clip copy     Copy to Android clipboard
+  ai clip history  View clipboard history
+  ai clip last     Retrieve last copy
+  echo 'text' | ai Pipe to clipboard
+
 LEARNING
-  ai help <topic>  Detailed help (gate, brick, role, workflow, release)
+  ai help <topic>  Detailed help (gate, brick, role, workflow, release, clip)
   ai tutorial 1    Guided walkthrough
   ai examples auth Real-world examples
   ai explain 6     Explain gate 6 or a brick
 
-Topics: gate, brick, role, workflow, release, session, git, commands
+Topics: gate, brick, role, workflow, release, clip, session, git, commands
 HELPEOF
 }
 
@@ -75,6 +85,16 @@ help_topic() {
         release)
             echo "RELEASE: ai release status | suggest | checklist | changelog | create | verify"
             ;;
+        clip)
+            echo "CLIPBOARD ENGINE"
+            echo "  ai clip copy 'text'   Copy to Android clipboard"
+            echo "  ai clip history        View saved copies"
+            echo "  ai clip last           Retrieve last copy"
+            echo "  ai clip status         Quick status"
+            echo "  echo 'text' | ai       Pipe to clipboard"
+            echo ""
+            echo "  Requires: Termux:API APK from F-Droid"
+            ;;
         session)
             echo "SESSION: ai session start | stop | status"
             ;;
@@ -82,9 +102,9 @@ help_topic() {
             echo "GIT: ai git status | branch | changes | commit | tag | rollback"
             ;;
         commands)
-            echo "ALL COMMANDS: work status doctor validate session role gate brick workflow event audit knowledge git github release help tutorial examples explain install plugins"
+            echo "ALL COMMANDS: work status doctor validate session role gate brick workflow event audit knowledge git github release help tutorial examples explain clip install plugins"
             ;;
-        *) echo "Topics: gate, brick, role, workflow, release, session, git, commands" ;;
+        *) echo "Topics: gate, brick, role, workflow, release, clip, session, git, commands" ;;
     esac
 }
 
@@ -130,23 +150,28 @@ help_examples() {
                  echo "  ai release changelog"
                  echo "  ai release create 1.2.0"
                  echo "  ai git tag v1.2.0" ;;
-        *) echo "EXAMPLES: ai examples auth | ai examples release" ;;
+        clip) echo "EXAMPLE: Clipboard Usage"
+              echo "  ai clip copy 'Bug: Login 404 — Fix: route:clear'"
+              echo "  ai gate status | ai  # Copy gate status"
+              echo "  ai clip history       # View all copies"
+              echo "  ai clip last          # Retrieve & copy last" ;;
+        *) echo "EXAMPLES: ai examples auth | release | clip" ;;
     esac
 }
 
 help_explain() {
     local target="$1"
-    if [ -n "$target" ] && [ -d "bricks/$target" ]; then
-        local status
-        status="$(grep "status:" "bricks/$target/brick.yaml" 2>/dev/null | sed 's/.*: //')"
-        echo "BRICK: $target — Status: ${status:-unknown}"
-        echo "Structure: bricks/$target/{contracts,events,database,backend,frontend,api,tests,docs}"
-    elif [ "$target" -ge 0 ] 2>/dev/null && [ "$target" -le 11 ] 2>/dev/null; then
-        local names=("Bootstrap" "Discovery" "Requirements" "Architecture" "Dependency Planning" "Brick Planning" "Brick Development" "Brick Testing" "Integration Testing" "System Testing" "Production Validation" "Release")
+    local names=("Bootstrap" "Discovery" "Requirements" "Architecture" "Dependency Planning" "Brick Planning" "Brick Development" "Brick Testing" "Integration Testing" "System Testing" "Production Validation" "Release")
+    
+    if [ -n "$target" ] && [ -d "bricks/$target" ] 2>/dev/null; then
+        echo "BRICK: $target"
+        grep -q "status:" "bricks/$target/brick.yaml" 2>/dev/null && echo "Status: $(grep "status:" "bricks/$target/brick.yaml" | sed 's/.*: //')"
+        echo "Path: bricks/$target/"
+    elif echo "$target" | grep -qE '^[0-9]+$' && [ "$target" -ge 0 ] && [ "$target" -le 11 ]; then
         echo "Gate $target: ${names[$target]}"
-        echo "Next: Gate $((target + 1)) — ${names[$((target + 1))]:-Final Gate}"
+        [ "$target" -lt 11 ] && echo "Next: Gate $((target + 1)) — ${names[$((target + 1))]}"
     else
-        echo "Explain: ai explain <gate-number> | ai explain <brick-name>"
+        echo "Explain: ai explain <0-11> | ai explain <brick-name>"
         echo "Examples: ai explain 6 | ai explain authentication"
     fi
 }

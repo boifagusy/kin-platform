@@ -117,6 +117,3 @@ Route::post('/sync', function (Request $request) {
 Route::get('/health', function () {
     return response()->json(['status' => 'ok']);
 });
-
-// Watchtower Observability System
-require_once __DIR__.'/watchtower.php';

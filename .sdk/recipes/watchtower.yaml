@@ -1,0 +1,53 @@
+recipe:
+  name: watchtower
+  version: 2.0.0
+  description: "Watchtower Observability Platform restoration"
+  
+  component: "API, Queue, Database, Performance, Plugin, Error, Notification, Security, System monitoring"
+  
+  dependencies:
+    - authentication
+    - admin
+    
+  rollback: automatic
+  
+  verification:
+    - routes
+    - cache
+    - safety_regression
+    
+  created_files:
+    - routes/watchtower.php
+    
+  modified_files:
+    - routes/api.php
+    
+  expected_routes:
+    - watchtower/health
+    - watchtower/api/metrics
+    - watchtower/api/degradation
+    - watchtower/queue/metrics
+    - watchtower/queue/stuck
+    - watchtower/database/metrics
+    - watchtower/database/locks
+    - watchtower/plugins
+    - watchtower/safety/metrics
+    - watchtower/performance/metrics
+    - watchtower/errors/metrics
+    - watchtower/notifications/metrics
+    - watchtower/security/metrics
+    - watchtower/system/health
+    
+  safety_routes:
+    - dashboard
+    - activities
+    - incidents
+    - checkin
+    - trusted-contacts
+    - sos
+    - health
+    - auth/login
+    
+  middleware:
+    - auth:sanctum
+    - admin

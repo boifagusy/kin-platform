@@ -3,7 +3,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SDK_ROOT="$(dirname "$SCRIPT_DIR")"
 
-# Pipe: read stdin, pass as argument to clipboard_copy
+# Pipe detection: auto-copy when stdin is piped with no arguments
 if [ ! -t 0 ] && [ $# -eq 0 ]; then
     CONTENT="$(cat)"
     source "$SDK_ROOT/engines/clipboard/engine.sh" 2>/dev/null
@@ -21,8 +21,13 @@ source "$SDK_ROOT/core/lib/plugin.sh"
 COMMAND="$1"; shift
 
 case "$COMMAND" in
-    status|doctor|install|work) execute_plugin "$COMMAND" ;;
-    clip) execute_plugin "$COMMAND" && main "$@" ;;
+    status|doctor|install|work)
+        execute_plugin "$COMMAND" ;;
+    clip)
+        execute_plugin "$COMMAND" && main "$@" ;;
+    restore)
+        # Direct engine execution with all arguments
+        bash "$SDK_ROOT/engines/restore/engine.sh" "$@" ;;
     session|role|gate|brick|workflow|event|audit|knowledge|git|github|release|validate|help|tutorial|examples|explain)
         execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}" ;;
     plugins) list_plugins ;;

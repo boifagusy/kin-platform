@@ -1,0 +1,41 @@
+engine:
+  name: restore
+  version: 2.0.0
+  command: restore
+  description: "Component restoration engine with recipe-based recovery"
+  
+  depends_on:
+    - audit
+    - knowledge
+    - checkpoint
+    
+  commands:
+    restore:
+      description: "Restore a component from a recipe"
+      usage: "ai restore <component> [--dry-run] [--rollback] [--verify-only]"
+      flags:
+        --dry-run: "Preview changes without executing"
+        --rollback: "Rollback a previous restoration"
+        --verify-only: "Verify existing restoration without changes"
+      examples:
+        - "ai restore watchtower --dry-run"
+        - "ai restore watchtower"
+        - "ai restore watchtower --rollback"
+    
+    recipe:
+      description: "Manage restoration recipes"
+      usage: "ai recipe [install|list|test]"
+      
+  events:
+    - restore.started
+    - restore.completed
+    - restore.failed
+    - restore.rollback
+    - restore.verified
+    
+  metrics:
+    - duration
+    - files_created
+    - files_modified
+    - verification_time
+    - rollback_used

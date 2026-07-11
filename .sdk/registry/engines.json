@@ -1,0 +1,15 @@
+{
+    "engines": {
+        "restore": {
+            "name": "restore",
+            "version": "1.0.0",
+            "command": "restore",
+            "depends_on": [
+                ""
+            ],
+            "path": "\/data\/data\/com.termux\/files\/home\/kin_project\/.sdk\/engines\/restore\/"
+        }
+    },
+    "plugins": [],
+    "last_discovery": "2026-07-11T16:15:36+00:00"
+}
