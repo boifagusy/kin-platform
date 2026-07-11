@@ -16,23 +16,19 @@ source "$SDK_ROOT/core/lib/yaml.sh"
 source "$SDK_ROOT/core/lib/state.sh"
 source "$SDK_ROOT/core/lib/plugin.sh"
 
-# ── GOVERNANCE — Mandatory Gateway ──
-# Every command except help/status/doctor/work/clip passes through governance
 GOVERNANCE_ENGINE="$SDK_ROOT/engines/governance/engine.sh"
+source "$SDK_ROOT/engines/governance/levels.sh" 2>/dev/null
 
 [ $# -eq 0 ] && { ./.sdk/commands/ai work 2>/dev/null; exit 0; }
 
 COMMAND="$1"; shift
 
-# Commands that BYPASS governance (read-only, diagnostics, help)
-BYPASS_COMMANDS="status doctor help tutorial examples explain plugins clip work session_start session_stop"
+# Determine level — Level 0 bypasses governance entirely
+CMD_LEVEL=$(governance_level "$COMMAND")
 
-# All other commands REQUIRE governance check
-if ! echo "$BYPASS_COMMANDS" | grep -qw "$COMMAND"; then
-    if [ -f "$GOVERNANCE_ENGINE" ]; then
-        source "$GOVERNANCE_ENGINE" 2>/dev/null
-        governance_check "$COMMAND" "${1:-}" || exit 1
-    fi
+if [ "$CMD_LEVEL" -gt 0 ] && [ -f "$GOVERNANCE_ENGINE" ]; then
+    source "$GOVERNANCE_ENGINE" 2>/dev/null
+    governance_check "$COMMAND" "${1:-}" || exit 1
 fi
 
 # Dispatch
