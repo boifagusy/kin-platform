@@ -15,20 +15,27 @@ source "$SDK_ROOT/core/lib/common.sh"
 source "$SDK_ROOT/core/lib/yaml.sh"
 source "$SDK_ROOT/core/lib/state.sh"
 source "$SDK_ROOT/core/lib/plugin.sh"
+source "$SDK_ROOT/engines/governance/engine.sh" 2>/dev/null
 
 [ $# -eq 0 ] && { ./.sdk/commands/ai work 2>/dev/null; exit 0; }
 
 COMMAND="$1"; shift
 
+# Commands that REQUIRE governance check
+case "$COMMAND" in
+    brick|fix|build|implement|deploy|restore_run)
+        governance_check "$COMMAND" "${1:-}" || exit 1
+        ;;
+esac
+
+# Dispatch
 case "$COMMAND" in
     status|doctor|install|work)
         execute_plugin "$COMMAND" ;;
     restore)
         bash "$SDK_ROOT/engines/restore/engine.sh" "$@" ;;
-    guard)
-        # Gate Guard — enforcement before implementation
-        source "$SDK_ROOT/engines/gate_guard/engine.sh" 2>/dev/null
-        gate_guard_check "${1:-implementation}" ;;
+    guard|governance)
+        governance_check "${1:-unknown}" "${2:-}" ;;
     clip)
         source "$SDK_ROOT/engines/clipboard/engine.sh" 2>/dev/null
         case "${1:-status}" in
