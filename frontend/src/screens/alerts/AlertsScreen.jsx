@@ -14,7 +14,7 @@ function AlertsScreen() {
 
   // Get authentication headers
   const getAuthHeaders = () => {
-    const token = localStorage.getItem('sanctum_token') || '';
+    const token = localStorage.getItem('kin_token') || '';
     return {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
