@@ -15,18 +15,25 @@ source "$SDK_ROOT/core/lib/common.sh"
 source "$SDK_ROOT/core/lib/yaml.sh"
 source "$SDK_ROOT/core/lib/state.sh"
 source "$SDK_ROOT/core/lib/plugin.sh"
-source "$SDK_ROOT/engines/governance/engine.sh" 2>/dev/null
+
+# ── GOVERNANCE — Mandatory Gateway ──
+# Every command except help/status/doctor/work/clip passes through governance
+GOVERNANCE_ENGINE="$SDK_ROOT/engines/governance/engine.sh"
 
 [ $# -eq 0 ] && { ./.sdk/commands/ai work 2>/dev/null; exit 0; }
 
 COMMAND="$1"; shift
 
-# Commands that REQUIRE governance check
-case "$COMMAND" in
-    brick|fix|build|implement|deploy|restore_run)
+# Commands that BYPASS governance (read-only, diagnostics, help)
+BYPASS_COMMANDS="status doctor help tutorial examples explain plugins clip work session_start session_stop"
+
+# All other commands REQUIRE governance check
+if ! echo "$BYPASS_COMMANDS" | grep -qw "$COMMAND"; then
+    if [ -f "$GOVERNANCE_ENGINE" ]; then
+        source "$GOVERNANCE_ENGINE" 2>/dev/null
         governance_check "$COMMAND" "${1:-}" || exit 1
-        ;;
-esac
+    fi
+fi
 
 # Dispatch
 case "$COMMAND" in
@@ -34,7 +41,8 @@ case "$COMMAND" in
         execute_plugin "$COMMAND" ;;
     restore)
         bash "$SDK_ROOT/engines/restore/engine.sh" "$@" ;;
-    guard|governance)
+    governance|guard)
+        source "$GOVERNANCE_ENGINE" 2>/dev/null
         governance_check "${1:-unknown}" "${2:-}" ;;
     clip)
         source "$SDK_ROOT/engines/clipboard/engine.sh" 2>/dev/null

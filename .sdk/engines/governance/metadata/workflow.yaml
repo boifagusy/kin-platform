@@ -1,0 +1,7 @@
+engine: workflow
+requires:
+  gate: 0
+  role: [architect, engineering_manager]
+  brick: optional
+  approval: false
+  validation: none

@@ -1,0 +1,7 @@
+engine: brick
+requires:
+  gate: 5
+  role: [architect, backend_developer, frontend_developer]
+  brick: required
+  approval: false
+  validation: none

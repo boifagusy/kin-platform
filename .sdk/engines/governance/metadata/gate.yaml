@@ -1,0 +1,7 @@
+engine: gate
+requires:
+  gate: 0
+  role: [architect, planner, engineering_manager]
+  brick: optional
+  approval: false
+  validation: none

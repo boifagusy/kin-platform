@@ -11,3 +11,11 @@
 
 # Keep structure but ignore content
 !.kin/**/.gitkeep
+
+# Engineering OS — Runtime artifacts (not source)
+.kin/history/clipboard/
+.kin/history/audit/
+.kin/events/
+.kin/reports/
+.kin/recovery/
+.kin/restore/history/

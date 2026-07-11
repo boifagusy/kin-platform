@@ -1,0 +1,7 @@
+engine: release
+requires:
+  gate: 11
+  role: [release_manager, engineering_manager]
+  brick: optional
+  approval: true
+  validation: all_bricks_certified
