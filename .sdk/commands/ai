@@ -24,10 +24,20 @@ case "$COMMAND" in
     status|doctor|install|work)
         execute_plugin "$COMMAND" ;;
     restore)
-        # Direct engine execution — no plugin wrapper
         bash "$SDK_ROOT/engines/restore/engine.sh" "$@" ;;
+    guard)
+        # Gate Guard — enforcement before implementation
+        source "$SDK_ROOT/engines/gate_guard/engine.sh" 2>/dev/null
+        gate_guard_check "${1:-implementation}" ;;
     clip)
-        execute_plugin "$COMMAND" && main "$@" ;;
+        source "$SDK_ROOT/engines/clipboard/engine.sh" 2>/dev/null
+        case "${1:-status}" in
+            status)  clipboard_status ;;
+            copy)    shift; clipboard_copy "manual" "$*" ;;
+            history) clipboard_history "${2:-10}" ;;
+            last)    clipboard_last ;;
+            *)       clipboard_status ;;
+        esac ;;
     session|role|gate|brick|workflow|event|audit|knowledge|git|github|release|validate|help|tutorial|examples|explain)
         execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}" ;;
     plugins) list_plugins ;;

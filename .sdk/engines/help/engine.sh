@@ -7,6 +7,9 @@ ENGINEERING OS — Help System
 USAGE
   ai <command> [subcommand] [options]
 
+ENFORCEMENT
+  ai guard         Gate Guard — pre-implementation check
+
 START HERE
   ai work          Engineering Command Center
   ai doctor        Check environment
