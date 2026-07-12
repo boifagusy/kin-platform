@@ -45,6 +45,9 @@ case "$COMMAND" in
     certify)
         execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}"
         ;;
+    certify)
+        execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}"
+        ;;
     certify|task)
         execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}" ;;
     plugins) list_plugins ;;
