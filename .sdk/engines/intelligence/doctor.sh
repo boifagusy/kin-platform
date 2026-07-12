@@ -49,13 +49,13 @@ echo ""
 echo "  PROJECT"
 echo "  ─────────────────────────────────"
 
-local services contracts tests certs
+services contracts tests certs
 services=$(find backend/app/Services -name "*.php" -type f 2>/dev/null | wc -l | tr -d ' ')
 contracts=$(find .sdk/contracts -name "*.yaml" -type f 2>/dev/null | wc -l | tr -d ' ')
 tests=$(find backend/tests -name "*Test.php" -type f 2>/dev/null | wc -l | tr -d ' ')
 certs=$(ls -1 .kin/certifications/*.yaml 2>/dev/null | wc -l | tr -d ' ')
 
-local contract_pct=0 test_pct=0
+contract_pct=0 test_pct=0
 [ "$services" -gt 0 ] && contract_pct=$((contracts * 100 / services))
 [ "$services" -gt 0 ] && test_pct=$((tests * 100 / services))
 
@@ -65,7 +65,7 @@ echo "  Tests:       ${test_pct}% (${tests}/${services})"
 echo "  Certified:   $certs tasks"
 
 # Risk assessment
-local risk="LOW"
+risk="LOW"
 [ "$contract_pct" -lt 30 ] && risk="MEDIUM"
 [ "$contract_pct" -lt 10 ] && risk="HIGH"
 [ "$test_pct" -lt 20 ] && risk="HIGH"

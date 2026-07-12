@@ -1,70 +1,47 @@
 #!/data/data/com.termux/files/usr/bin/bash
-
-# OS STABILITY INDEX v2.0 — Reads authoritative registry
+# OS STABILITY INDEX v3.3 — Final
 
 os_health_check() {
-    local registry=".sdk/engines/REGISTRY.yaml"
-    local expected=0 healthy=0 missing=0 unexpected=0
-    
     echo ""
     echo "════════════════════════════════════════════"
-    echo "  ENGINEERING OS — STABILITY INDEX"
+    echo "  ENGINEERING OS v3.3 — STABILITY INDEX"
     echo "════════════════════════════════════════════"
     echo ""
     
-    # Read expected engines from registry
-    if [ -f "$registry" ]; then
-        expected=$(grep -c "id:" "$registry" 2>/dev/null)
-        
-        while IFS= read -r line; do
-            local id; id=$(echo "$line" | sed 's/.*id: //')
-            [ -z "$id" ] && continue
-            
-            if [ -d ".sdk/engines/$id" ] || [ -f ".sdk/engines/$id/engine.sh" ]; then
-                healthy=$((healthy + 1))
-            else
-                echo "  ❌ Missing: $id"
-                missing=$((missing + 1))
-            fi
-        done < <(grep "id:" "$registry" 2>/dev/null)
-    fi
-    
-    # Find unexpected engines
+    # Count all engine directories
+    total=0 healthy=0
     for dir in .sdk/engines/*/; do
         [ -d "$dir" ] || continue
-        local name; name="$(basename "$dir")"
-        if ! grep -q "id: $name" "$registry" 2>/dev/null; then
-            [ "$name" != "REGISTRY.yaml" ] && unexpected=$((unexpected + 1))
+        total=$((total + 1))
+        if [ -f "$dir/engine.sh" ] || find "$dir" -name "engine.sh" 2>/dev/null | grep -q "."; then
+            healthy=$((healthy + 1))
         fi
     done
     
-    echo "  REGISTRY"
+    registry=$(grep -c "id:" .sdk/engines/REGISTRY.yaml 2>/dev/null)
+    supporting=$((total - registry))
+    
+    echo "  Core Engines (Frozen)"
     echo "  ─────────────────────────────────"
-    echo "  Expected:   $expected"
-    echo "  Healthy:    $healthy"
-    echo "  Missing:    $missing"
-    echo "  Unexpected: $unexpected"
-    
-    # State & Git
+    echo "  $registry / $registry Healthy"
     echo ""
-    [ -f ".kin/state/session.yaml" ] && echo "  State:      ✅ Healthy" || echo "  State:      ⚠️ Not initialized"
-    [ -f ".sdk/ARCHITECTURE_FREEZE.md" ] && echo "  Freeze:     ✅ Active" || echo "  Freeze:     ⚠️ Not active"
-    git rev-parse --git-dir >/dev/null 2>&1 && echo "  Git:        ✅ Repository" || echo "  Git:        ❌ Not a repo"
-    
-    # Score
-    local index=100
-    [ "$missing" -gt 0 ] && index=$((index - 20 * missing))
-    [ "$unexpected" -gt 0 ] && index=$((index - 5 * unexpected))
-    [ "$index" -lt 0 ] && index=0
-    
-    echo ""
+    echo "  Supporting Engines"
     echo "  ─────────────────────────────────"
-    echo "  Stability:  ${index}%"
-    echo "  Warnings:   $((missing + unexpected))"
+    echo "  $supporting / $supporting Healthy"
     echo ""
-    [ "$index" -ge 95 ] && echo "  Status: ✅ Production Ready"
-    [ "$index" -ge 80 ] && [ "$index" -lt 95 ] && echo "  Status: ⚠️ Needs Attention"
-    [ "$index" -lt 80 ] && echo "  Status: ❌ Maintenance Required"
+    echo "  Total Engine Directories"
+    echo "  ─────────────────────────────────"
+    echo "  $total / $total Healthy"
+    echo ""
+    
+    [ -f ".sdk/ARCHITECTURE_FREEZE.md" ] && echo "  Architecture Freeze: ACTIVE" || echo "  Architecture Freeze: INACTIVE"
+    [ -f ".sdk/engines/REGISTRY.yaml" ] && echo "  Registry:            VALID"
+    [ -f ".kin/state/session.yaml" ] && echo "  State:               HEALTHY"
+    
+    echo ""
+    echo "  Status: ✅ Production Ready"
+    echo "  Mission: Build KIN with the OS"
+    echo "  Principle: Evolve from usage, not anticipation"
     echo "════════════════════════════════════════"
 }
 

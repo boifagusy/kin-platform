@@ -1,6 +1,5 @@
 # Engineering OS — Authoritative Engine Registry
-# This is the single source of truth. Health checks read from here.
-# Architecture Freeze active. New engines require ADR.
+# v3.3 — Architecture Frozen
 
 version: 3.3
 status: STABLE
@@ -8,106 +7,107 @@ freeze_date: 2026-07-12
 
 engines:
   - id: governance
+    dir: governance
     version: 3.3.0
     layer: context
     status: stable
     command: ai guard
-    depends_on: [gate, state]
     
   - id: gate
+    dir: gate
     version: 3.2.1
     layer: context
     status: stable
     command: ai gate
-    depends_on: [state]
     
   - id: project
+    dir: project
     version: 3.3.0
     layer: context
     status: stable
     command: ai project
-    depends_on: [gate, governance]
+    note: Orchestrator — no dedicated engine directory
     
   - id: discovery
+    dir: intelligence/discovery
     version: 3.3.0
     layer: knowledge
     status: stable
     command: ai discovery
-    depends_on: [state]
     
   - id: intelligence
+    dir: intelligence
     version: 3.3.0
     layer: knowledge
     status: stable
     command: ai intelligence
-    depends_on: [discovery, gate]
     
-  - id: investigation
+  - id: investigate
+    dir: investigate
     version: 3.3.0
     layer: knowledge
     status: stable
     command: ai investigate
-    depends_on: [discovery]
     
-  - id: contract
+  - id: contracts
+    dir: contracts
     version: 3.3.0
     layer: verification
     status: stable
     command: ai contract
-    depends_on: [discovery]
     
   - id: validate
+    dir: validate
     version: 3.2.0
     layer: verification
     status: stable
     command: ai validate
-    depends_on: [state]
     
-  - id: certification
+  - id: certify
+    dir: certify
     version: 3.3.0
     layer: verification
     status: stable
     command: ai certify
-    depends_on: [gate, contract]
     
   - id: brick
+    dir: brick
     version: 3.2.0
     layer: delivery
     status: stable
     command: ai brick
-    depends_on: [gate, contract]
     
   - id: workflow
+    dir: workflow
     version: 3.3.0
     layer: delivery
     status: stable
     command: ai workflow
-    depends_on: [gate, governance]
     
   - id: restore
+    dir: restore
     version: 3.3.0
     layer: utilities
     status: stable
     command: ai restore
-    depends_on: [state]
     
   - id: clipboard
+    dir: clipboard
     version: 3.3.0
     layer: utilities
     status: stable
     command: ai copy
-    depends_on: []
     
   - id: help
+    dir: help
     version: 3.3.0
     layer: utilities
     status: stable
     command: ai help
-    depends_on: []
 
 layers:
   context:     [governance, gate, project]
-  knowledge:   [discovery, intelligence, investigation]
-  verification: [contract, validate, certification]
+  knowledge:   [discovery, intelligence, investigate]
+  verification: [contracts, validate, certify]
   delivery:    [brick, workflow]
   utilities:   [restore, clipboard, help]
