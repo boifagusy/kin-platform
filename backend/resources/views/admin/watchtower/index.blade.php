@@ -49,7 +49,7 @@
             border-l-4 border-l-red-500 border-red-200
         @elseif($module['health'] === 'warning')
             border-l-4 border-l-yellow-500 border-yellow-200
-        @elseif($module['status'] === 'error')
+        @elseif($module['health'] === 'error')
             border-red-300 bg-red-50
         @else
             border-gray-200
@@ -80,29 +80,29 @@
             </div>
 
             {{-- Module Content --}}
-            @if($module['status'] === 'error')
+            @if($module['health'] === 'error')
                 <div class="text-center py-4">
                     <span class="material-symbols-outlined text-gray-400 text-3xl mb-2">warning</span>
                     <p class="text-sm text-gray-500">{{ $module['error'] ?? 'Unavailable' }}</p>
                 </div>
-            @elseif(empty($module['metrics']))
+            @elseif(empty($module['items']))
                 <div class="text-center py-4">
                     <p class="text-sm text-gray-400">No metrics available</p>
                 </div>
             @else
                 <div class="space-y-2">
-                    @foreach($module['metrics'] as $metricKey => $metricValue)
+                    @foreach($module['items'] as $item)
                     <div class="flex justify-between items-baseline">
                         <span class="text-xs text-gray-500 truncate mr-2">
-                            {{ ucwords(str_replace('_', ' ', $metricKey)) }}
+                            {{ ucwords(str_replace('_', ' ', $item['label'])) }}
                         </span>
                         <span class="text-sm font-semibold text-gray-800 text-right whitespace-nowrap">
-                            @if(is_array($metricValue))
-                                {{ json_encode($metricValue) }}
-                            @elseif(is_numeric($metricValue))
-                                {{ is_float($metricValue) ? number_format($metricValue, 1) : number_format($metricValue) }}
+                            @if(is_array($item['value']))
+                                {{ json_encode($item['value']) }}
+                            @elseif(is_numeric($item['value']))
+                                {{ is_float($item['value']) ? number_format($item['value'], 1) : number_format($item['value']) }}
                             @else
-                                {{ $metricValue }}
+                                {{ $item['value'] }}
                             @endif
                         </span>
                     </div>
