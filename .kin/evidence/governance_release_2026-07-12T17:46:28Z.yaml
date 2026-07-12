@@ -1,0 +1,11 @@
+governance_check:
+  command: release
+  timestamp: 2026-07-12T17:46:28Z
+  level: 4
+  state:
+    gate: 0
+    role: unassigned
+    brick: none
+    session: active
+  verdict: BLOCKED
+  failed_guard: role
