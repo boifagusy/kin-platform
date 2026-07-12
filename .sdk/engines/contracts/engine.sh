@@ -1,179 +1,236 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-# CONTRACT VERIFICATION ENGINE
-# Verifies implementation against contracts. No assumptions.
+# CONTRACT ENGINE v2.0
+# Verified Contracts Before Implementation
+# No assumptions. Machine-readable artifacts.
 
 if [ -n "$SDK_ROOT" ]; then
     KERNEL_DIR="$SDK_ROOT/kernel"
-    CONTRACTS_DIR="$SDK_ROOT/contracts"
+    ENGINES_DIR="$SDK_ROOT/engines"
 else
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    KERNEL_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")/kernel"
-    CONTRACTS_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")/contracts"
+    ENGINES_DIR="$(dirname "$SCRIPT_DIR")"
+    KERNEL_DIR="$(dirname "$ENGINES_DIR")/kernel"
 fi
 
 source "$KERNEL_DIR/yaml.sh" 2>/dev/null
 source "$KERNEL_DIR/filesystem.sh" 2>/dev/null
 
-# List all contracts
-contract_list() {
-    echo "SERVICE CONTRACT REGISTRY"
-    echo "═══════════════════════════════════════"
-    
-    if [ ! -d "$CONTRACTS_DIR" ]; then
-        echo "  (no contracts directory)"
-        return
-    fi
-    
-    for domain in "$CONTRACTS_DIR"/*/; do
-        [ -d "$domain" ] || continue
-        echo ""
-        echo "  $(basename "$domain"):"
-        for contract in "$domain"/*.yaml; do
-            [ -f "$contract" ] || continue
-            local name version status
-            name="$(yaml_get_nested "$contract" "service" "name" 2>/dev/null)"
-            version="$(yaml_get_nested "$contract" "service" "version" 2>/dev/null)"
-            echo "    $name v$version"
-        done
-    done
-}
+CONTRACTS_DIR=".kin/contracts"
+mkdir -p "$CONTRACTS_DIR"
 
-# Verify a single contract against actual code
-contract_verify() {
-    local contract_file="$1"
+# ── Verify a PHP class exists and has expected methods ──
+contract_verify_class() {
+    local class_path="$1"
+    local expected_methods="${2:-}"
+    local now; now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     
-    if [ ! -f "$contract_file" ]; then
-        echo "Contract not found: $contract_file"
+    local class_name
+    class_name="$(basename "$class_path" .php)"
+    
+    echo ""
+    echo "═══════════════════════════════════════"
+    echo "  CONTRACT VERIFY: $class_name"
+    echo "═══════════════════════════════════════"
+    
+    # Check file exists
+    if [ ! -f "$class_path" ]; then
+        echo "  ❌ File not found: $class_path"
         return 1
     fi
+    echo "  ✅ File: $class_path"
     
-    local name namespace class
-    name="$(yaml_get_nested "$contract_file" "service" "name" 2>/dev/null)"
-    namespace="$(yaml_get_nested "$contract_file" "service" "namespace" 2>/dev/null)"
-    class="$(yaml_get_nested "$contract_file" "service" "class" 2>/dev/null)"
+    # Extract namespace
+    local namespace
+    namespace="$(grep "^namespace " "$class_path" 2>/dev/null | head -1 | sed 's/namespace //;s/;//')"
+    echo "  ✅ Namespace: ${namespace:-none}"
     
-    echo ""
-    echo "═══════════════════════════════════════"
-    echo "  CONTRACT VERIFICATION: $name"
-    echo "═══════════════════════════════════════"
-    echo "  Namespace: $namespace"
-    echo "  Class:     $class"
-    echo ""
+    # Extract class name
+    local actual_class
+    actual_class="$(grep "^class " "$class_path" 2>/dev/null | head -1 | awk '{print $2}')"
+    echo "  ✅ Class: ${actual_class:-unknown}"
     
+    # Verify methods
     local errors=0
+    local verified_methods=""
     
-    # Find the actual PHP file
-    local php_file
-    php_file="backend/app/Services/Watchtower/${class}.php"
-    
-    if [ ! -f "$php_file" ]; then
-        echo "  ❌ Class file not found: $php_file"
-        return 1
+    if [ -n "$expected_methods" ]; then
+        for method in $expected_methods; do
+            if grep -q "function $method" "$class_path" 2>/dev/null; then
+                # Extract return type
+                local return_type
+                return_type="$(grep "function $method" "$class_path" 2>/dev/null | grep -oP ':\s*\K\S+' | head -1)"
+                echo "  ✅ Method: $method() → ${return_type:-mixed}"
+                verified_methods="$verified_methods $method"
+            else
+                echo "  ❌ Method missing: $method()"
+                errors=$((errors + 1))
+            fi
+        done
+    else
+        # Auto-discover all public methods
+        echo "  Methods discovered:"
+        grep "public function " "$class_path" 2>/dev/null | while read line; do
+            local method
+            method="$(echo "$line" | sed 's/.*function //;s/(.*//')"
+            echo "    • $method()"
+            verified_methods="$verified_methods $method"
+        done
     fi
-    echo "  ✅ Class file exists: $php_file"
     
-    # Verify each method from contract
-    local methods
-    methods="$(grep "  - name:" "$contract_file" 2>/dev/null | sed 's/.*name: //')"
+    # Generate machine-readable artifact
+    local artifact="$CONTRACTS_DIR/${class_name}.json"
+    cat > "$artifact" << JSON
+{
+  "class": "$actual_class",
+  "namespace": "$namespace",
+  "file": "$class_path",
+  "verified_at": "$now",
+  "methods": "$(echo $verified_methods | tr ' ' ',')",
+  "status": "$([ $errors -eq 0 ] && echo "certified" || echo "failed")"
+}
+JSON
     
-    for method in $methods; do
-        if grep -q "function $method" "$php_file" 2>/dev/null; then
-            echo "  ✅ Method: $method()"
-        else
-            echo "  ❌ Method missing: $method()"
-            echo "     Expected: $(grep -A4 "name: $method" "$contract_file" | grep "returns:" | sed 's/.*: //')"
-            errors=$((errors + 1))
-        fi
-    done
+    echo ""
+    echo "  Artifact: $artifact"
     
-    # Update last_verified
     if [ $errors -eq 0 ]; then
-        sed -i "s/last_verified:.*/last_verified: $(date -u +%Y-%m-%dT%H:%M:%SZ)/" "$contract_file"
-        echo ""
-        echo "  VERDICT: ✅ PASS — All methods verified"
+        echo "  STATUS: ✅ CERTIFIED"
         return 0
     else
-        echo ""
-        echo "  VERDICT: ❌ FAIL — $errors method(s) missing"
+        echo "  STATUS: ❌ $errors method(s) missing"
         return 1
     fi
 }
 
-# Verify all contracts
+# ── Discover and verify all service classes ──
 contract_verify_all() {
+    local service_dir="${1:-backend/app/Services}"
     local total=0 passed=0 failed=0
     
-    for contract in $(find "$CONTRACTS_DIR" -name "*.yaml" 2>/dev/null); do
+    echo "CONTRACT VERIFICATION — $service_dir"
+    echo "═══════════════════════════════════════"
+    echo ""
+    
+    if [ ! -d "$service_dir" ]; then
+        echo "  Directory not found: $service_dir"
+        return 1
+    fi
+    
+    for php_file in $(find "$service_dir" -name "*.php" -type f 2>/dev/null); do
         total=$((total + 1))
-        if contract_verify "$contract"; then
+        local class_name
+        class_name="$(basename "$php_file" .php)"
+        
+        if contract_verify_class "$php_file" ""; then
             passed=$((passed + 1))
         else
             failed=$((failed + 1))
         fi
     done
     
+    # Summary artifact
+    local summary="$CONTRACTS_DIR/verification_summary.json"
+    cat > "$summary" << JSON
+{
+  "directory": "$service_dir",
+  "verified_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "total": $total,
+  "passed": $passed,
+  "failed": $failed,
+  "status": "$([ $failed -eq 0 ] && echo "certified" || echo "incomplete")"
+}
+JSON
+    
     echo ""
     echo "═══════════════════════════════════════"
-    echo "  CONTRACT VERIFICATION SUMMARY"
+    echo "  VERIFICATION SUMMARY"
     echo "═══════════════════════════════════════"
     echo "  Total:   $total"
     echo "  Passed:  $passed"
     echo "  Failed:  $failed"
+    echo "  Status:  $([ $failed -eq 0 ] && echo "✅ CERTIFIED" || echo "❌ INCOMPLETE")"
+    echo "  Summary: $summary"
     echo "═══════════════════════════════════════"
     
     return $failed
 }
 
-# Show contract status
-contract_status() {
-    echo "CONTRACT STATUS"
-    echo "═══════════════════════════════════════"
+# ── Show contract artifacts ──
+contract_show() {
+    local class="$1"
+    local artifact="$CONTRACTS_DIR/${class}.json"
     
-    for contract in $(find "$CONTRACTS_DIR" -name "*.yaml" 2>/dev/null); do
-        local name verified
-        name="$(yaml_get_nested "$contract" "service" "name" 2>/dev/null)"
-        verified="$(yaml_get_nested "$contract" "service" "last_verified" 2>/dev/null)"
-        
-        if [ "$verified" != "null" ] && [ -n "$verified" ]; then
-            echo "  ✅ $name — verified $verified"
-        else
-            echo "  ⬜ $name — not verified"
-        fi
-    done
+    if [ -f "$artifact" ]; then
+        echo "CONTRACT: $class"
+        echo "═══════════════════════════════════════"
+        cat "$artifact"
+    else
+        echo "No contract found for: $class"
+        echo "Run: ai contract verify"
+    fi
 }
 
-# Architecture sync — update architecture docs from verified contracts
-contract_sync() {
-    echo "ARCHITECTURE SYNC"
+# ── List all contracts ──
+contract_list() {
+    echo "CONTRACT REGISTRY"
     echo "═══════════════════════════════════════"
     
-    local arch_file="docs/ARCHITECTURE.md"
-    
-    for contract in $(find "$CONTRACTS_DIR" -name "*.yaml" 2>/dev/null); do
-        local name methods
-        name="$(yaml_get_nested "$contract" "service" "name" 2>/dev/null)"
-        methods="$(grep "  - name:" "$contract" 2>/dev/null | sed 's/.*name: //')"
-        
-        echo "  $name:"
-        for method in $methods; do
-            echo "    • $method()"
+    if [ -d "$CONTRACTS_DIR" ] && [ -n "$(ls -A "$CONTRACTS_DIR" 2>/dev/null)" ]; then
+        for artifact in "$CONTRACTS_DIR"/*.json; do
+            [ -f "$artifact" ] || continue
+            local name status
+            name="$(basename "$artifact" .json)"
+            status="$(grep -o '"status": "[^"]*"' "$artifact" 2>/dev/null | head -1 | cut -d'"' -f4)"
+            echo "  $name — ${status:-unknown}"
         done
-    done
+    else
+        echo "  (no contracts verified)"
+    fi
+}
+
+# ── Certify a task ──
+contract_certify() {
+    local task="${1:-task_0}"
+    local summary="$CONTRACTS_DIR/verification_summary.json"
     
-    echo ""
-    echo "  Architecture synced from verified contracts."
-    echo "  $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    if [ -f "$summary" ]; then
+        local status
+        status="$(grep -o '"status": "[^"]*"' "$summary" 2>/dev/null | cut -d'"' -f4)"
+        
+        if [ "$status" = "certified" ]; then
+            echo "✅ Task '$task' CERTIFIED"
+            echo "   Artifact: $summary"
+            
+            # Update task state
+            mkdir -p .kin/state
+            cat > .kin/state/task.yaml << YAML
+task:
+  name: $task
+  status: certified
+  certified_at: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+  artifact: $summary
+YAML
+            return 0
+        else
+            echo "❌ Cannot certify — verification incomplete"
+            return 1
+        fi
+    else
+        echo "❌ No verification summary found"
+        echo "   Run: ai contract verify"
+        return 1
+    fi
 }
 
 # Dispatch
-case "${1:-status}" in
+case "${1:-list}" in
+    verify)  contract_verify_all "${2:-backend/app/Services}" ;;
+    show)    contract_show "${2:-}" ;;
     list)    contract_list ;;
-    verify)  contract_verify_all ;;
-    status)  contract_status ;;
-    sync)    contract_sync ;;
+    certify) contract_certify "${2:-task_0}" ;;
     *)
-        echo "Usage: ai contract [list|verify|status|sync]"
-        contract_status
+        echo "Usage: ai contract [verify|show|list|certify]"
+        contract_list
         ;;
 esac

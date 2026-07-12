@@ -23,8 +23,8 @@ source "$SDK_ROOT/engines/governance/levels.sh" 2>/dev/null
 
 COMMAND="$1"; shift
 
-# Level 0 bypasses governance
-if [ "$COMMAND" != "clip" ]; then
+# Clip/copy bypass governance
+if [ "$COMMAND" != "clip" ] && [ "$COMMAND" != "copy" ]; then
     CMD_LEVEL=$(governance_level "$COMMAND")
     if [ "$CMD_LEVEL" -gt 0 ] && [ -f "$GOVERNANCE_ENGINE" ]; then
         source "$GOVERNANCE_ENGINE" 2>/dev/null
@@ -40,15 +40,17 @@ case "$COMMAND" in
     governance|guard)
         source "$GOVERNANCE_ENGINE" 2>/dev/null
         governance_check "${1:-unknown}" "${2:-}" ;;
-    clip)
+    clip|copy)
         source "$SDK_ROOT/engines/clipboard/engine.sh" 2>/dev/null
         case "${1:-status}" in
             status)  clipboard_status ;;
-            copy)    shift; clipboard_copy "manual" "$*" ;;
-            file)    shift; clipboard_copy_file "$1" ;;
+            all)     clipboard_select_all ;;
+            last)    clipboard_last_lines "${2:-50}" ;;
+            file)    clipboard_copy_file "$2" ;;
             history) clipboard_history "${2:-10}" ;;
-            last)    clipboard_last ;;
-            *)       clipboard_status ;;
+            restore) clipboard_last ;;
+            clear)   rm -f "$(get_clipboard_dir)"/*.txt 2>/dev/null; echo "✓ Cleared" ;;
+            *)       shift; clipboard_copy "manual" "$*" ;;
         esac ;;
     session|role|gate|brick|workflow|event|audit|knowledge|git|github|release|validate|help|tutorial|examples|explain)
         execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}" ;;

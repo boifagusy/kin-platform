@@ -1,0 +1,7 @@
+engine:
+  name: contracts
+  version: 2.0.0
+  description: Verified Contracts Before Implementation
+  gate_required: 6
+  produces: .kin/contracts/*.json
+  commands: [verify, capture, show, list, certify]
