@@ -1,45 +1,61 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
+# ENGINEERING OS CLI — Registry-Driven Dispatcher
+# No hardcoded commands. Reads registry. Orchestrates only.
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SDK_ROOT="$(dirname "$SCRIPT_DIR")"
 
+# ── Bootstrap: Pipe detection ──
 if [ ! -t 0 ] && [ $# -eq 0 ]; then
     CONTENT="$(cat)"
     source "$SDK_ROOT/engines/clipboard/engine.sh" 2>/dev/null
-    _clipboard_save_copy "$CONTENT" "pipe"
+    _clipboard_save_copy "$CONTENT" "pipe" 2>/dev/null
     exit $?
 fi
 
-source "$SDK_ROOT/core/lib/common.sh"
-source "$SDK_ROOT/core/lib/yaml.sh"
-source "$SDK_ROOT/core/lib/state.sh"
-source "$SDK_ROOT/core/lib/plugin.sh"
+# ── Bootstrap: Load core ──
+source "$SDK_ROOT/kernel/common.sh" 2>/dev/null
+source "$SDK_ROOT/kernel/registry.sh" 2>/dev/null
+source "$SDK_ROOT/kernel/state.sh" 2>/dev/null
+source "$SDK_ROOT/kernel/plugin.sh" 2>/dev/null
 
+# ── Bootstrap: Load governance levels ──
+source "$SDK_ROOT/engines/governance/levels.sh" 2>/dev/null
+
+# ── No args = dashboard ──
 [ $# -eq 0 ] && { ./.sdk/commands/ai work 2>/dev/null; exit 0; }
 
 COMMAND="$1"; shift
 
-case "$COMMAND" in
-    work|status|doctor|install) execute_plugin "$COMMAND" ;;
-    copy|clip)
-        source "$SDK_ROOT/engines/clipboard/engine.sh" 2>/dev/null
-        [ $# -eq 0 ] && { clipboard_save_all; exit $?; }
-        case "$1" in
-            status) clipboard_status ;;
-            file) shift; clipboard_copy_file "$1" ;;
-            history) clipboard_history "${2:-10}" ;;
-            last) clipboard_last ;;
-            *) shift; clipboard_copy "manual" "$*" ;;
-        esac ;;
-    restore)   bash "$SDK_ROOT/engines/restore/engine.sh" "$@" ;;
-    discovery) bash "$SDK_ROOT/engines/intelligence/discovery/engine.sh" "$@" ;;
-    governance|guard)
-        source "$SDK_ROOT/engines/governance/engine.sh" 2>/dev/null
-        governance_check "${1:-unknown}" "${2:-}" ;;
-    investigate|certify|intelligence|contract|task|project)
-        execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}" ;;
-    session|role|gate|brick|workflow|event|audit|knowledge|git|github|release|validate|help|tutorial|examples|explain)
-        execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}" ;;
-    plugins) list_plugins ;;
-    *) echo "Unknown: $COMMAND" ;;
-esac
+# ── Step 1: Resolve plugin from registry ──
+PLUGIN_FILE=$(registry_resolve "$COMMAND")
+
+if [ -z "$PLUGIN_FILE" ]; then
+    echo "Unknown command: $COMMAND"
+    echo "Run 'ai help' for available commands."
+    exit 1
+fi
+
+# ── Step 2: Governance check (Level 0 bypasses) ──
+CMD_LEVEL=$(governance_level "$COMMAND" 2>/dev/null || echo "0")
+if [ "$CMD_LEVEL" != "0" ] && [ -f "$SDK_ROOT/engines/governance/engine.sh" ]; then
+    source "$SDK_ROOT/engines/governance/engine.sh" 2>/dev/null
+    governance_check "$COMMAND" "${1:-}" || exit 1
+fi
+
+# ── Step 3: Execute plugin ──
+if [ -f ".sdk/commands/plugins/${COMMAND}.sh" ]; then
+    source ".sdk/commands/plugins/${COMMAND}.sh" 2>/dev/null
+    if type main >/dev/null 2>&1; then
+        main "${1:-main}" "${2:-}"
+    else
+        echo "Plugin '$COMMAND' has no main() function"
+        exit 1
+    fi
+elif [ -f "$PLUGIN_FILE" ]; then
+    bash "$PLUGIN_FILE" "$@"
+else
+    echo "Plugin not found: $COMMAND"
+    exit 1
+fi

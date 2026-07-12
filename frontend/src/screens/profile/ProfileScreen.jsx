@@ -54,7 +54,7 @@ function ProfileScreen() {
       const data = await response.json();
       if (data.success) {
         setUser(data.data.user);
-        setSafetyScore(95);
+        setSafetyScore(data.data.safety_score || 0);
         const hasDuressTask = data.data.pending_tasks?.some(t => t.id === 'duress_pin');
         setHasDuressPin(!hasDuressTask);
       }

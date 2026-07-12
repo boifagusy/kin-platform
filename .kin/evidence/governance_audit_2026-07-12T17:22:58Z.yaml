@@ -1,0 +1,11 @@
+governance_check:
+  command: audit
+  timestamp: 2026-07-12T17:22:58Z
+  level: 1
+  state:
+    gate: 0
+    role: unassigned
+    brick: none
+    session: active
+  verdict: BLOCKED
+  failed_guard: role

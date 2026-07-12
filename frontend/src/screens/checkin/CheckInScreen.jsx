@@ -45,13 +45,8 @@ function CheckInScreen() {
   const homeZoneAdded = !tasks.find(t => t.id === "home_zone");
   const duressPinCreated = !tasks.find(t => t.id === "duress_pin");
   
-  let calculatedScore = 60;
-  if (locationEnabled) calculatedScore += 15;
-  if (homeZoneAdded) calculatedScore += 15;
-  if (duressPinCreated) calculatedScore += 10;
-  if (checkInState === 'safe') calculatedScore = Math.min(calculatedScore + 5, 100);
   
-  const actualSafetyScore = dashboard?.safety?.score || calculatedScore;
+  const actualSafetyScore = dashboard?.safety_score || 60;
   const displayScore = checkInState === 'safe' ? Math.min(actualSafetyScore + 5, 100) : actualSafetyScore;
 
   const getScoreLabel = (score) => {

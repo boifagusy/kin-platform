@@ -111,3 +111,89 @@ layers:
   verification: [contracts, validate, certify]
   delivery:    [brick, workflow]
   utilities:   [restore, clipboard, help]
+
+supporting_plugins:
+  - id: audit
+    dir: audit
+    status: stable
+    command: ai audit
+    
+  - id: event
+    dir: event
+    status: stable
+    command: ai event
+    
+  - id: git
+    dir: git
+    status: stable
+    command: ai git
+    
+  - id: github
+    dir: github
+    status: stable
+    command: ai github
+    
+  - id: knowledge
+    dir: knowledge
+    status: stable
+    command: ai knowledge
+    
+  - id: release
+    dir: release
+    status: stable
+    command: ai release
+    
+  - id: copy
+    dir: clipboard
+    status: stable
+    command: ai copy
+    
+  - id: guard
+    dir: gate_guard
+    status: stable
+    command: ai guard
+    
+  - id: install
+    dir: none
+    status: stable
+    command: ai install
+    
+  - id: role
+    dir: none
+    status: stable
+    command: ai role
+    
+  - id: session
+    dir: none
+    status: stable
+    command: ai session
+    
+  - id: status
+    dir: none
+    status: stable
+    command: ai status
+    
+  - id: doctor
+    dir: none
+    status: stable
+    command: ai doctor
+    
+  - id: task
+    dir: task
+    status: stable
+    command: ai task
+    
+  - id: tutorial
+    dir: help
+    status: stable
+    command: ai tutorial
+    
+  - id: examples
+    dir: help
+    status: stable
+    command: ai examples
+    
+  - id: explain
+    dir: help
+    status: stable
+    command: ai explain
