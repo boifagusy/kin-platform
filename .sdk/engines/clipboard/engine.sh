@@ -4,28 +4,13 @@
 source "$KERNEL_DIR/clipboard.sh" 2>/dev/null
 
 get_clipboard_dir()  { echo ".kin/history/clipboard"; }
+get_project_root()   { git rev-parse --show-toplevel 2>/dev/null || pwd; }
 
-# Main copy — saves screen + copies to clipboard
-clipboard_copy() {
-    local content="$2"
-    
-    # If content provided, copy it directly
-    if [ -n "$content" ]; then
-        _clipboard_save_copy "$content" "${1:-manual}"
-        return 0
-    fi
-    
-    # No content = save everything on screen
-    clipboard_save_all
-}
-
-# Internal: save and copy
 _clipboard_save_copy() {
     local content="$1"
     local label="$2"
     local dir; dir="$(get_clipboard_dir)"; mkdir -p "$dir"
     local ts; ts="$(date +%Y%m%d_%H%M%S)"
-    
     echo "$content" > "$dir/${ts}_${label}.txt"
     local tmp="$HOME/.clip_$$"
     echo "$content" > "$tmp"
@@ -34,33 +19,50 @@ _clipboard_save_copy() {
     echo "✓ Copied — ${ts}"
 }
 
-# Save everything currently on screen
 clipboard_save_all() {
+    local root; root="$(get_project_root)"
+    local project; project="$(basename "$root")"
+    local branch; branch="$(git -C "$root" branch --show-current 2>/dev/null || echo 'N/A')"
     local save_file="$HOME/termux_screen_$(date +%Y%m%d_%H%M%S).txt"
-    local all_content=""
     
-    # Collect everything available
-    all_content+="=== TERMUX SCREEN ===\n"
-    all_content+="Date: $(date)\n"
-    all_content+="Directory: $(pwd)\n"
-    all_content+="Git: $(git branch --show-current 2>/dev/null || echo 'N/A')\n"
-    all_content+="\n=== BASH HISTORY ===\n"
-    all_content+="$(tail -500 "${HISTFILE:-$HOME/.bash_history}" 2>/dev/null)\n"
-    all_content+="\n=== CLIPBOARD HISTORY ===\n"
-    all_content+="$(ls -1t "$(get_clipboard_dir)"/*.txt 2>/dev/null | head -5 | while read f; do echo "  $(basename "$f" .txt)"; done)\n"
+    {
+        echo "=== TERMUX SCREEN ==="
+        echo "Date: $(date)"
+        echo "Project: ${project}"
+        echo "Directory: ${root}"
+        echo "Git: ${branch}"
+        echo ""
+        echo "=== BASH HISTORY ==="
+        tail -500 "${HISTFILE:-$HOME/.bash_history}" 2>/dev/null
+        echo ""
+        echo "=== CLIPBOARD HISTORY ==="
+        ls -1t "$(get_clipboard_dir)"/*.txt 2>/dev/null | head -5 | while read f; do
+            echo "  $(basename "$f" .txt)"
+        done
+    } > "$save_file"
     
-    # Save to file
-    echo -e "$all_content" > "$save_file"
-    
-    # Copy to clipboard
-    local tmp="$HOME/.clip_$$"
-    echo -e "$all_content" > "$tmp"
-    termux-clipboard-set < "$tmp" 2>/dev/null
-    rm -f "$tmp"
-    
+    _clipboard_save_copy "$(cat "$save_file")" "screen"
     echo "✓ Screen saved: $save_file"
-    echo "✓ Copied to Android clipboard"
     echo "✓ $(wc -l < "$save_file" | tr -d ' ') lines"
+}
+
+clipboard_copy() {
+    local content="$2"
+    if [ -z "$content" ]; then
+        clipboard_save_all
+    else
+        _clipboard_save_copy "$content" "${1:-manual}"
+    fi
+}
+
+clipboard_select_all() {
+    local histfile="${HISTFILE:-$HOME/.bash_history}"
+    if [ -f "$histfile" ]; then
+        _clipboard_save_copy "$(tail -500 "$histfile" 2>/dev/null)" "history"
+        echo "✓ 500 lines copied"
+    else
+        echo "No history. Run: touch ~/.bash_history"
+    fi
 }
 
 clipboard_copy_file() {
@@ -86,16 +88,10 @@ clipboard_last() {
 }
 
 clipboard_status() {
-    local count
-    count=$(ls -1 "$(get_clipboard_dir)"/*.txt 2>/dev/null | wc -l | tr -d ' ')
-    local screen_files
-    screen_files=$(ls -1 "$HOME/termux_screen_"*.txt 2>/dev/null | wc -l | tr -d ' ')
-    echo "✓ Clipboard | History: ${count:-0} | Screens: ${screen_files:-0}"
-    echo ""
-    echo "  ai copy               Save screen + copy to clipboard"
-    echo "  ai copy \"text\"        Copy text directly"
+    local count; count=$(ls -1 "$(get_clipboard_dir)"/*.txt 2>/dev/null | wc -l | tr -d ' ')
+    echo "✓ Clipboard | History: ${count:-0}"
+    echo "  ai copy               Save screen + copy"
+    echo "  ai copy \"text\"        Copy text"
     echo "  ai copy file <f>      Copy file"
     echo "  echo \"text\" | ai      Pipe to clipboard"
-    echo "  ai copy history       View history"
-    echo "  ai copy last          Show last copy"
 }
