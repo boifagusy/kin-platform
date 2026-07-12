@@ -1,0 +1,83 @@
+# Engineering OS Engine Registry
+# Single source of truth for all engine responsibilities
+# Frozen for v3.3 — new engines require ADR
+
+version: 3.3
+status: STABLE
+freeze_date: 2026-07-12
+
+engines:
+  context:
+    - name: Governance
+      purpose: Enforce policies before execution
+      command: ai guard
+      layer: Context
+      
+    - name: Gate
+      purpose: Manage 12-gate project lifecycle
+      command: ai gate
+      layer: Context
+      
+    - name: Project
+      purpose: Orchestrate projects through gates
+      command: ai project
+      layer: Context
+
+  knowledge:
+    - name: Discovery
+      purpose: Build architecture and dependency maps
+      command: ai discovery
+      layer: Knowledge
+      
+    - name: Intelligence
+      purpose: Compute health, maturity, recommendations
+      command: ai intelligence
+      layer: Knowledge
+      
+    - name: Investigation
+      purpose: Research features before changes
+      command: ai investigate
+      layer: Knowledge
+
+  verification:
+    - name: Contract
+      purpose: Verify interfaces and dependencies
+      command: ai contract
+      layer: Verification
+      
+    - name: Validate
+      purpose: Execute health and consistency checks
+      command: ai validate
+      layer: Verification
+      
+    - name: Certification
+      purpose: Record completed work permanently
+      command: ai certify
+      layer: Verification
+
+  delivery:
+    - name: Brick
+      purpose: Manage implementation units
+      command: ai brick
+      layer: Delivery
+      
+    - name: Workflow
+      purpose: Compute next engineering action
+      command: ai workflow
+      layer: Delivery
+
+  utilities:
+    - name: Restore
+      purpose: Recover system state
+      command: ai restore
+      layer: Utilities
+      
+    - name: Clipboard
+      purpose: Android system clipboard integration
+      command: ai copy
+      layer: Utilities
+      
+    - name: Help
+      purpose: Self-documenting reference
+      command: ai help
+      layer: Utilities
