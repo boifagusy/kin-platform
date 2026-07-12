@@ -21,6 +21,8 @@ PROJECT
   ai brick         Brick management
 
 DEVELOPMENT
+  ai investigate    Investigation Engine — no code without research
+  ai certify        Task Certification Engine
   ai contract      Contract verification
   ai task          Task state machine
   ai role          Assign AI roles

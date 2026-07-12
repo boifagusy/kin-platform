@@ -123,3 +123,21 @@ YAML
         return 1
     fi
 }
+
+# Investigation Guard — no implementation without investigation
+guard_investigation() {
+    local gate; gate="$(gate_current 2>/dev/null)"
+    
+    # Gates 6+ require investigation
+    if [ "$gate" -ge 6 ]; then
+        if [ -d ".kin/investigations" ] && [ -n "$(ls -A .kin/investigations 2>/dev/null)" ]; then
+            echo "  ✅ Investigation complete"
+            return 0
+        fi
+        echo "  ❌ No investigation report"
+        echo "     → ai investigate services"
+        return 1
+    fi
+    echo "  ⏭️  Investigation not required at Gate $gate"
+    return 0
+}
