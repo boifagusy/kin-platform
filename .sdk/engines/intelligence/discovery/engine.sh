@@ -1,34 +1,33 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-# PROJECT DISCOVERY ENGINE — Read-only. Builds project registry.
-# Separated from Analysis and Planning.
+# PROJECT DISCOVERY ENGINE v3.0
+# Weighted scoring, risk-based recommendations, gate-aware, trend tracking
 
 if [ -n "$SDK_ROOT" ]; then
     KERNEL_DIR="$SDK_ROOT/kernel"
+    ENGINES_DIR="$SDK_ROOT/engines"
 else
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     KERNEL_DIR="$(dirname "$(dirname "$(dirname "$SCRIPT_DIR")")")/kernel"
+    ENGINES_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 fi
 
 source "$KERNEL_DIR/yaml.sh" 2>/dev/null
 source "$KERNEL_DIR/filesystem.sh" 2>/dev/null
+source "$ENGINES_DIR/gate/engine.sh" 2>/dev/null
 
 REGISTRY_DIR=".kin/intelligence/registry"
 SNAPSHOT_DIR=".kin/intelligence/snapshots"
-mkdir -p "$REGISTRY_DIR" "$SNAPSHOT_DIR"
+REPORT_DIR=".kin/intelligence/reports"
+mkdir -p "$REGISTRY_DIR" "$SNAPSHOT_DIR" "$REPORT_DIR"
 
-# ── Build Service Registry ──
+# ── Weighted Scoring Model ──
+# Architecture: 15%, Contracts: 30%, Tests: 25%, Bricks: 10%, Debt: 10%, Docs: 5%, Validation: 5%
+
 discovery_build_registry() {
     local snapshot="$SNAPSHOT_DIR/scan_$(date +%Y%m%d_%H%M%S).yaml"
     local root; root="$(git rev-parse --show-toplevel 2>/dev/null)" || root="."
     
-    echo ""
-    echo "═══════════════════════════════════════"
-    echo "  PROJECT DISCOVERY — Building Registry"
-    echo "═══════════════════════════════════════"
-    echo ""
-    
-    # Discover every service with metadata
     echo "services:" > "$REGISTRY_DIR/services.yaml"
     
     if [ -d "$root/backend/app/Services" ]; then
@@ -39,13 +38,10 @@ discovery_build_registry() {
             class="$(grep "^class " "$f" 2>/dev/null | head -1 | awk '{print $2}')"
             methods="$(grep "public function " "$f" 2>/dev/null | wc -l | tr -d ' ')"
             
-            # Determine status
             if grep -q "DEPRECATED\|@deprecated" "$f" 2>/dev/null; then status="deprecated"
             elif grep -q "TODO\|FIXME\|@experimental" "$f" 2>/dev/null; then status="experimental"
             elif [ ! -f "$root/backend/tests/Unit/Services/${name}Test.php" ]; then status="partial"
             else status="implemented"; fi
-            
-            echo "  $name: $status ($methods methods)"
             
             cat >> "$REGISTRY_DIR/services.yaml" << YAML
   - name: $name
@@ -60,139 +56,143 @@ YAML
         done < <(find "$root/backend/app/Services" -name "*.php" -type f 2>/dev/null)
     fi
     
-    # Discover features
-    echo "features:" > "$REGISTRY_DIR/features.yaml"
-    
-    if [ -d "$root/frontend/src/screens" ]; then
-        for d in "$root/frontend/src/screens"/*/; do
-            [ -d "$d" ] || continue
-            local feature; feature="$(basename "$d")"
-            local has_controller has_route has_view has_test
-            has_controller="$(find "$root/backend/app/Http/Controllers" -iname "*${feature}*" 2>/dev/null | wc -l | tr -d ' ')"
-            has_view="$(find "$root/frontend/src/screens/$feature" -name "*.jsx" -o -name "*.tsx" 2>/dev/null | wc -l | tr -d ' ')"
-            
-            local fstatus="unknown"
-            [ "$has_controller" -gt 0 ] && [ "$has_view" -gt 0 ] && fstatus="implemented"
-            [ "$has_controller" -gt 0 ] && [ "$has_view" -eq 0 ] && fstatus="partial"
-            [ "$has_controller" -eq 0 ] && [ "$has_view" -gt 0 ] && fstatus="partial"
-            
-            cat >> "$REGISTRY_DIR/features.yaml" << YAML
-  - name: $feature
-    status: $fstatus
-    controllers: $has_controller
-    views: $has_view
-YAML
-        done
-    fi
-    
-    # Save snapshot for comparison
     cp "$REGISTRY_DIR/services.yaml" "$snapshot"
     ln -sf "$(basename "$snapshot")" "$SNAPSHOT_DIR/latest.yaml" 2>/dev/null
-    
-    echo ""
-    echo "  Registry: $REGISTRY_DIR/"
-    echo "  Snapshot: $snapshot"
 }
 
-# ── Compare snapshots ──
-discovery_diff() {
-    echo ""
-    echo "═══════════════════════════════════════"
-    echo "  SNAPSHOT COMPARISON"
-    echo "═══════════════════════════════════════"
-    
-    local snapshots=($(ls -1t "$SNAPSHOT_DIR"/scan_*.yaml 2>/dev/null))
-    
-    if [ ${#snapshots[@]} -lt 2 ]; then
-        echo "  Need at least 2 snapshots to compare."
-        echo "  Run: ai discovery build"
-        return
-    fi
-    
-    echo "  Latest:  $(basename "${snapshots[0]}")"
-    echo "  Previous: $(basename "${snapshots[1]}")"
-    echo ""
-    
-    # Show what's new
-    local new; new=$(diff "${snapshots[1]}" "${snapshots[0]}" 2>/dev/null | grep "^>")
-    if [ -n "$new" ]; then
-        echo "  New since last scan:"
-        echo "$new" | head -10 | while read line; do echo "    $line"; done
-    else
-        echo "  No changes detected."
-    fi
-}
-
-# ── Investigate a feature ──
-discovery_investigate() {
-    local target="$1"
-    
-    echo ""
-    echo "═══════════════════════════════════════"
-    echo "  INVESTIGATION: $target"
-    echo "═══════════════════════════════════════"
-    echo ""
-    
-    local root; root="$(git rev-parse --show-toplevel 2>/dev/null)" || root="."
-    local total=0
-    
-    echo "  References found:"
-    if [ -d "$root/backend" ]; then
-        grep -rl "$target" "$root/backend/app" "$root/backend/routes" "$root/backend/resources" 2>/dev/null | while read f; do
-            echo "    • ${f#$root/}"
-        done
-        total=$(grep -rl "$target" "$root/backend/app" "$root/backend/routes" "$root/backend/resources" 2>/dev/null | wc -l | tr -d ' ')
-    fi
-    
-    echo ""
-    echo "  Files affected: ${total:-0}"
-    echo "  Risk: $([ "${total:-0}" -gt 10 ] && echo "HIGH" || echo "MEDIUM")"
-    echo "  Recommendation: $([ "${total:-0}" -gt 10 ] && echo "Requires approval before modification" || echo "Safe to proceed with investigation")"
-}
-
-# ── Confidence scoring ──
+# ── Weighted Confidence Score ──
 discovery_confidence() {
-    echo ""
-    echo "═══════════════════════════════════════"
-    echo "  CONFIDENCE SCORES"
-    echo "═══════════════════════════════════════"
+    local gate; gate="$(gate_current 2>/dev/null)"
+    local gate_name; gate_name="$(gate_name "$gate" 2>/dev/null)"
+    local project; project="$(git rev-parse --show-toplevel 2>/dev/null | xargs basename 2>/dev/null)"
     
-    local services contracts tests routes
+    # Gather metrics
+    local services contracts tests bricks certs debt_items docs
     services=$(find backend/app/Services -name "*.php" -type f 2>/dev/null | wc -l | tr -d ' ')
     contracts=$(find .sdk/contracts -name "*.yaml" -type f 2>/dev/null | wc -l | tr -d ' ')
     tests=$(find backend/tests -name "*Test.php" -type f 2>/dev/null | wc -l | tr -d ' ')
-    routes=$(grep -c "Route::" backend/routes/*.php 2>/dev/null)
+    bricks=$(ls -1d bricks/*/ 2>/dev/null | wc -l | tr -d ' ')
+    certs=$(ls -1 .kin/certifications/*.yaml 2>/dev/null | wc -l | tr -d ' ')
+    docs=$(find docs -name "*.md" -type f 2>/dev/null | wc -l | tr -d ' ')
     
-    local svc_conf=$([ "$services" -gt 0 ] && echo 98 || echo 0)
-    local ct_conf=$([ "$contracts" -gt 0 ] && echo $(( contracts * 100 / (services + 1) )) || echo 0)
-    local test_conf=$([ "$tests" -gt 0 ] && echo $(( tests * 100 / (services + 1) )) || echo 0)
-    local overall=$(( (svc_conf + ct_conf + test_conf) / 3 ))
+    # Individual scores (0-100)
+    local arch_score=$([ "$services" -gt 0 ] && echo 98 || echo 0)
     
-    echo "  Architecture: ${svc_conf}%"
-    echo "  Contracts:    ${ct_conf}%"
-    echo "  Tests:        ${test_conf}%"
-    echo "  ─────────────────"
-    echo "  Overall:      ${overall}%"
+    local contract_pct=$([ "$services" -gt 0 ] && echo $(( contracts * 100 / (services + 1) )) || echo 0)
+    [ "$contract_pct" -gt 100 ] && contract_pct=100
+    
+    local test_pct=$([ "$services" -gt 0 ] && echo $(( tests * 100 / (services + 1) )) || echo 0)
+    [ "$test_pct" -gt 100 ] && test_pct=100
+    
+    local brick_score=$([ "$bricks" -gt 0 ] && echo 80 || echo 10)
+    local debt_score=65
+    local doc_score=$([ "$docs" -gt 10 ] && echo 70 || echo 30)
+    local val_score=$([ "$certs" -gt 0 ] && echo 75 || echo 15)
+    
+    # Weighted calculation
+    local weighted=$(( (arch_score * 15) + (contract_pct * 30) + (test_pct * 25) + (brick_score * 10) + (debt_score * 10) + (doc_score * 5) + (val_score * 5) ))
+    local overall=$(( weighted / 100 ))
+    
+    # Maturity level
+    local maturity
+    if [ "$overall" -le 20 ]; then maturity="Prototype"
+    elif [ "$overall" -le 40 ]; then maturity="Early Development"
+    elif [ "$overall" -le 60 ]; then maturity="Feature Complete"
+    elif [ "$overall" -le 80 ]; then maturity="Stabilization"
+    elif [ "$overall" -le 90 ]; then maturity="Release Candidate"
+    else maturity="Production Ready"; fi
+    
+    # Trend
+    local prev_score=0 trend="first_scan"
+    if [ -f "$REPORT_DIR/latest_score.txt" ]; then
+        prev_score=$(cat "$REPORT_DIR/latest_score.txt" 2>/dev/null)
+        if [ "$overall" -gt "$prev_score" ]; then trend="+$((overall - prev_score))%"
+        elif [ "$overall" -lt "$prev_score" ]; then trend="-$((prev_score - overall))%"
+        else trend="stable"; fi
+    fi
+    echo "$overall" > "$REPORT_DIR/latest_score.txt"
+    
+    # Determine critical services (no contracts, high methods = high risk)
+    local critical_services=""
+    if [ -f "$REGISTRY_DIR/services.yaml" ]; then
+        critical_services=$(grep -B5 "has_contract: false" "$REGISTRY_DIR/services.yaml" 2>/dev/null | grep "name:" | sed 's/.*: //' | head -5 | tr '\n' ', ' | sed 's/,$//')
+    fi
+    
+    # ── Gate-aware recommendation ──
+    local recommendation next_action
+    if [ "$gate" -le 2 ]; then
+        recommendation="Complete Discovery and Requirements gates"
+        next_action="ai gate advance"
+    elif [ "$gate" -le 5 ] && [ "$contract_pct" -lt 50 ]; then
+        recommendation="Priority 1: Contract verification for critical services"
+        next_action="ai contract verify"
+    elif [ "$gate" -le 6 ] && [ "$test_pct" -lt 30 ]; then
+        recommendation="Priority 2: Add tests for contract-certified services"
+        next_action="ai investigate services"
+    elif [ "$gate" -le 11 ] && [ "$overall" -lt 65 ]; then
+        recommendation="Stabilize before release — contracts + tests needed"
+        next_action="ai discovery confidence"
+    else
+        recommendation="Proceed with current gate requirements"
+        next_action="ai gate verify && ai gate advance"
+    fi
+    
+    # Estimated risk reduction
+    local risk_reduction=0
+    [ "$contract_pct" -lt 50 ] && risk_reduction=$((50 - contract_pct + 15))
+    [ "$test_pct" -lt 30 ] && risk_reduction=$((risk_reduction + 30 - test_pct))
+    
+    # ── Output Report ──
+    echo ""
+    echo "════════════════════════════════════════════"
+    echo "  PROJECT INTELLIGENCE REPORT"
+    echo "════════════════════════════════════════════"
+    echo ""
+    echo "  Project:    $project"
+    echo "  Gate:       $gate — $gate_name"
+    echo "  Maturity:   $maturity"
+    echo "  Trend:      $trend"
+    echo ""
+    echo "────────────────────────────────────────"
+    echo "  SCORES (Weighted)"
+    echo "────────────────────────────────────────"
+    echo "  Architecture:   ${arch_score}%  (weight: 15%)"
+    echo "  Contracts:      ${contract_pct}%  (weight: 30%)  ← CRITICAL"
+    echo "  Tests:          ${test_pct}%  (weight: 25%)"
+    echo "  Bricks:         ${brick_score}%  (weight: 10%)"
+    echo "  Technical Debt: ${debt_score}%  (weight: 10%)"
+    echo "  Documentation:  ${doc_score}%  (weight: 5%)"
+    echo "  Validation:     ${val_score}%  (weight: 5%)"
+    echo "  ─────────────────────────────────"
+    echo "  STABILITY:      ${overall}%"
     echo ""
     
-    if [ "$overall" -lt 85 ]; then
-        echo "  ⚠️  Confidence below 85% — recommend further investigation"
-    else
-        echo "  ✅ Confidence sufficient for implementation"
+    if [ ${#critical_services} -gt 5 ]; then
+        echo "────────────────────────────────────────"
+        echo "  HIGHEST RISKS"
+        echo "────────────────────────────────────────"
+        echo "  Uncertified services: $critical_services..."
+        echo ""
     fi
+    
+    echo "────────────────────────────────────────"
+    echo "  RECOMMENDATION"
+    echo "────────────────────────────────────────"
+    echo "  $recommendation"
+    echo ""
+    echo "  Next Action: $next_action"
+    [ "$risk_reduction" -gt 0 ] && echo "  Risk Reduction: ${overall}% → $(( overall + risk_reduction > 95 ? 95 : overall + risk_reduction ))%"
+    echo ""
+    echo "════════════════════════════════════════════"
 }
 
 # Dispatch
-case "${1:-build}" in
+case "${1:-status}" in
     build)     discovery_build_registry ;;
-    diff)      discovery_diff ;;
-    investigate) discovery_investigate "${2:-}" ;;
     confidence) discovery_confidence ;;
+    status)    echo "Registry: $REGISTRY_DIR/"; ls "$REGISTRY_DIR/" 2>/dev/null ;;
     *)
-        echo "Usage: ai discovery [build|diff|investigate|confidence]"
-        echo "  ai discovery build        Build project registry"
-        echo "  ai discovery diff         Compare snapshots"
-        echo "  ai discovery investigate  Deep-dive a feature"
-        echo "  ai discovery confidence   Confidence scores"
+        echo "Usage: ai discovery [build|confidence|status]"
+        discovery_confidence
         ;;
 esac

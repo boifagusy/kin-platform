@@ -1,0 +1,41 @@
+features:
+  - name: alerts
+    status: partial
+    controllers: 0
+    views: 1
+  - name: auth
+    status: implemented
+    controllers: 10
+    views: 5
+  - name: checkin
+    status: implemented
+    controllers: 4
+    views: 8
+  - name: dashboard
+    status: implemented
+    controllers: 4
+    views: 1
+  - name: map
+    status: partial
+    controllers: 0
+    views: 1
+  - name: network
+    status: partial
+    controllers: 0
+    views: 1
+  - name: onboarding
+    status: implemented
+    controllers: 2
+    views: 2
+  - name: profile
+    status: partial
+    controllers: 0
+    views: 1
+  - name: settings
+    status: implemented
+    controllers: 5
+    views: 3
+  - name: ui-polish
+    status: partial
+    controllers: 0
+    views: 17

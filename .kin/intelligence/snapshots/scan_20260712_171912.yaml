@@ -1,0 +1,201 @@
+services:
+  - name: SafetyScoreService
+    namespace: App\Services
+    class: SafetyScoreService
+    file: backend/app/Services/SafetyScoreService.php
+    methods: 5
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: DashboardSnapshotService
+    namespace: App\Services
+    class: DashboardSnapshotService
+    file: backend/app/Services/DashboardSnapshotService.php
+    methods: 3
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: CheckInService
+    namespace: App\Services
+    class: CheckInService
+    file: backend/app/Services/CheckInService.php
+    methods: 2
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: NotificationService
+    namespace: App\Services
+    class: NotificationService
+    file: backend/app/Services/NotificationService.php
+    methods: 10
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: SafetyMonitorService
+    namespace: App\Services\Admin
+    class: SafetyMonitorService
+    file: backend/app/Services/Admin/SafetyMonitorService.php
+    methods: 8
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: UserManagementService
+    namespace: App\Services\Admin
+    class: UserManagementService
+    file: backend/app/Services/Admin/UserManagementService.php
+    methods: 4
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: SystemSettingsService
+    namespace: App\Services\Admin
+    class: SystemSettingsService
+    file: backend/app/Services/Admin/SystemSettingsService.php
+    methods: 6
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: AuditService
+    namespace: App\Services\Admin
+    class: AuditService
+    file: backend/app/Services/Admin/AuditService.php
+    methods: 8
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: UserActionService
+    namespace: App\Services\Admin
+    class: UserActionService
+    file: backend/app/Services/Admin/UserActionService.php
+    methods: 4
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: PermissionService
+    namespace: App\Services\Admin
+    class: PermissionService
+    file: backend/app/Services/Admin/PermissionService.php
+    methods: 7
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: EmergencyPermissionService
+    namespace: App\Services
+    class: EmergencyPermissionService
+    file: backend/app/Services/EmergencyPermissionService.php
+    methods: 2
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: PasswordResetService
+    namespace: App\Services
+    class: PasswordResetService
+    file: backend/app/Services/PasswordResetService.php
+    methods: 4
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: DeviceTrustService
+    namespace: App\Services
+    class: DeviceTrustService
+    file: backend/app/Services/DeviceTrustService.php
+    methods: 8
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: EscalationDecisionEngine
+    namespace: App\Services
+    class: EscalationDecisionEngine
+    file: backend/app/Services/EscalationDecisionEngine.php
+    methods: 6
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: HealthService
+    namespace: App\Services\Watchtower
+    class: HealthService
+    file: backend/app/Services/Watchtower/HealthService.php
+    methods: 1
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: ApiMonitorService
+    namespace: App\Services\Watchtower
+    class: ApiMonitorService
+    file: backend/app/Services/Watchtower/ApiMonitorService.php
+    methods: 2
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: QueueMonitorService
+    namespace: App\Services\Watchtower
+    class: QueueMonitorService
+    file: backend/app/Services/Watchtower/QueueMonitorService.php
+    methods: 2
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: DatabaseMonitorService
+    namespace: App\Services\Watchtower
+    class: DatabaseMonitorService
+    file: backend/app/Services/Watchtower/DatabaseMonitorService.php
+    methods: 2
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: PluginHealthService
+    namespace: App\Services\Watchtower
+    class: PluginHealthService
+    file: backend/app/Services/Watchtower/PluginHealthService.php
+    methods: 2
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: SafetyEngineMonitorService
+    namespace: App\Services\Watchtower
+    class: SafetyEngineMonitorService
+    file: backend/app/Services/Watchtower/SafetyEngineMonitorService.php
+    methods: 1
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: PerformanceMonitorService
+    namespace: App\Services\Watchtower
+    class: PerformanceMonitorService
+    file: backend/app/Services/Watchtower/PerformanceMonitorService.php
+    methods: 1
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: ErrorMonitorService
+    namespace: App\Services\Watchtower
+    class: ErrorMonitorService
+    file: backend/app/Services/Watchtower/ErrorMonitorService.php
+    methods: 1
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: NotificationMonitorService
+    namespace: App\Services\Watchtower
+    class: NotificationMonitorService
+    file: backend/app/Services/Watchtower/NotificationMonitorService.php
+    methods: 1
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: SecurityMonitorService
+    namespace: App\Services\Watchtower
+    class: SecurityMonitorService
+    file: backend/app/Services/Watchtower/SecurityMonitorService.php
+    methods: 1
+    status: partial
+    has_tests: false
+    has_contract: false
+  - name: WatchtowerHealthService
+    namespace: App\Services\Watchtower
+    class: WatchtowerHealthService
+    file: backend/app/Services/Watchtower/WatchtowerHealthService.php
+    methods: 2
+    status: partial
+    has_tests: false
+    has_contract: false

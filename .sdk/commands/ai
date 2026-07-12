@@ -23,38 +23,22 @@ case "$COMMAND" in
     work|status|doctor|install) execute_plugin "$COMMAND" ;;
     copy|clip)
         source "$SDK_ROOT/engines/clipboard/engine.sh" 2>/dev/null
-        # No args = save everything
         [ $# -eq 0 ] && { clipboard_save_all; exit $?; }
         case "$1" in
-            status)  clipboard_status ;;
-            file)    shift; clipboard_copy_file "$1" ;;
+            status) clipboard_status ;;
+            file) shift; clipboard_copy_file "$1" ;;
             history) clipboard_history "${2:-10}" ;;
-            last)    clipboard_last ;;
-            *)       shift; clipboard_copy "manual" "$*" ;;
+            last) clipboard_last ;;
+            *) shift; clipboard_copy "manual" "$*" ;;
         esac ;;
     restore)   bash "$SDK_ROOT/engines/restore/engine.sh" "$@" ;;
+    discovery) bash "$SDK_ROOT/engines/intelligence/discovery/engine.sh" "$@" ;;
     governance|guard)
         source "$SDK_ROOT/engines/governance/engine.sh" 2>/dev/null
         governance_check "${1:-unknown}" "${2:-}" ;;
-    session|role|gate|brick|workflow|event|audit|knowledge|git|github|release|validate|help|tutorial|examples|explain|contract)
-        execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}"
-        ;;
-    discovery)
-        execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}"
-        ;;
-    investigate)
-        execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}"
-        ;;
-    certify)
-        execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}"
-        ;;
-    certify)
-        execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}"
-        ;;
-    certify)
-        execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}"
-        ;;
-    certify|task)
+    investigate|certify|intelligence|contract|task|project)
+        execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}" ;;
+    session|role|gate|brick|workflow|event|audit|knowledge|git|github|release|validate|help|tutorial|examples|explain)
         execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}" ;;
     plugins) list_plugins ;;
     *) echo "Unknown: $COMMAND" ;;
