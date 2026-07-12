@@ -39,6 +39,9 @@ case "$COMMAND" in
     session|role|gate|brick|workflow|event|audit|knowledge|git|github|release|validate|help|tutorial|examples|explain|contract)
         execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}"
         ;;
+    certify)
+        execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}"
+        ;;
     certify|task)
         execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}" ;;
     plugins) list_plugins ;;
