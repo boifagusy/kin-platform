@@ -1,0 +1,25 @@
+service:
+  name: ApiMonitorService
+  namespace: App\Services\Watchtower
+  class: ApiMonitorService
+  version: 1.0.0
+  description: Monitors external API health and response times
+methods:
+  - name: detectDegradation
+    visibility: public
+    params: []
+    returns: array
+    exceptions: [ApiMonitorException]
+  - name: getStatus
+    visibility: public
+    params: []
+    returns: string
+    exceptions: []
+  - name: getMetrics
+    visibility: public
+    params: []
+    returns: array
+    exceptions: []
+dependencies: []
+owner: watchtower
+last_verified: null

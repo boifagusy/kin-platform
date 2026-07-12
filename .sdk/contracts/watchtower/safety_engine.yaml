@@ -1,0 +1,20 @@
+service:
+  name: SafetyEngine
+  namespace: App\Services\Watchtower
+  class: SafetyEngine
+  version: 1.0.0
+  description: Evaluates system safety status
+methods:
+  - name: evaluate
+    visibility: public
+    params: []
+    returns: array
+    exceptions: [SafetyEngineException]
+  - name: isSafe
+    visibility: public
+    params: []
+    returns: bool
+    exceptions: []
+dependencies: [ApiMonitorService]
+owner: watchtower
+last_verified: null

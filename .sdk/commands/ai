@@ -23,7 +23,7 @@ source "$SDK_ROOT/engines/governance/levels.sh" 2>/dev/null
 
 COMMAND="$1"; shift
 
-# Clip is Level 1 — bypasses full governance
+# Level 0 bypasses governance
 if [ "$COMMAND" != "clip" ]; then
     CMD_LEVEL=$(governance_level "$COMMAND")
     if [ "$CMD_LEVEL" -gt 0 ] && [ -f "$GOVERNANCE_ENGINE" ]; then
@@ -33,7 +33,7 @@ if [ "$COMMAND" != "clip" ]; then
 fi
 
 case "$COMMAND" in
-    status|doctor|install|work)
+    status|doctor|install|work|contract|task)
         execute_plugin "$COMMAND" ;;
     restore)
         bash "$SDK_ROOT/engines/restore/engine.sh" "$@" ;;

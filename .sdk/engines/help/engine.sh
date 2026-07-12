@@ -21,6 +21,8 @@ PROJECT
   ai brick         Brick management
 
 DEVELOPMENT
+  ai contract      Contract verification
+  ai task          Task state machine
   ai role          Assign AI roles
   ai audit         View audit trail
   ai restore       System restoration

@@ -1,4 +1,4 @@
 active_brick: none
-status: inactive
-gate: 0
+brick_status: inactive
 last_updated: null
+documentation: null
