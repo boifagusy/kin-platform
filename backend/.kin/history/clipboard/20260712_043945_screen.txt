@@ -1,0 +1,509 @@
+=== TERMUX SCREEN ===
+Date: Sun Jul 12 04:39:45 WAT 2026
+Project: kin_project
+Directory: /data/data/com.termux/files/home/kin_project
+Git: main
+
+=== BASH HISTORY ===
+# ── Discover and verify all service classes ──
+contract_verify_all() {
+    local service_dir="${1:-backend/app/Services}"
+    local total=0 passed=0 failed=0
+    
+    echo "CONTRACT VERIFICATION — $service_dir"
+    echo "═══════════════════════════════════════"
+    echo ""
+    
+    if [ ! -d "$service_dir" ]; then
+        echo "  Directory not found: $service_dir"
+        return 1
+    fi
+    
+    for php_file in $(find "$service_dir" -name "*.php" -type f 2>/dev/null); do
+        total=$((total + 1))
+        local class_name
+        class_name="$(basename "$php_file" .php)"
+        
+        if contract_verify_class "$php_file" ""; then
+            passed=$((passed + 1))
+        else
+            failed=$((failed + 1))
+        fi
+    done
+    
+    # Summary artifact
+    local summary="$CONTRACTS_DIR/verification_summary.json"
+    cat > "$summary" << JSON
+{
+  "directory": "$service_dir",
+  "verified_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "total": $total,
+  "passed": $passed,
+  "failed": $failed,
+  "status": "$([ $failed -eq 0 ] && echo "certified" || echo "incomplete")"
+}
+JSON
+    
+    echo ""
+    echo "═══════════════════════════════════════"
+    echo "  VERIFICATION SUMMARY"
+    echo "═══════════════════════════════════════"
+    echo "  Total:   $total"
+    echo "  Passed:  $passed"
+    echo "  Failed:  $failed"
+    echo "  Status:  $([ $failed -eq 0 ] && echo "✅ CERTIFIED" || echo "❌ INCOMPLETE")"
+    echo "  Summary: $summary"
+    echo "═══════════════════════════════════════"
+    
+    return $failed
+}
+
+# ── Show contract artifacts ──
+contract_show() {
+    local class="$1"
+    local artifact="$CONTRACTS_DIR/${class}.json"
+    
+    if [ -f "$artifact" ]; then
+        echo "CONTRACT: $class"
+        echo "═══════════════════════════════════════"
+        cat "$artifact"
+    else
+        echo "No contract found for: $class"
+        echo "Run: ai contract verify"
+    fi
+}
+
+# ── List all contracts ──
+contract_list() {
+    echo "CONTRACT REGISTRY"
+    echo "═══════════════════════════════════════"
+    
+    if [ -d "$CONTRACTS_DIR" ] && [ -n "$(ls -A "$CONTRACTS_DIR" 2>/dev/null)" ]; then
+        for artifact in "$CONTRACTS_DIR"/*.json; do
+            [ -f "$artifact" ] || continue
+            local name status
+            name="$(basename "$artifact" .json)"
+            status="$(grep -o '"status": "[^"]*"' "$artifact" 2>/dev/null | head -1 | cut -d'"' -f4)"
+            echo "  $name — ${status:-unknown}"
+        done
+    else
+        echo "  (no contracts verified)"
+    fi
+}
+
+# ── Certify a task ──
+contract_certify() {
+    local task="${1:-task_0}"
+    local summary="$CONTRACTS_DIR/verification_summary.json"
+    
+    if [ -f "$summary" ]; then
+        local status
+        status="$(grep -o '"status": "[^"]*"' "$summary" 2>/dev/null | cut -d'"' -f4)"
+        
+        if [ "$status" = "certified" ]; then
+            echo "✅ Task '$task' CERTIFIED"
+            echo "   Artifact: $summary"
+            
+            # Update task state
+            mkdir -p .kin/state
+            cat > .kin/state/task.yaml << YAML
+task:
+  name: $task
+  status: certified
+  certified_at: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+  artifact: $summary
+YAML
+            return 0
+        else
+            echo "❌ Cannot certify — verification incomplete"
+            return 1
+        fi
+    else
+        echo "❌ No verification summary found"
+        echo "   Run: ai contract verify"
+        return 1
+    fi
+}
+
+# Dispatch
+case "${1:-list}" in
+    verify)  contract_verify_all "${2:-backend/app/Services}" ;;
+    show)    contract_show "${2:-}" ;;
+    list)    contract_list ;;
+    certify) contract_certify "${2:-task_0}" ;;
+    *)
+        echo "Usage: ai contract [verify|show|list|certify]"
+        contract_list
+        ;;
+esac
+ENDOFFILE
+
+chmod +x .sdk/engines/contracts/engine.sh
+
+# ── 2. Update contract plugin ──
+cat > .sdk/commands/plugins/contract.sh << 'EOF'
+# Description: Contract Engine — Verified Contracts Before Implementation
+contract_main() {
+    bash "$SDK_ROOT/engines/contracts/engine.sh" "${1:-list}"
+}
+main() { contract_main "$@"; }
+EOF
+chmod +x .sdk/commands/plugins/contract.sh
+
+# ── 3. Add Contract Guard to Governance ──
+# Insert after dependency guard
+sed -i 's|guard_validation|guard_contract() {\n    echo "  CONTRACT GUARD"\n    echo "  ─────────────────────────────────"\n    \n    if [ -f ".kin/contracts/verification_summary.json" ]; then\n        local status\n        status="$(grep -o '\''"status": "[^"]*"'\'' .kin/contracts/verification_summary.json 2>/dev/null | cut -d'\''"'\'' -f4)"\n        if [ "$status" = "certified" ]; then\n            echo "  ✅ Contracts certified"\n            return 0\n        fi\n    fi\n    echo "  ❌ No certified contracts"\n    echo "     → ai contract verify"\n    return 1\n}\n\nguard_validation|' .sdk/engines/governance/engine.sh 2>/dev/null
+
+# ── TEST ──
+echo ""
+echo "=== Contract List ==="
+./.sdk/commands/ai contract list
+
+echo ""
+echo "=== Contract Verify (Watchtower Services) ==="
+./.sdk/commands/ai contract verify backend/app/Services/Watchtower 2>&1 | head -30
+
+echo ""
+echo "=== Contract Show ==="
+./.sdk/commands/ai contract show verification_summary 2>/dev/null || echo "Run verify first"
+
+echo ""
+echo "Contract Engine v2.0 deployed."
+echo "Principle: Verified Contracts Before Implementation"
+
+# Commit
+git add -A
+git commit -m "feat: Contract Engine v2.0 — Verified Contracts Before Implementation
+
+CONTRACT ENGINE:
+  - Verifies existing PHP classes, methods, return types
+  - Generates machine-readable JSON artifacts in .kin/contracts/
+  - ai contract verify — Discover and verify all service classes
+  - ai contract show <class> — View contract artifact
+  - ai contract list — All verified contracts
+  - ai contract certify — Certify task for Gate 6
+
+GOVERNANCE INTEGRATION:
+  - New Contract Guard in mandatory check chain
+  - Blocks implementation without certified contracts
+  - Position: after Dependency Guard, before Validation Guard
+
+PRINCIPLE:
+  No AI agent may create code until dependent contracts
+  have been verified and certified.
+  Assumptions are prohibited.
+
+ADR: docs/adr/ADR-0005.md" 2>/dev/null
+
+git push origin main
+
+echo ""
+echo "Contract Engine v2.0 — Deployed"
+```
+ai copy all
+clear
+x
+cd ~/kin_project
+ai contract list
+~/kin_project $
+clear
+cleae
+clear
+~/kin_project $ Single output now. The clipboard double-output is fixed. Now let me verify the Gate Guard works:
+No command Single found, did you mean:
+~/kin_project $
+~/kin_project $ ```bash
+> cd ~/kin_project
+>
+> echo "=== Gate Guard: Check implementation (should block at Gate 0) ==="
+> ./.sdk/commands/ai guard implement
+>
+> echo ""
+> echo "=== Gate Guard: Check architecture ==="
+> ./.sdk/commands/ai guard architect
+>
+> echo ""
+> echo "Gate Guard Engine ready."
+> echo "Usage: ai guard [implement|test|architect|design|release|...]"
+> echo ""
+> echo "Before any implementation, the AI should run: ai guard implement"
+> echo "If blocked, no code generation is permitted."
+> ```
+exit
+clear
+cd ~/kin_project
+# Add a new function: copy the REAL terminal session using script
+cat >> .sdk/engines/clipboard/engine.sh << 'ENDOFFILE'
+
+# Copy everything currently visible on screen
+clipboard_screen() {
+    echo "To copy all visible text:"
+    echo "1. Long-press in Termux"
+    echo "2. Tap 'More...'"
+    echo "3. Drag from top to bottom to select"
+    echo "4. Tap 'Copy'"
+    echo ""
+    echo "Or capture future output:"
+    echo "  script /tmp/session.log"
+    echo "  (do your work)"
+    echo "  exit"
+    echo "  ai copy file /tmp/session.log"
+}
+ENDOFFILE
+
+# Fix the CLI to handle copy correctly
+cat > .sdk/commands/ai << 'EOF'
+#!/data/data/com.termux/files/usr/bin/bash
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SDK_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Pipe detection — works anywhere
+if [ ! -t 0 ] && [ $# -eq 0 ]; then
+    CONTENT="$(cat)"
+    source "$SDK_ROOT/engines/clipboard/engine.sh" 2>/dev/null
+    clipboard_copy "pipe" "$CONTENT" 2>/dev/null
+    exit $?
+fi
+
+source "$SDK_ROOT/core/lib/common.sh"
+source "$SDK_ROOT/core/lib/yaml.sh"
+source "$SDK_ROOT/core/lib/state.sh"
+source "$SDK_ROOT/core/lib/plugin.sh"
+
+[ $# -eq 0 ] && { ./.sdk/commands/ai work 2>/dev/null; exit 0; }
+
+COMMAND="$1"; shift
+
+case "$COMMAND" in
+    work|status|doctor|install)
+        execute_plugin "$COMMAND" ;;
+    copy|clip)
+        source "$SDK_ROOT/engines/clipboard/engine.sh" 2>/dev/null
+        case "${1:-status}" in
+            all)     clipboard_select_all ;;
+            screen)  clipboard_screen ;;
+            last)    clipboard_last_lines "${2:-50}" ;;
+            file)    clipboard_copy_file "$2" ;;
+            history) clipboard_history "${2:-10}" ;;
+            restore) clipboard_last ;;
+            status)  clipboard_status ;;
+            *)       shift; clipboard_copy "manual" "$*" ;;
+        esac ;;
+    restore)   bash "$SDK_ROOT/engines/restore/engine.sh" "$@" ;;
+    governance|guard)
+        source "$SDK_ROOT/engines/governance/engine.sh" 2>/dev/null
+        governance_check "${1:-unknown}" "${2:-}" ;;
+    session|role|gate|brick|workflow|event|audit|knowledge|git|github|release|validate|help|tutorial|examples|explain|contract|task)
+        execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}" ;;
+    plugins) list_plugins ;;
+    *) echo "Unknown: $COMMAND. Run 'ai' for help." ;;
+esac
+EOF
+
+chmod +x .sdk/commands/ai
+echo ""
+echo "=== Clipboard Reference ==="
+echo ""
+echo "  ai copy \"text\"       Copy text to Android clipboard"
+echo "  ai copy file <f>      Copy file contents"
+echo "  ai copy all           Copy command history"
+echo "  echo \"text\" | ai      Pipe to clipboard"
+echo "  cat file.txt | ai     Copy file via pipe"
+echo "  ai copy screen        Show screen capture help"
+echo ""
+echo "For full terminal output:"
+echo "  script /tmp/log.txt   Start capture"
+echo "  (do work)"
+echo "  exit                  Stop capture"
+echo "  ai copy file /tmp/log.txt"
+clear
+cd ~/kin_project
+# Add one-command session capture
+cat > .sdk/engines/clipboard/engine.sh << 'ENDOFFILE'
+#!/data/data/com.termux/files/usr/bin/bash
+
+[ -n "$SDK_ROOT" ] && KERNEL_DIR="$SDK_ROOT/kernel" || KERNEL_DIR=".sdk/kernel"
+source "$KERNEL_DIR/clipboard.sh" 2>/dev/null
+
+get_clipboard_dir()  { echo ".kin/history/clipboard"; }
+
+clipboard_copy() {
+    local content="$2"
+    [ -z "$content" ] && { echo "Usage: ai copy \"text\""; return 1; }
+    local dir; dir="$(get_clipboard_dir)"; mkdir -p "$dir"
+    local ts; ts="$(date +%Y%m%d_%H%M%S)"
+    echo "$content" > "$dir/${ts}_${1:-manual}.txt"
+    local tmp="$HOME/.clip_$$"
+    echo "$content" > "$tmp"
+    termux-clipboard-set < "$tmp" 2>/dev/null
+    rm -f "$tmp"
+    echo "✓ Copied — ${ts}"
+}
+
+# Copy bash history
+clipboard_select_all() {
+    local histfile="${HISTFILE:-$HOME/.bash_history}"
+    if [ -f "$histfile" ]; then
+        local content; content="$(tail -500 "$histfile" 2>/dev/null)"
+        [ -n "$content" ] && clipboard_copy "history" "$content" && echo "✓ 500 lines copied"
+    else
+        echo "No history file. Run: touch ~/.bash_history"
+    fi
+}
+
+clipboard_copy_file() {
+    local file="$1"
+    [ ! -f "$file" ] && { echo "File not found: $file"; return 1; }
+    clipboard_copy "file" "$(cat "$file")"
+}
+
+clipboard_history() {
+    local limit="${1:-10}" dir; dir="$(get_clipboard_dir)"
+    echo "CLIPBOARD HISTORY"
+    echo "═══════════════════════════════════════"
+    if [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]; then
+        ls -1t "$dir"/*.txt 2>/dev/null | head -"$limit" | while read f; do
+            echo "  $(basename "$f" .txt) ($(wc -c < "$f" | tr -d ' ')B)"
+        done
+    else
+        echo "  (empty)"
+    fi
+}
+
+clipboard_last() {
+    local dir; dir="$(get_clipboard_dir)"
+    local last; last=$(ls -1t "$dir"/*.txt 2>/dev/null | head -1)
+    [ -f "$last" ] && cat "$last" || echo "No history"
+}
+
+clipboard_status() {
+    local count
+    count=$(ls -1 "$(get_clipboard_dir)"/*.txt 2>/dev/null | wc -l | tr -d ' ')
+    echo "✓ Clipboard | History: ${count:-0}"
+    echo "  ai copy \"text\"      Copy text"
+    echo "  ai copy file <f>     Copy file"
+    echo "  ai copy all          Copy bash history"
+    echo "  ai copy session      Start recording session"
+    echo "  ai copy stop         Stop & copy session"
+    echo "  echo \"text\" | ai     Pipe to clipboard"
+}
+
+# Session recording — captures EVERYTHING
+SESSION_FILE="$HOME/.termux_session_log.txt"
+
+clipboard_session_start() {
+    echo "Recording session to $SESSION_FILE"
+    echo "All output will be captured."
+    echo "Run 'ai copy stop' when done."
+    script -q "$SESSION_FILE"
+}
+
+clipboard_session_stop() {
+    if [ -f "$SESSION_FILE" ] && [ -s "$SESSION_FILE" ]; then
+        # Strip control characters for clean output
+        cat "$SESSION_FILE" | sed 's/\x1b\[[0-9;]*m//g' | sed 's/\r//g' > "$SESSION_FILE.clean"
+        clipboard_copy "session" "$(cat "$SESSION_FILE.clean")"
+        rm -f "$SESSION_FILE" "$SESSION_FILE.clean"
+        echo "✓ Session copied to Android clipboard"
+    else
+        echo "No session recording found."
+        echo "Start with: ai copy session"
+    fi
+}
+ENDOFFILE
+
+chmod +x .sdk/engines/clipboard/engine.sh
+echo ""
+echo "════════════════════════════════════════════"
+echo "  CLIPBOARD — COMPLETE REFERENCE"
+echo "════════════════════════════════════════════"
+echo ""
+echo "COPY ANYTHING:"
+echo "  ai copy \"text\"         Copy text"
+echo "  ai copy file <f>        Copy file"
+echo "  ai copy all             Copy bash history (500 lines)"
+echo "  echo \"text\" | ai        Pipe to clipboard"
+echo ""
+echo "SESSION RECORDING (captures everything):"
+echo "  ai copy session         Start recording"
+echo "  (do all your work)"
+echo "  exit                    Stop recording"
+echo "  ai copy stop            Copy entire session to clipboard"
+echo ""
+echo "HISTORY:"
+echo "  ai copy history         View saved copies"
+echo "  ai copy status          Clipboard status"
+ai copy session
+clear
+cd ~/kin_project
+# Fix CLI to recognize session and stop subcommands for copy
+cat > .sdk/commands/ai << 'EOF'
+#!/data/data/com.termux/files/usr/bin/bash
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SDK_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Pipe detection
+if [ ! -t 0 ] && [ $# -eq 0 ]; then
+    CONTENT="$(cat)"
+    source "$SDK_ROOT/engines/clipboard/engine.sh" 2>/dev/null
+    clipboard_copy "pipe" "$CONTENT" 2>/dev/null
+    exit $?
+fi
+
+source "$SDK_ROOT/core/lib/common.sh"
+source "$SDK_ROOT/core/lib/yaml.sh"
+source "$SDK_ROOT/core/lib/state.sh"
+source "$SDK_ROOT/core/lib/plugin.sh"
+
+[ $# -eq 0 ] && { ./.sdk/commands/ai work 2>/dev/null; exit 0; }
+
+COMMAND="$1"; shift
+
+case "$COMMAND" in
+    work|status|doctor|install)
+        execute_plugin "$COMMAND" ;;
+    copy|clip)
+        source "$SDK_ROOT/engines/clipboard/engine.sh" 2>/dev/null
+        case "${1:-status}" in
+            status)   clipboard_status ;;
+            all)      clipboard_select_all ;;
+            session)  clipboard_session_start ;;
+            stop)     clipboard_session_stop ;;
+            file)     shift; clipboard_copy_file "$1" ;;
+            history)  clipboard_history "${2:-10}" ;;
+            last)     clipboard_last ;;
+            *)        shift; clipboard_copy "manual" "$*" ;;
+        esac ;;
+    restore)
+        bash "$SDK_ROOT/engines/restore/engine.sh" "$@" ;;
+    governance|guard)
+        source "$SDK_ROOT/engines/governance/engine.sh" 2>/dev/null
+        governance_check "${1:-unknown}" "${2:-}" ;;
+    session|role|gate|brick|workflow|event|audit|knowledge|git|github|release|validate|help|tutorial|examples|explain|contract|task)
+        execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}" ;;
+    plugins) list_plugins ;;
+    *) echo "Unknown: $COMMAND. Run 'ai' for help." ;;
+esac
+EOF
+
+chmod +x .sdk/commands/ai
+# Test
+ai copy status
+echo ""
+echo "Now try: ai copy session"
+ai copy session
+clear
+# First, exit any script session
+exit 2>/dev/null
+clear
+ai
+ai work
+# First, exit any script session
+exit 2>/dev/null
+clear
+# First, exit any script session
+exit 2>/dev/null
+
+=== CLIPBOARD HISTORY ===

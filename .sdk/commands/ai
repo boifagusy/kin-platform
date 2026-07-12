@@ -36,7 +36,10 @@ case "$COMMAND" in
     governance|guard)
         source "$SDK_ROOT/engines/governance/engine.sh" 2>/dev/null
         governance_check "${1:-unknown}" "${2:-}" ;;
-    session|role|gate|brick|workflow|event|audit|knowledge|git|github|release|validate|help|tutorial|examples|explain|contract|task)
+    session|role|gate|brick|workflow|event|audit|knowledge|git|github|release|validate|help|tutorial|examples|explain|contract)
+        execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}"
+        ;;
+    certify|task)
         execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}" ;;
     plugins) list_plugins ;;
     *) echo "Unknown: $COMMAND" ;;

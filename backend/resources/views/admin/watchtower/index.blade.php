@@ -20,14 +20,18 @@
             <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
             <span class="text-gray-600">{{ $healthyCount }} Healthy</span>
         </span>
+        @if($warningCount > 0)
         <span class="flex items-center gap-1">
             <span class="w-2.5 h-2.5 rounded-full bg-yellow-500"></span>
             <span class="text-gray-600">{{ $warningCount }} Warning</span>
         </span>
+        @endif
+        @if($criticalCount > 0)
         <span class="flex items-center gap-1">
             <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
             <span class="text-gray-600">{{ $criticalCount }} Critical</span>
         </span>
+        @endif
         @if($errorCount > 0)
         <span class="flex items-center gap-1">
             <span class="w-2.5 h-2.5 rounded-full bg-gray-400"></span>
@@ -39,7 +43,7 @@
 
 {{-- Module Cards Grid --}}
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
-    @foreach($modules as $key => $module)
+    @foreach($modules as $module)
     <div class="bg-white rounded-xl border shadow-sm min-h-48
         @if($module['health'] === 'critical')
             border-l-4 border-l-red-500 border-red-200

@@ -137,7 +137,7 @@ class WatchtowerDashboardController extends Controller
                 'status' => 'ok',
                 'label' => $label,
                 'icon' => $icon,
-                'health' => $data['overall_health'] ?? 'unknown',
+                'health' => $data['overall_health']['status'] ?? 'unknown',
                 'metrics' => $this->extractMetrics($data),
             ];
         } catch (\Exception $e) {
