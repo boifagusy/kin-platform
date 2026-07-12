@@ -2,89 +2,115 @@
 
 help_main() {
     cat << "HELPEOF"
-ENGINEERING OS — Help System
+ENGINEERING OS v3.3 — Help System
 
 USAGE
   ai <command> [subcommand] [options]
 
+────────────────────────────────────────
 START HERE
+────────────────────────────────────────
   ai work          Engineering Command Center
   ai doctor        Check environment
   ai validate      Validate system health
   ai session start Begin session
   ai guard         Pre-implementation check
 
+────────────────────────────────────────
 PROJECT
+────────────────────────────────────────
   ai status        Project overview
   ai workflow      Workflow status + next action
-  ai gate          Gate management
+  ai gate          Gate management (12 gates)
   ai brick         Brick management
+  ai project       Project orchestrator
 
-DEVELOPMENT
-  ai investigate    Investigation Engine — no code without research
-  ai certify        Task Certification Engine
-  ai contract      Contract verification
+────────────────────────────────────────
+INVESTIGATE & CERTIFY (v3.3)
+────────────────────────────────────────
+  ai investigate   Scan services, find gaps, assess risks
+  ai certify       Create task certification records
+  ai contract      Verify contracts before implementation
   ai task          Task state machine
+
+────────────────────────────────────────
+DEVELOPMENT
+────────────────────────────────────────
   ai role          Assign AI roles
   ai audit         View audit trail
   ai restore       System restoration
+  ai knowledge     Search knowledge base
 
+────────────────────────────────────────
 RELEASE
+────────────────────────────────────────
   ai git           Git operations
   ai github        GitHub integration
   ai release       Release management
 
+────────────────────────────────────────
 CLIPBOARD
-  ai clip copy     Copy to Android clipboard
-  ai clip history  View clipboard history
-  echo 'text' | ai Pipe to clipboard
+────────────────────────────────────────
+  ai copy          Save screen + copy to Android clipboard
+  ai copy "text"   Copy text directly
+  ai copy file <f> Copy file contents
+  echo "text" | ai Pipe to clipboard
 
+────────────────────────────────────────
 LEARNING
+────────────────────────────────────────
   ai help <topic>  Detailed help on any topic
   ai tutorial 1    Guided walkthrough
   ai examples auth Real-world examples
   ai explain 6     Explain gate 6 or a brick
 
-Topics: guard, gate, brick, role, workflow, release, clip, restore, session, git, commands
+────────────────────────────────────────
+MANDATORY WORKFLOW
+────────────────────────────────────────
+  Investigate → Verify → Plan → Approve →
+  Implement → Validate → Certify → Commit → Release
+
+Topics: gate, brick, role, workflow, release, investigate,
+        certify, contract, copy, restore, session, git, commands
 HELPEOF
 }
 
 help_topic() {
     local topic="$1"
     case "$topic" in
-        guard)
-            echo "GATE GUARD — Pre-Implementation Enforcement"
+        investigate)
+            echo "INVESTIGATION ENGINE"
             echo ""
-            echo "  Before ANY implementation, the AI must run gate guard."
-            echo "  If blocked, NO code generation is permitted."
-            echo ""
-            echo "CHECKS (10-point):"
-            echo "  1. Session active?"
-            echo "  2. Role assigned?"
-            echo "  3. Current gate identified?"
-            echo "  4. Requested action allowed at current gate?"
-            echo "  5. Active brick selected (for implementation)?"
-            echo "  6. Brick locked by current AI?"
-            echo "  7. Approval required at current gate?"
-            echo "  8. Gate blocked?"
-            echo "  9. Validation passing?"
-            echo "  10. Health score acceptable?"
+            echo "  No implementation begins before investigation."
             echo ""
             echo "COMMANDS:"
-            echo "  ai guard implement   Check if coding is allowed"
-            echo "  ai guard architect   Check if architecture is allowed"
-            echo "  ai guard test        Check if testing is allowed"
-            echo "  ai guard design      Check if design is allowed"
-            echo "  ai guard release     Check if release is allowed"
-            echo "  ai guard             Default check"
+            echo "  ai investigate services    Scan backend services"
+            echo "  ai investigate controllers Scan controllers"
+            echo "  ai investigate routes      Analyze routes"
+            echo "  ai investigate models      Check models"
+            echo "  ai investigate list        View all reports"
             echo ""
-            echo "BLOCKED EXAMPLE:"
-            echo "  VERDICT: ❌ BLOCKED — 3 issue(s)"
-            echo "  REQUIRED ACTIONS:"
-            echo "    • Assign role: ai role set <role>"
-            echo "    • Advance 6 gate(s): ai gate verify && ai gate advance"
-            echo "    • Create brick: ai brick create <name>"
-            echo "  No code generation permitted until all checks pass."
+            echo "OUTPUT:"
+            echo "  • Findings — what exists"
+            echo "  • Gaps — what's missing"
+            echo "  • Risks — what could fail"
+            echo "  • Recommendation — READY or NEEDS_ATTENTION"
+            echo ""
+            echo "If gaps found → approval required before implementation"
+            ;;
+        certify)
+            echo "CERTIFICATION ENGINE"
+            echo ""
+            echo "  Every task generates a permanent certification record."
+            echo ""
+            echo "COMMANDS:"
+            echo "  ai certify create <id> <name> <status>"
+            echo "  ai certify list              All certifications"
+            echo "  ai certify progress          Gate completion %"
+            echo ""
+            echo "CONSUMED BY:"
+            echo "  Gate Engine, Brick Engine, Audit Engine,"
+            echo "  Restore Engine, Release Engine, Dashboard"
             ;;
         gate)
             echo "GATE SYSTEM — 12 Gates"
@@ -99,7 +125,7 @@ help_topic() {
             ;;
         brick)
             echo "BRICK SYSTEM"
-            echo "  Lifecycle: planned -> in_development -> testing -> complete -> released"
+            echo "  Lifecycle: planned → in_development → testing → complete → released"
             echo "  Structure: contracts/ events/ database/ backend/ frontend/ api/ tests/ docs/"
             echo "  Commands: ai brick list | create | info | lock | unlock | validate"
             ;;
@@ -111,23 +137,22 @@ help_topic() {
             echo "  Commands: ai role status | ai role set <role>"
             ;;
         workflow)
-            echo "WORKFLOW"
-            echo "  Bootstrap -> Discovery -> Requirements -> Architecture ->"
-            echo "  Dependency Planning -> Brick Planning -> Development ->"
-            echo "  Testing -> Integration -> System Testing -> Production -> Release"
+            echo "MANDATORY WORKFLOW"
+            echo "  Investigate → Verify → Plan → Approve →"
+            echo "  Implement → Validate → Certify → Commit → Release"
+            echo ""
             echo "  Commands: ai workflow status | ai workflow next"
             ;;
         release)
             echo "RELEASE: ai release status | suggest | checklist | changelog | create | verify"
             ;;
-        clip)
+        copy|clip)
             echo "CLIPBOARD ENGINE"
-            echo "  ai clip copy 'text'   Copy to Android clipboard"
-            echo "  ai clip history        View saved copies"
-            echo "  ai clip last           Retrieve last copy"
-            echo "  ai clip status         Quick status"
-            echo "  echo 'text' | ai       Pipe to clipboard"
-            echo "  Requires: Termux:API APK from F-Droid"
+            echo "  ai copy               Save screen + copy to Android clipboard"
+            echo "  ai copy \"text\"        Copy text directly"
+            echo "  ai copy file <f>      Copy file contents"
+            echo "  ai copy history       View saved copies"
+            echo "  echo \"text\" | ai      Pipe to clipboard"
             ;;
         restore)
             echo "RESTORE ENGINE"
@@ -143,15 +168,24 @@ help_topic() {
         git)
             echo "GIT: ai git status | branch | changes | commit | tag | rollback"
             ;;
+        contract)
+            echo "CONTRACT ENGINE"
+            echo "  ai contract verify   Verify implementation against contracts"
+            echo "  ai contract list     All registered contracts"
+            echo "  ai contract certify  Certify task for Gate 6"
+            echo "  Principle: Verified Contracts Before Implementation"
+            ;;
         commands)
             echo "ALL COMMANDS:"
             echo "  work status doctor validate guard session role"
-            echo "  gate brick workflow event audit knowledge"
-            echo "  git github release restore clip"
+            echo "  gate brick workflow project investigate certify"
+            echo "  contract task event audit knowledge"
+            echo "  git github release restore copy"
             echo "  help tutorial examples explain install plugins"
             ;;
         *) 
-            echo "Topics: guard, gate, brick, role, workflow, release, clip, restore, session, git, commands"
+            echo "Topics: investigate, certify, gate, brick, role, workflow,"
+            echo "        release, contract, copy, restore, session, git, commands"
             echo "Run 'ai help' for the full menu."
             ;;
     esac
@@ -165,14 +199,13 @@ help_tutorial() {
            echo "  Step 2: ai session start"
            echo "  Step 3: ai role set architect"
            echo "  Step 4: ai gate status"
-           echo "  Step 5: ai guard implement"
+           echo "  Step 5: ai work"
            echo "  Next: ai tutorial 2" ;;
-        2) echo "LESSON 2: Creating Your First Brick"
-           echo "  Step 1: ai brick create authentication"
-           echo "  Step 2: ai brick info authentication"
-           echo "  Step 3: ai brick lock authentication AI-1"
-           echo "  Step 4: Develop in bricks/authentication/"
-           echo "  Step 5: ai validate brick authentication"
+        2) echo "LESSON 2: Investigate Before You Build"
+           echo "  Step 1: ai investigate services"
+           echo "  Step 2: Review gaps and risks"
+           echo "  Step 3: ai contract verify"
+           echo "  Step 4: ai certify create 1 \"Discovery\" CERTIFIED"
            echo "  Next: ai tutorial 3" ;;
         3) echo "LESSON 3: Advancing Through Gates"
            echo "  Step 1: ai gate status"
@@ -187,37 +220,25 @@ help_examples() {
     local ex="${1:-}"
     case "$ex" in
         auth) echo "EXAMPLE: Build Authentication Brick"
-              echo "  ai guard implement       # Verify allowed"
+              echo "  ai investigate services"
               echo "  ai brick create authentication"
               echo "  ai brick lock authentication AI-1"
               echo "  ai role set backend_developer"
               echo "  ai validate brick authentication"
-              echo "  ai brick unlock authentication"
-              echo "  ai gate verify && ai gate advance" ;;
+              echo "  ai certify create 1 \"Auth\" CERTIFIED" ;;
         release) echo "EXAMPLE: Create a Release"
-                 echo "  ai guard release          # Verify allowed"
+                 echo "  ai investigate services"
                  echo "  ai validate all"
                  echo "  ai release checklist"
-                 echo "  ai release changelog"
                  echo "  ai release create 1.2.0"
-                 echo "  ai git tag v1.2.0" ;;
-        clip) echo "EXAMPLE: Clipboard Usage"
-              echo "  ai clip copy 'Bug: Login 404 — Fix: route:clear'"
-              echo "  ai gate status | ai      # Copy gate status"
-              echo "  ai clip history           # View all copies"
-              echo "  ai clip last              # Retrieve & copy last" ;;
-        restore) echo "EXAMPLE: System Restore"
-                 echo "  ai restore verify          # Check all components"
-                 echo "  ai restore run watchtower  # Full state restore"
-                 echo "  ai restore run w --dry-run # Preview first" ;;
-        guard) echo "EXAMPLE: Gate Guard Flow"
-               echo "  ai guard implement         # Check before coding"
-               echo "  # If blocked, fix issues:"
-               echo "  ai role set coder          # Assign role"
-               echo "  ai gate advance            # Advance gates"
-               echo "  ai brick create auth       # Create brick"
-               echo "  ai guard implement         # Re-check — should pass" ;;
-        *) echo "EXAMPLES: ai examples auth | release | clip | restore | guard" ;;
+                 echo "  ai certify create 1 \"Release\" CERTIFIED" ;;
+        investigate) echo "EXAMPLE: Investigation Flow"
+                     echo "  ai investigate services"
+                     echo "  ai investigate controllers"
+                     echo "  ai investigate routes"
+                     echo "  ai investigate list"
+                     echo "  # Review reports, approve, then implement" ;;
+        *) echo "EXAMPLES: ai examples auth | release | investigate" ;;
     esac
 }
 
@@ -225,20 +246,22 @@ help_explain() {
     local target="$1"
     local names=("Bootstrap" "Discovery" "Requirements" "Architecture" "Dependency Planning" "Brick Planning" "Brick Development" "Brick Testing" "Integration Testing" "System Testing" "Production Validation" "Release")
     
-    if [ "$target" = "guard" ]; then
-        echo "GATE GUARD — The enforcement layer"
-        echo "Runs 10 checks before any implementation is permitted."
-        echo "If any check fails, code generation is BLOCKED."
-        echo "Run: ai guard implement"
+    if [ "$target" = "investigate" ]; then
+        echo "INVESTIGATION ENGINE — No code without research"
+        echo "Scans existing code, finds gaps, assesses risks."
+        echo "Blocks implementation if gaps are found."
+        echo "Run: ai investigate services"
+    elif [ "$target" = "certify" ]; then
+        echo "CERTIFICATION ENGINE — Permanent task records"
+        echo "Every completed task generates a certification artifact."
+        echo "Consumed by Gate, Brick, Audit, Restore, and Release engines."
+        echo "Run: ai certify list"
     elif [ -n "$target" ] && [ -d "bricks/$target" ] 2>/dev/null; then
         echo "BRICK: $target"
-        grep -q "status:" "bricks/$target/brick.yaml" 2>/dev/null && echo "Status: $(grep "status:" "bricks/$target/brick.yaml" | sed 's/.*: //')"
-        echo "Path: bricks/$target/"
     elif echo "$target" | grep -qE '^[0-9]+$' && [ "$target" -ge 0 ] && [ "$target" -le 11 ]; then
         echo "Gate $target: ${names[$target]}"
         [ "$target" -lt 11 ] && echo "Next: Gate $((target + 1)) — ${names[$((target + 1))]}"
     else
-        echo "Explain: ai explain <0-11> | ai explain <brick-name> | ai explain guard"
-        echo "Examples: ai explain 6 | ai explain authentication | ai explain guard"
+        echo "Explain: ai explain <0-11> | ai explain <brick> | ai explain investigate | certify"
     fi
 }
