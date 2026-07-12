@@ -3,11 +3,10 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SDK_ROOT="$(dirname "$SCRIPT_DIR")"
 
-# Pipe detection
 if [ ! -t 0 ] && [ $# -eq 0 ]; then
     CONTENT="$(cat)"
     source "$SDK_ROOT/engines/clipboard/engine.sh" 2>/dev/null
-    clipboard_copy "pipe" "$CONTENT" 2>/dev/null
+    _clipboard_save_copy "$CONTENT" "pipe"
     exit $?
 fi
 
@@ -16,43 +15,28 @@ source "$SDK_ROOT/core/lib/yaml.sh"
 source "$SDK_ROOT/core/lib/state.sh"
 source "$SDK_ROOT/core/lib/plugin.sh"
 
-GOVERNANCE_ENGINE="$SDK_ROOT/engines/governance/engine.sh"
-source "$SDK_ROOT/engines/governance/levels.sh" 2>/dev/null
-
 [ $# -eq 0 ] && { ./.sdk/commands/ai work 2>/dev/null; exit 0; }
 
 COMMAND="$1"; shift
 
-# Clip/copy bypass governance
-if [ "$COMMAND" != "clip" ] && [ "$COMMAND" != "copy" ]; then
-    CMD_LEVEL=$(governance_level "$COMMAND")
-    if [ "$CMD_LEVEL" -gt 0 ] && [ -f "$GOVERNANCE_ENGINE" ]; then
-        source "$GOVERNANCE_ENGINE" 2>/dev/null
-        governance_check "$COMMAND" "${1:-}" || exit 1
-    fi
-fi
-
 case "$COMMAND" in
-    status|doctor|install|work|contract|task)
-        execute_plugin "$COMMAND" ;;
-    restore)
-        bash "$SDK_ROOT/engines/restore/engine.sh" "$@" ;;
-    governance|guard)
-        source "$GOVERNANCE_ENGINE" 2>/dev/null
-        governance_check "${1:-unknown}" "${2:-}" ;;
-    clip|copy)
+    work|status|doctor|install) execute_plugin "$COMMAND" ;;
+    copy|clip)
         source "$SDK_ROOT/engines/clipboard/engine.sh" 2>/dev/null
-        case "${1:-status}" in
+        # No args = save everything
+        [ $# -eq 0 ] && { clipboard_save_all; exit $?; }
+        case "$1" in
             status)  clipboard_status ;;
-            all)     clipboard_select_all ;;
-            last)    clipboard_last_lines "${2:-50}" ;;
-            file)    clipboard_copy_file "$2" ;;
+            file)    shift; clipboard_copy_file "$1" ;;
             history) clipboard_history "${2:-10}" ;;
-            restore) clipboard_last ;;
-            clear)   rm -f "$(get_clipboard_dir)"/*.txt 2>/dev/null; echo "✓ Cleared" ;;
+            last)    clipboard_last ;;
             *)       shift; clipboard_copy "manual" "$*" ;;
         esac ;;
-    session|role|gate|brick|workflow|event|audit|knowledge|git|github|release|validate|help|tutorial|examples|explain)
+    restore)   bash "$SDK_ROOT/engines/restore/engine.sh" "$@" ;;
+    governance|guard)
+        source "$SDK_ROOT/engines/governance/engine.sh" 2>/dev/null
+        governance_check "${1:-unknown}" "${2:-}" ;;
+    session|role|gate|brick|workflow|event|audit|knowledge|git|github|release|validate|help|tutorial|examples|explain|contract|task)
         execute_plugin "$COMMAND" && main "${1:-main}" "${2:-}" ;;
     plugins) list_plugins ;;
     *) echo "Unknown: $COMMAND" ;;

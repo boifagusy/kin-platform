@@ -1,7 +1,7 @@
 sdk:
   name: KIN Engineering SDK
-  version: 1.0.0
-  schema_version: 1
+  version: 3.2.0
+  schema_version: 3.2.0
   description: Reusable engineering operating system for multiple projects
   compatibility:
     termux: true
