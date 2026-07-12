@@ -1,83 +1,113 @@
-# Engineering OS Engine Registry
-# Single source of truth for all engine responsibilities
-# Frozen for v3.3 — new engines require ADR
+# Engineering OS — Authoritative Engine Registry
+# This is the single source of truth. Health checks read from here.
+# Architecture Freeze active. New engines require ADR.
 
 version: 3.3
 status: STABLE
 freeze_date: 2026-07-12
 
 engines:
-  context:
-    - name: Governance
-      purpose: Enforce policies before execution
-      command: ai guard
-      layer: Context
-      
-    - name: Gate
-      purpose: Manage 12-gate project lifecycle
-      command: ai gate
-      layer: Context
-      
-    - name: Project
-      purpose: Orchestrate projects through gates
-      command: ai project
-      layer: Context
+  - id: governance
+    version: 3.3.0
+    layer: context
+    status: stable
+    command: ai guard
+    depends_on: [gate, state]
+    
+  - id: gate
+    version: 3.2.1
+    layer: context
+    status: stable
+    command: ai gate
+    depends_on: [state]
+    
+  - id: project
+    version: 3.3.0
+    layer: context
+    status: stable
+    command: ai project
+    depends_on: [gate, governance]
+    
+  - id: discovery
+    version: 3.3.0
+    layer: knowledge
+    status: stable
+    command: ai discovery
+    depends_on: [state]
+    
+  - id: intelligence
+    version: 3.3.0
+    layer: knowledge
+    status: stable
+    command: ai intelligence
+    depends_on: [discovery, gate]
+    
+  - id: investigation
+    version: 3.3.0
+    layer: knowledge
+    status: stable
+    command: ai investigate
+    depends_on: [discovery]
+    
+  - id: contract
+    version: 3.3.0
+    layer: verification
+    status: stable
+    command: ai contract
+    depends_on: [discovery]
+    
+  - id: validate
+    version: 3.2.0
+    layer: verification
+    status: stable
+    command: ai validate
+    depends_on: [state]
+    
+  - id: certification
+    version: 3.3.0
+    layer: verification
+    status: stable
+    command: ai certify
+    depends_on: [gate, contract]
+    
+  - id: brick
+    version: 3.2.0
+    layer: delivery
+    status: stable
+    command: ai brick
+    depends_on: [gate, contract]
+    
+  - id: workflow
+    version: 3.3.0
+    layer: delivery
+    status: stable
+    command: ai workflow
+    depends_on: [gate, governance]
+    
+  - id: restore
+    version: 3.3.0
+    layer: utilities
+    status: stable
+    command: ai restore
+    depends_on: [state]
+    
+  - id: clipboard
+    version: 3.3.0
+    layer: utilities
+    status: stable
+    command: ai copy
+    depends_on: []
+    
+  - id: help
+    version: 3.3.0
+    layer: utilities
+    status: stable
+    command: ai help
+    depends_on: []
 
-  knowledge:
-    - name: Discovery
-      purpose: Build architecture and dependency maps
-      command: ai discovery
-      layer: Knowledge
-      
-    - name: Intelligence
-      purpose: Compute health, maturity, recommendations
-      command: ai intelligence
-      layer: Knowledge
-      
-    - name: Investigation
-      purpose: Research features before changes
-      command: ai investigate
-      layer: Knowledge
-
-  verification:
-    - name: Contract
-      purpose: Verify interfaces and dependencies
-      command: ai contract
-      layer: Verification
-      
-    - name: Validate
-      purpose: Execute health and consistency checks
-      command: ai validate
-      layer: Verification
-      
-    - name: Certification
-      purpose: Record completed work permanently
-      command: ai certify
-      layer: Verification
-
-  delivery:
-    - name: Brick
-      purpose: Manage implementation units
-      command: ai brick
-      layer: Delivery
-      
-    - name: Workflow
-      purpose: Compute next engineering action
-      command: ai workflow
-      layer: Delivery
-
-  utilities:
-    - name: Restore
-      purpose: Recover system state
-      command: ai restore
-      layer: Utilities
-      
-    - name: Clipboard
-      purpose: Android system clipboard integration
-      command: ai copy
-      layer: Utilities
-      
-    - name: Help
-      purpose: Self-documenting reference
-      command: ai help
-      layer: Utilities
+layers:
+  context:     [governance, gate, project]
+  knowledge:   [discovery, intelligence, investigation]
+  verification: [contract, validate, certification]
+  delivery:    [brick, workflow]
+  utilities:   [restore, clipboard, help]
