@@ -6,6 +6,7 @@ ENGINEERING OS v3.3 — Help System
 
 ────────────────────────────────────────
 START HERE
+  ai resume        Project resume — every AI's first command
 ────────────────────────────────────────
   ai work          Engineering Command Center
   ai doctor        Check environment
@@ -77,7 +78,7 @@ MANDATORY WORKFLOW
   Investigate → Verify → Plan → Approve →
   Implement → Validate → Certify → Commit → Release
 
-Topics: discovery, intelligence, investigate, certify,
+Topics: resume, discovery, intelligence, investigate, certify,
         gate, brick, role, workflow, release, contract,
         copy, restore, session, git, commands
 HELPEOF

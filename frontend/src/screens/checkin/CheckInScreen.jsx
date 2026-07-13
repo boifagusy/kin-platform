@@ -47,7 +47,7 @@ function CheckInScreen() {
   
   
   const actualSafetyScore = dashboard?.safety_score || 60;
-  const displayScore = checkInState === 'safe' ? Math.min(actualSafetyScore + 5, 100) : actualSafetyScore;
+  const displayScore = actualSafetyScore;
 
   const getScoreLabel = (score) => {
     if (score >= 90) return "Excellent";

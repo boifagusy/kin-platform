@@ -1,0 +1,8 @@
+{
+  "class": "SafetyMonitorService",
+  "namespace": "App\Services\Admin",
+  "file": "backend/app/Services/Admin/SafetyMonitorService.php",
+  "verified_at": "2026-07-13T03:17:42Z",
+  "methods": "",
+  "status": "certified"
+}

@@ -1,4 +1,4 @@
-active_brick: none
-brick_status: inactive
+active_brick: safety_score
+status: inactive
+gate: 0
 last_updated: null
-documentation: null

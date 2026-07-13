@@ -1,0 +1,8 @@
+{
+  "class": "UserManagementService",
+  "namespace": "App\Services\Admin",
+  "file": "backend/app/Services/Admin/UserManagementService.php",
+  "verified_at": "2026-07-13T03:17:42Z",
+  "methods": "",
+  "status": "certified"
+}

@@ -1,0 +1,8 @@
+{
+  "class": "NotificationService",
+  "namespace": "App\Services",
+  "file": "backend/app/Services/NotificationService.php",
+  "verified_at": "2026-07-13T03:17:41Z",
+  "methods": "",
+  "status": "certified"
+}

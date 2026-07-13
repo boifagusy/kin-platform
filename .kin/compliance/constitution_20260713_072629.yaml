@@ -1,0 +1,29 @@
+constitution:
+  version: 3.3
+  timestamp: 2026-07-13T06:26:27Z
+  score: 73
+  passed: 14
+  failed: 2
+  warnings: 3
+  compliant: false
+  results:
+    - article_01: fail
+    - article_02: pass
+    - article_03: pass
+    - article_04: pass
+    - article_05: pass
+    - article_06: warn
+    - article_07: pass
+    - article_08: pass
+    - article_09: pass
+    - article_10: warn
+    - article_11: pass
+    - article_12: warn
+    - article_13: pass
+    - article_14: pass
+    - article_15: pass
+    - article_16: fail
+    - article_17: pass
+    - article_18: pass
+    - article_19: pass
+    - 

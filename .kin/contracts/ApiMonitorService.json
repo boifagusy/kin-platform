@@ -1,0 +1,8 @@
+{
+  "class": "ApiMonitorService",
+  "namespace": "App\Services\Watchtower",
+  "file": "backend/app/Services/Watchtower/ApiMonitorService.php",
+  "verified_at": "2026-07-13T03:17:45Z",
+  "methods": "",
+  "status": "certified"
+}

@@ -1,0 +1,11 @@
+governance_check:
+  command: project
+  timestamp: 2026-07-13T03:06:47Z
+  level: 2
+  state:
+    gate: 1
+    role: architect
+    brick: none
+    session: active
+  verdict: PASS
+  failed_guard: none

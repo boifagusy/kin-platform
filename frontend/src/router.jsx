@@ -9,6 +9,8 @@ import UserDetailsScreenV2 from './screens/ui-polish/UserDetailsScreenV2';
 import TrustedContactScreenV2 from './screens/ui-polish/TrustedContactScreenV2';
 import DuressPinSetupScreenV2 from './screens/ui-polish/DuressPinSetupScreenV2';
 import DashboardScreenV2 from './screens/ui-polish/DashboardScreenV2';
+import SettingsScreen from './screens/settings/SettingsScreen';
+import SafeZonesScreen from './screens/settings/SafeZonesScreen';
 import CheckInSettingsScreen from './screens/settings/CheckInSettingsScreen';
 import ContinueSetupScreen from './screens/onboarding/ContinueSetupScreen';
 import AlertsScreenV2 from './screens/ui-polish/AlertsScreenV2';
@@ -44,7 +46,15 @@ const router = createBrowserRouter([
                 element: <ProtectedRoute><DashboardScreenV2 /></ProtectedRoute> 
             },
             { 
+            {
+                path: 'settings',
+                element: <ProtectedRoute><SettingsScreen /></ProtectedRoute>,
+            },
                 path: 'settings/check-in', 
+            },
+            {
+                path: 'settings/safe-zones',
+                element: <ProtectedRoute><SafeZonesScreen /></ProtectedRoute>
                 element: <ProtectedRoute><CheckInSettingsScreen /></ProtectedRoute> 
             },
             { 

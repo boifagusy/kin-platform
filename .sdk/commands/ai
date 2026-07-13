@@ -1,12 +1,12 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-# ENGINEERING OS CLI — Registry-Driven Dispatcher
-# No hardcoded commands. Reads registry. Orchestrates only.
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SDK_ROOT="$(dirname "$SCRIPT_DIR")"
 
-# ── Bootstrap: Pipe detection ──
+# ── KERNEL: Load state first (mandatory) ──
+source "$SDK_ROOT/kernel/kernel.sh" 2>/dev/null
+
+# ── Pipe detection ──
 if [ ! -t 0 ] && [ $# -eq 0 ]; then
     CONTENT="$(cat)"
     source "$SDK_ROOT/engines/clipboard/engine.sh" 2>/dev/null
@@ -14,48 +14,29 @@ if [ ! -t 0 ] && [ $# -eq 0 ]; then
     exit $?
 fi
 
-# ── Bootstrap: Load core ──
 source "$SDK_ROOT/kernel/common.sh" 2>/dev/null
 source "$SDK_ROOT/kernel/registry.sh" 2>/dev/null
-source "$SDK_ROOT/kernel/state.sh" 2>/dev/null
-source "$SDK_ROOT/kernel/plugin.sh" 2>/dev/null
-
-# ── Bootstrap: Load governance levels ──
 source "$SDK_ROOT/engines/governance/levels.sh" 2>/dev/null
 
-# ── No args = dashboard ──
-[ $# -eq 0 ] && { ./.sdk/commands/ai work 2>/dev/null; exit 0; }
+[ $# -eq 0 ] && { kernel_ai_startup; exit 0; }
 
 COMMAND="$1"; shift
 
-# ── Step 1: Resolve plugin from registry ──
-PLUGIN_FILE=$(registry_resolve "$COMMAND")
+# ── Resolve plugin ──
+PLUGIN_FILE="$SDK_ROOT/commands/plugins/${COMMAND}.sh"
+[ ! -f "$PLUGIN_FILE" ] && { echo "Unknown: $COMMAND"; exit 1; }
 
-if [ -z "$PLUGIN_FILE" ]; then
-    echo "Unknown command: $COMMAND"
-    echo "Run 'ai help' for available commands."
-    exit 1
-fi
-
-# ── Step 2: Governance check (Level 0 bypasses) ──
+# ── Governance check ──
 CMD_LEVEL=$(governance_level "$COMMAND" 2>/dev/null || echo "0")
 if [ "$CMD_LEVEL" != "0" ] && [ -f "$SDK_ROOT/engines/governance/engine.sh" ]; then
     source "$SDK_ROOT/engines/governance/engine.sh" 2>/dev/null
     governance_check "$COMMAND" "${1:-}" || exit 1
 fi
 
-# ── Step 3: Execute plugin ──
-if [ -f ".sdk/commands/plugins/${COMMAND}.sh" ]; then
-    source ".sdk/commands/plugins/${COMMAND}.sh" 2>/dev/null
-    if type main >/dev/null 2>&1; then
-        main "${1:-main}" "${2:-}"
-    else
-        echo "Plugin '$COMMAND' has no main() function"
-        exit 1
-    fi
-elif [ -f "$PLUGIN_FILE" ]; then
-    bash "$PLUGIN_FILE" "$@"
+# ── Execute ──
+source "$PLUGIN_FILE" 2>/dev/null
+if type main >/dev/null 2>&1; then
+    main "${1:-main}" "${2:-}"
 else
-    echo "Plugin not found: $COMMAND"
-    exit 1
+    echo "Plugin error: $COMMAND"
 fi

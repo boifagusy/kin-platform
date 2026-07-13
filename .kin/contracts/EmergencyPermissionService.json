@@ -1,0 +1,8 @@
+{
+  "class": "EmergencyPermissionService",
+  "namespace": "App\Services",
+  "file": "backend/app/Services/EmergencyPermissionService.php",
+  "verified_at": "2026-07-13T03:17:44Z",
+  "methods": "",
+  "status": "certified"
+}

@@ -1,0 +1,12 @@
+debug_session:
+  started: 2026-07-13T03:47:45Z
+  issue: Safety Score +5 text not showing after check-in
+  brick: safety_score
+  findings: []
+  - 04:50:09: find StatusCard.jsx also shows Safety Score label
+  - 04:50:12: FIX: fix Updated SafetyScoreCard to display +5 after check-in
+completed: 2026-07-13T03:50:13Z
+  - 04:50:48: find +5 text not in SafetyCheckCard — found in SafetyScoreCard.jsx
+  - 04:50:51: find StatusCard.jsx also shows Safety Score label
+  - 04:50:53: FIX: fix Updated SafetyScoreCard to display +5 after check-in
+completed: 2026-07-13T03:50:58Z

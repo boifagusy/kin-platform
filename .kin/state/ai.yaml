@@ -1,5 +1,5 @@
-active_role: unassigned
-current_stage: bootstrap
+active_role: debugger
+current_gate: 0
 current_brick: none
 waiting_for: initialization
 last_action: none

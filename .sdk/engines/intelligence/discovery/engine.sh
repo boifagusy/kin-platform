@@ -69,7 +69,7 @@ discovery_confidence() {
     # Gather metrics
     local services contracts tests bricks certs debt_items docs
     services=$(find backend/app/Services -name "*.php" -type f 2>/dev/null | wc -l | tr -d ' ')
-    contracts=$(find .sdk/contracts -name "*.yaml" -type f 2>/dev/null | wc -l | tr -d ' ')
+    contracts=$(find .kin/contracts -name "*.json" -type f 2>/dev/null | wc -l | tr -d " ")
     tests=$(find backend/tests -name "*Test.php" -type f 2>/dev/null | wc -l | tr -d ' ')
     bricks=$(ls -1d bricks/*/ 2>/dev/null | wc -l | tr -d ' ')
     certs=$(ls -1 .kin/certifications/*.yaml 2>/dev/null | wc -l | tr -d ' ')

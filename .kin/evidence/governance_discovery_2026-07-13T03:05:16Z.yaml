@@ -1,0 +1,11 @@
+governance_check:
+  command: discovery
+  timestamp: 2026-07-13T03:05:16Z
+  level: 3
+  state:
+    gate: 1
+    role: architect
+    brick: none
+    session: active
+  verdict: BLOCKED
+  failed_guard: brick

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>KIN Debug Logs</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #fff; }
+    pre { background: #16213e; padding: 15px; border-radius: 8px; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; }
+    .log-entry { border-bottom: 1px solid #333; padding: 10px 0; }
+    .title { color: #4CAF50; font-weight: bold; }
+    .timestamp { color: #888; font-size: 12px; }
+    button { background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+  </style>
+</head>
+<body>
+  <h1>🔍 KIN Debug Logs</h1>
+  <button onclick="refreshLogs()">🔄 Refresh</button>
+  <button onclick="clearLogs()">🗑️ Clear</button>
+  <button onclick="downloadLogs()">📥 Download</button>
+  <div id="logs">
+    <p>Open the app, navigate to Alerts, then refresh this page.</p>
+  </div>
+
+  <script>
+    function refreshLogs() {
+      const logs = window.__KIN_DEBUG_LOGS || [];
+      const container = document.getElementById('logs');
+      
+      if (logs.length === 0) {
+        container.innerHTML = '<p>No logs yet. Navigate to Alerts and try again.</p>';
+        return;
+      }
+      
+      container.innerHTML = logs.map(entry => `
+        <div class="log-entry">
+          <div class="timestamp">${entry.timestamp}</div>
+          <div class="title">${entry.title}</div>
+          <pre>${JSON.stringify(entry.data, null, 2)}</pre>
+        </div>
+      `).join('');
+    }
+
+    function clearLogs() {
+      window.__KIN_DEBUG_LOGS = [];
+      refreshLogs();
+    }
+
+    function downloadLogs() {
+      const logs = window.__KIN_DEBUG_LOGS || [];
+      const blob = new Blob([JSON.stringify(logs, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'kin-debug-logs.json';
+      a.click();
+    }
+
+    // Refresh every 2 seconds
+    setInterval(refreshLogs, 2000);
+    refreshLogs();
+  </script>
+</body>
+</html>

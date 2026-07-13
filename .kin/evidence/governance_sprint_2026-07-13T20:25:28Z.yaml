@@ -1,0 +1,11 @@
+governance_check:
+  command: sprint
+  timestamp: 2026-07-13T20:25:28Z
+  level: 1
+  state:
+    gate: 0
+    role: debugger
+    brick: safety_score
+    session: active
+  verdict: PASS
+  failed_guard: none

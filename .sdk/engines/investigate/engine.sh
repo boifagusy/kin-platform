@@ -41,7 +41,7 @@ investigate() {
                 echo "  Services found: $count"
                 
                 # Check for missing contracts
-                for svc in backend/app/Services/**/*.php 2>/dev/null; do
+                for svc in $(find backend/app/Services -name "*.php" -type f 2>/dev/null); do
                     [ -f "$svc" ] || continue
                     local name; name="$(basename "$svc" .php)"
                     if [ ! -f ".sdk/contracts/watchtower/${name}.yaml" ] && [ ! -f ".sdk/contracts/*/${name}.yaml" ]; then

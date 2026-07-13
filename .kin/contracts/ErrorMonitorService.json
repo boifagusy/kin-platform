@@ -1,0 +1,8 @@
+{
+  "class": "ErrorMonitorService",
+  "namespace": "App\Services\Watchtower",
+  "file": "backend/app/Services/Watchtower/ErrorMonitorService.php",
+  "verified_at": "2026-07-13T03:17:46Z",
+  "methods": "",
+  "status": "certified"
+}

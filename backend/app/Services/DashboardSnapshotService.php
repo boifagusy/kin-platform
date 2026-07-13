@@ -78,10 +78,7 @@ class DashboardSnapshotService
             })
             ->toArray();
 
-        $safeZones = [
-            ['id' => 1, 'name' => 'Home', 'address' => 'Your home address', 'active' => true],
-            ['id' => 2, 'name' => 'Work', 'address' => 'Your work address', 'active' => false],
-        ];
+        $safeZones = app(\App\Services\SafeZoneService::class)->dashboardData($user);
 
         $trustedContactsCount = TrustedContact::where('user_id', $user->id)
             ->where('verified', true)

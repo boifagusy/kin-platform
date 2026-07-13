@@ -1,0 +1,8 @@
+{
+  "class": "WatchtowerHealthService",
+  "namespace": "App\Services\Watchtower",
+  "file": "backend/app/Services/Watchtower/WatchtowerHealthService.php",
+  "verified_at": "2026-07-13T03:17:47Z",
+  "methods": "",
+  "status": "certified"
+}

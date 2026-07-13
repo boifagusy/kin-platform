@@ -1,0 +1,8 @@
+{
+  "class": "SafetyScoreService",
+  "namespace": "App\Services",
+  "file": "backend/app/Services/SafetyScoreService.php",
+  "verified_at": "2026-07-13T03:17:40Z",
+  "methods": "",
+  "status": "certified"
+}

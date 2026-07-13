@@ -120,3 +120,11 @@ Route::get('/health', function () {
 
 // Watchtower Observability System
 require_once __DIR__.'/watchtower.php';
+
+// Safe Zones
+Route::prefix('safe-zones')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [App\Http\Controllers\Api\V1\SafeZoneController::class, 'index']);
+    Route::post('/', [App\Http\Controllers\Api\V1\SafeZoneController::class, 'store']);
+    Route::patch('/{id}', [App\Http\Controllers\Api\V1\SafeZoneController::class, 'update']);
+    Route::delete('/{id}', [App\Http\Controllers\Api\V1\SafeZoneController::class, 'destroy']);
+});

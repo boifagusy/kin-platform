@@ -5,13 +5,13 @@
 LEVEL0_COMMANDS="help tutorial examples explain plugins version role session work status copy clip"
 
 # Level 1: Light check (session + role)
-LEVEL1_COMMANDS="doctor validate workflow audit event knowledge"
+LEVEL1_COMMANDS="doctor validate workflow audit event knowledge discovery"
 
 # Level 2: Planning check (session + role + gate)
-LEVEL2_COMMANDS="gate brick plan design architect project"
+LEVEL2_COMMANDS="gate brick plan design architect project investigate contract"
 
 # Level 3: Full check (all guards)
-LEVEL3_COMMANDS="implement code develop build fix modify patch generate scaffold migrate test restore investigate certify intelligence discovery contract task"
+LEVEL3_COMMANDS="implement code develop build fix modify patch generate scaffold migrate test restore certify intelligence task"
 
 # Level 4: Critical check (full + approval + git clean)
 LEVEL4_COMMANDS="release deploy publish rollback delete"
