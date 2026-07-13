@@ -98,7 +98,7 @@ function DashboardScreenV2() {
 
 
   const actualSafetyScore = dashboard?.safety_score || 60;
-  const displayScore = checkInState === 'safe' ? Math.min(actualSafetyScore + 5, 100) : actualSafetyScore;
+  const displayScore = actualSafetyScore;
 
   const getScoreLabel = (score) => {
     if (score >= 90) return "Excellent";
@@ -109,7 +109,7 @@ function DashboardScreenV2() {
 
   const contactsCount = dashboard?.user?.contacts_count || 0;
   const safeZones = dashboard?.safe_zones || [];
-  const recentCheckIn = dashboard?.last_checkin || false;
+  const recentCheckIn = dashboard?.recent_checkin || false;
 
   const breakdownItems = [
     { label: "Location Enabled", status: locationEnabled },
@@ -298,13 +298,13 @@ function DashboardScreenV2() {
         <SafetyScoreCardMinimal score={displayScore} label={getScoreLabel(displayScore)} />
 
         <SafetyCheckCard
-          checkInState={checkInState}
+          state={checkInState}
           nextCheckin={nextCheckin}
+          hasTrustedContact={dashboard?.has_verified_contact || false}
           onSafe={handleSafeCheckInWithLocation}
           onAssistance={handleNeedAssistance}
           onEmergency={handleEmergency}
-          onUpdateStatus={() => setCheckInState("default")}
-          loading={checkInLoading}
+          onAddContact={() => navigate("/network")}
         />
 
         {showAssistanceOptions && (

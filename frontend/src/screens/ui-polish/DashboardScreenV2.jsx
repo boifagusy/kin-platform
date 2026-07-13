@@ -86,7 +86,8 @@ const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)
             ...data,
             trusted_contact: data.data?.trusted_contact || null,
             has_verified_contact: data.data?.has_verified_contact || false,
-          });
+        });
+        setCheckInState(data.data?.recent_checkin ? "done" : "idle");
         }
         // Clear onboarding draft
         clearDraft();
@@ -114,7 +115,7 @@ const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)
   const duressPinCreated = !tasks.find(t => t.id === "duress_pin");
 
 
-  const actualSafetyScore = dashboard?.safety_score || 60;
+  const actualSafetyScore = dashboard?.data?.safety_score || 60;
   const displayScore = checkInState === 'safe' ? Math.min(actualSafetyScore + 5, 100) : actualSafetyScore;
 
   const getScoreLabel = (score) => {
@@ -126,18 +127,18 @@ const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)
 
   const contactsCount = dashboard?.user?.contacts_count || 0;
   const safeZones = dashboard?.safe_zones || [];
-  const recentCheckIn = dashboard?.last_checkin || false;
+  const recentCheckIn = dashboard?.data?.recent_checkin || false;
 
   const breakdownItems = [
     { label: "Location Enabled", status: locationEnabled },
-    { label: "Trusted Contact Added", status: trustedContactService.isVerifiedContactAvailable() },
+    { label: "Trusted Contact Added", status: dashboard?.data?.has_verified_contact || false },
     { label: "Safe Zones Added", status: homeZoneAdded },
     { label: "Duress PIN Created", status: duressPinCreated },
     { label: "Recent Check-In", status: recentCheckIn !== false },
   ];
 
   const handleSafeCheckInState = () => {
-    setCheckInState("safe");
+    setCheckInState("done");
     setShowAssistanceOptions(false);
   };
 
@@ -162,17 +163,15 @@ const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)
       // Use SafetyService — single source of truth
       const result = await safetyService.checkIn(phone, locationData, batteryLevel);
 
-      if (result.state === 'SENT') {
-        handleSafeCheckInState();
-
- const refreshRes = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)}`, {      
-
-  headers: { "Authorization": `Bearer ${localStorage.getItem("kin_token")}` },
+      if (result.state === "SENT") {
+        setCheckInState("done");
+        const refreshRes = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)}`, {
+          headers: { "Authorization": `Bearer ${localStorage.getItem("kin_token")}` },
         });
         const refreshData = await refreshRes.json();
         if (refreshData.success) setDashboard(refreshData);
-        alert("✅ Check-in successful!");
-      } else if (result.state === 'QUEUED') {
+      } else if (result.state === "QUEUED") {
+        setCheckInState("offline");
         handleSafeCheckInState();
         alert("📴 Check-in saved. Will send automatically when online.");
       } else {
@@ -211,10 +210,15 @@ const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)
 
     setCheckInState("emergency");
     
-    if (result.state === 'SENT') {
-      scheduleSOSNotification("Trusted Contacts", "", result.data?.sos_id).catch((err) => console.warn("SOS notification error:", err));
-      alert("🚨 SOS ACTIVATED! Your trusted contacts are being notified.");
-    } else if (result.state === 'QUEUED') {
+      if (result.state === "SENT") {
+        setCheckInState("done");
+        const refreshRes = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)}`, {
+          headers: { "Authorization": `Bearer ${localStorage.getItem("kin_token")}` },
+        });
+        const refreshData = await refreshRes.json();
+        if (refreshData.success) setDashboard(refreshData);
+      } else if (result.state === "QUEUED") {
+        setCheckInState("offline");
       alert("📴 SOS saved. Will send automatically when online.");
     } else {
       alert("Failed to send SOS. Please try again.");
@@ -248,7 +252,15 @@ const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Morning" : hour < 18 ? "Afternoon" : "Evening";
   const userName = dashboard?.data?.user?.name?.split(" ")[0] || dashboard?.user?.name?.split(" ")[0] || "User";
-  const nextCheckin = dashboard?.settings?.checkin_time || "9:00 PM";
+  const formatCheckinTime = (time) => {
+  if (!time || time === "21:00") return "9:00 PM";
+  const [h, m] = time.split(":");
+  const hour = parseInt(h);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:${m} ${ampm}`;
+};
+const nextCheckin = formatCheckinTime(dashboard?.data?.settings?.checkin_time);
 
   return (
     <div className="min-h-screen bg-[#F0F7F2] pb-20">
@@ -264,13 +276,14 @@ const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)
         <SafetyScoreCardMinimal score={displayScore} label={getScoreLabel(displayScore)} />
 
         <SafetyCheckCard
-          checkInState={checkInState}
+          state={checkInState}
           nextCheckin={nextCheckin}
+          hasTrustedContact={dashboard?.data?.has_verified_contact || false}
+          hasActiveSOS={dashboard?.data?.has_active_sos || false}
           onSafe={handleSafeCheckInWithLocation}
           onAssistance={handleNeedAssistance}
           onEmergency={handleEmergency}
-          onUpdateStatus={() => setCheckInState("default")}
-          loading={checkInLoading}
+          onAddContact={() => navigate("/network")}
         />
 
         {showAssistanceOptions && (
@@ -282,7 +295,7 @@ const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)
         )}
 
         {/* Trusted Contact Card */}
-        {!trustedContactService.isVerifiedContactAvailable() && (
+        {!dashboard?.data?.has_verified_contact || false && (
           <TrustedContactCard
             contact={trustedContactService.getVerifiedContact()}
             inviteStatus={dashboard?.invite_status}
@@ -356,7 +369,8 @@ const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)
         />
       )}
 
-      <BottomNav
+      <BottomNav hasActiveSOS={dashboard?.data?.has_active_sos || false} hasTrustedContact={dashboard?.data?.has_verified_contact || false}
+          hasActiveSOS={dashboard?.data?.has_active_sos || false}
         onSOS={handleEmergency}
         activeTab={activeTab}
         onTabChange={setActiveTab}

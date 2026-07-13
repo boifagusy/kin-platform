@@ -96,6 +96,7 @@ class DashboardSnapshotService
             ->where('checked_in_at', '>=', now()->subHours(24))
             ->exists();
 
+        $activeSOS = \App\Models\SosEvent::where("user_id", $user->id)->whereNull("resolved_at")->latest("triggered_at")->first();
         return [
             'user' => [
                 'name' => $user->name,
@@ -121,6 +122,10 @@ class DashboardSnapshotService
             'pin_created' => !empty($user->login_pin_hash),
             'has_verified_contact' => $hasVerifiedContact,
             'recent_checkin' => $recentCheckIn,
+            'has_active_sos' => $activeSOS !== null,
+            'active_sos_id' => $activeSOS?->id,
+            'active_sos_status' => $activeSOS ? 'active' : null,
+            'active_sos_started_at' => $activeSOS?->triggered_at?->toISOString(),
             // ✅ ADDED: Duress PIN field
             'duress_pin_created' => !empty($user->duress_pin_hash),
         ];
