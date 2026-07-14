@@ -76,3 +76,8 @@ Route::middleware(['web', 'admin.auth'])->prefix('admin/settings')->name('admin.
 
 // Security Settings Save Route
 Route::middleware(['web', 'admin.auth'])->post('/admin/settings/security', [App\Http\Controllers\Admin\SystemSettingsController::class, 'updateSecurity'])->name('admin.settings.update.security');
+
+// SPA fallback — serve index.html for any unmatched route
+Route::get('/{any}', function () {
+    return file_get_contents(public_path('index.html'));
+})->where('any', '^(?!api|admin).*$');

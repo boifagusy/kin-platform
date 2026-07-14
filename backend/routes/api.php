@@ -122,9 +122,17 @@ Route::get('/health', function () {
 require_once __DIR__.'/watchtower.php';
 
 // Safe Zones
-Route::prefix('safe-zones')->middleware('auth:sanctum')->group(function () {
+Route::prefix('v1/safe-zones')->middleware('auth:sanctum')->group(function () {
     Route::get('/', [App\Http\Controllers\Api\V1\SafeZoneController::class, 'index']);
     Route::post('/', [App\Http\Controllers\Api\V1\SafeZoneController::class, 'store']);
     Route::patch('/{id}', [App\Http\Controllers\Api\V1\SafeZoneController::class, 'update']);
     Route::delete('/{id}', [App\Http\Controllers\Api\V1\SafeZoneController::class, 'destroy']);
+});
+
+// Trusted Contact Verification
+Route::post('/trusted-contacts/verify', [App\Http\Controllers\Api\V1\VerificationController::class, 'verify']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/trusted-contacts/{id}/resend', [App\Http\Controllers\Api\V1\VerificationController::class, 'resend']);
+    Route::patch('/trusted-contacts/{id}', [App\Http\Controllers\Api\V1\TrustedContactController::class, 'update']);
+    Route::post('/trusted-contacts/{id}/revoke', [App\Http\Controllers\Api\V1\TrustedContactController::class, 'revoke']);
 });

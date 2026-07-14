@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import HeaderV2 from "../../components/dashboard/HeaderV2";
 import SafetyScoreCardMinimal from "../../components/dashboard/SafetyScoreCardMinimal";
+import SafeZonesCard from '../../components/dashboard/SafeZonesCard';
 import TrustedContactCard from "../../components/dashboard/TrustedContactCard";
 import SafetyCheckCard from "../../components/dashboard/SafetyCheckCard";
 import AssistanceOptions from "../../components/dashboard/AssistanceOptions";
@@ -13,7 +14,6 @@ import EmergencyModal from "../../components/dashboard/EmergencyModal";
 import BottomNav from "../../components/dashboard/BottomNav";
 import { getCurrentLocation, getBatteryLevel } from "../../utils/location";
 import { startNotificationChecker, stopNotificationChecker, scheduleSOSNotification } from "../../services/notificationService";
-import trustedContactService from '../../services/trustedContactService.js';
 import safetyService from '../../services/SafetyService.js';
 
 const API_BASE = import.meta.env.VITE_API_URL;
@@ -34,23 +34,13 @@ function DashboardScreenV2() {
 
   // Trusted Contact handlers
   const handleShareInvite = () => {
-    console.log("📤 Share invite clicked");
     alert("Share invite - coming soon!");
   };
 
   const handleReplaceContact = () => {
-    console.log("🔄 Replace contact clicked");
     alert("Replace contact - coming soon!");
   };
 
-  // Subscribe to trusted contact changes
-  useEffect(() => {
-    const unsubscribe = trustedContactService.subscribe(() => {
-      setTrustedContactStatus(Date.now());
-    });
-    trustedContactService.loadStatus();
-    return unsubscribe;
-  }, []);
 
   useEffect(() => {
     const handleOnline = () => {
@@ -297,7 +287,7 @@ const nextCheckin = formatCheckinTime(dashboard?.data?.settings?.checkin_time);
         {/* Trusted Contact Card */}
         {!dashboard?.data?.has_verified_contact || false && (
           <TrustedContactCard
-            contact={trustedContactService.getVerifiedContact()}
+            contact={dashboard?.data?.trusted_contact || null}
             inviteStatus={dashboard?.invite_status}
             onShare={handleShareInvite}
             onReplace={handleReplaceContact}
@@ -325,7 +315,10 @@ const nextCheckin = formatCheckinTime(dashboard?.data?.settings?.checkin_time);
         />
 
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-[#E9ECEF]">
-          <h3 className="text-sm font-semibold text-[#1A1A1A] mb-2">Safe Zones</h3>
+          <SafeZonesCard 
+            zones={safeZones?.zones || safeZones || []} 
+            count={safeZones?.count || (Array.isArray(safeZones) ? safeZones.length : 0)} 
+          />
           {safeZones.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {safeZones.map((zone, index) => (

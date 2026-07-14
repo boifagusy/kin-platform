@@ -24,6 +24,7 @@ import AlertsScreenV2 from "./screens/ui-polish/AlertsScreenV2";
 import AlertDetailScreenV2 from "./screens/ui-polish/AlertDetailScreenV2";
 import ForgotPinScreenV3 from "./screens/ui-polish/ForgotPinScreenV3";
 import ProfileScreen from "./screens/profile/ProfileScreen";
+import SafeZonesScreen from "./screens/settings/SafeZonesScreen";
 import MapScreen from "./screens/map/MapScreen";
 
 export default function App() {
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="/tailwind-test" element={<TailwindTest />} />
         <Route path="/settings/checkin" element={<CheckInSettingsScreen />} />
         <Route path="/settings/duress-pin" element={<DuressPinSetupScreenV2 />} />
+        <Route path="/settings/safe-zones" element={<SafeZonesScreen />} />
         <Route path="/network" element={<NetworkScreenV2 />} />
         <Route path="/alerts" element={<AlertsScreenV2 />} />
         <Route path="/forgot-pin" element={<ForgotPinScreenV3 />} />

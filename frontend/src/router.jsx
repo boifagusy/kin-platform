@@ -19,6 +19,7 @@ import AlertDetailScreenV2 from './screens/ui-polish/AlertDetailScreenV2';
 const router = createBrowserRouter([
     {
         path: '/',
+    { path: 'test-safe-zone', element: <div style={{color:'red',padding:50}}>TEST ROUTE WORKS</div> },
         element: <App />,
         children: [
             // Public routes
@@ -45,17 +46,17 @@ const router = createBrowserRouter([
                 path: 'dashboard', 
                 element: <ProtectedRoute><DashboardScreenV2 /></ProtectedRoute> 
             },
-            { 
             {
-                path: 'settings',
+                path: "settings",
                 element: <ProtectedRoute><SettingsScreen /></ProtectedRoute>,
             },
-                path: 'settings/check-in', 
+            {
+                path: "settings/check-in",
+                element: <ProtectedRoute><CheckInSettingsScreen /></ProtectedRoute>,
             },
             {
-                path: 'settings/safe-zones',
-                element: <ProtectedRoute><SafeZonesScreen /></ProtectedRoute>
-                element: <ProtectedRoute><CheckInSettingsScreen /></ProtectedRoute> 
+                path: "settings/safe-zones",
+                element: <SafeZonesScreen />,
             },
             { 
                 path: 'continue-setup', 

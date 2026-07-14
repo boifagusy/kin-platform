@@ -8,7 +8,7 @@ function SettingsScreen() {
     <div className="min-h-screen bg-[#F0F7F2] pb-20">
       <div className="bg-[#1A5632] px-5 pt-8 pb-4">
         <div className="flex items-center">
-          <button onClick={() => navigate('/dashboard')} className="text-white">← Back</button>
+          <button onClick={() => navigate(-1)} className="text-white">← Back</button>
           <h1 className="text-white text-lg font-semibold ml-4">Settings</h1>
         </div>
       </div>
