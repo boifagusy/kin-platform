@@ -5,40 +5,45 @@ function SafeZonesCard({ zones = [], count = 0, defaultZone = null }) {
   const navigate = useNavigate();
 
   return (
-    <div style={{ background: "white", borderRadius: 20, padding: 20, marginBottom: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        <div style={{ width: 48, height: 48, borderRadius: 24, background: "#e8f5e9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <FaMapMarkerAlt style={{ fontSize: 24, color: "#1A5632" }} />
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {count === 0 ? (
-            <>
-              <p style={{ fontWeight: 600, color: "#1A5632", margin: 0, fontSize: 14 }}>No Safe Zones</p>
-              <p style={{ color: "#6b7280", fontSize: 12, margin: "2px 0 0 0" }}>Add a safe zone in Settings</p>
-            </>
-          ) : (
-            <>
-              <p style={{ fontWeight: 600, color: "#1A5632", margin: 0, fontSize: 14 }}>Safe Zones ({count})</p>
-              <p style={{ color: "#6b7280", fontSize: 12, margin: "2px 0 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {zones.map(z => z.name).join(" • ")}
-              </p>
-            </>
-          )}
+    <div className="bg-white rounded-2xl p-4 shadow-sm border border-[#E9ECEF] mb-4">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <h3 className="text-sm font-semibold text-[#1A1A1A]">📍 Safe Zones</h3>
+          <p className="text-xs text-[#6C757D] mt-0.5">Trusted places for emergency response</p>
         </div>
         <button
           onClick={() => navigate('/settings/safe-zones')}
-          style={{
-            width: 40, height: 40, borderRadius: 20,
-            background: "#1A5632", border: "none",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", flexShrink: 0,
-            minWidth: 40, minHeight: 40
-          }}
+          className="w-8 h-8 rounded-full bg-[#1A5632] flex items-center justify-center active:scale-95 transition-all flex-shrink-0"
           aria-label="Add safe zone"
         >
-          <FaPlus style={{ color: "white", fontSize: 18 }} />
+          <FaPlus style={{ color: "white", fontSize: 14 }} />
         </button>
       </div>
+
+      {zones.length === 0 ? (
+        <div className="text-center py-4">
+          <FaMapMarkerAlt className="text-gray-300 text-2xl mx-auto mb-2" />
+          <p className="text-xs text-[#6C757D]">No safe zones added yet</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {zones.map((zone) => (
+            <div key={zone.id} className="flex items-center gap-3 p-2 rounded-xl bg-[#F8F9FA]">
+              <div className="w-8 h-8 rounded-full bg-[#E8F3EA] flex items-center justify-center flex-shrink-0">
+                <FaMapMarkerAlt style={{ fontSize: 14, color: "#1A5632" }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-[#1A1A1A] truncate">{zone.name}</p>
+              </div>
+              {zone.is_default && (
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium flex-shrink-0">
+                  Default
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

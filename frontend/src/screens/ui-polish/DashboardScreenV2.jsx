@@ -116,7 +116,7 @@ const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)
   };
 
   const contactsCount = dashboard?.user?.contacts_count || 0;
-  const safeZones = dashboard?.safe_zones || [];
+  const safeZones = dashboard?.data?.safe_zones || [];
   const recentCheckIn = dashboard?.data?.recent_checkin || false;
 
   const breakdownItems = [
@@ -319,24 +319,6 @@ const nextCheckin = formatCheckinTime(dashboard?.data?.settings?.checkin_time);
             zones={safeZones?.zones || safeZones || []} 
             count={safeZones?.count || (Array.isArray(safeZones) ? safeZones.length : 0)} 
           />
-          {safeZones.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {safeZones.map((zone, index) => (
-                <span
-                  key={index}
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    zone.active
-                      ? "bg-green-100 text-green-700 border border-green-500"
-                      : "bg-gray-100 text-gray-500 border border-gray-300"
-                  }`}
-                >
-                  {zone.name}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs text-[#6C757D]">No safe zones added yet.</p>
-          )}
         </div>
 
         {!duressPinCreated && (

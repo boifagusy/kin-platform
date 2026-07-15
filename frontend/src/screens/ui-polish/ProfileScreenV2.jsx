@@ -43,8 +43,8 @@ function ProfileScreenV2() {
         setSafetyScore(data.safety_score || 0);
         const hasDuressTask = data.pending_tasks?.some(t => t.id === 'duress_pin');
         setHasDuressPin(!hasDuressTask);
-        setContactsCount(data.contacts?.count || 0);
-        setHasTrustedContact((data.contacts?.count || 0) > 0);
+        setContactsCount(data.data?.contacts_count || 0);
+        setHasTrustedContact(data.data?.has_verified_contact || false);
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -169,7 +169,7 @@ function ProfileScreenV2() {
               </div>
               <FaChevronRight className="text-[#6C757D] text-sm" />
             </button>
-            <button
+            <button onClick={() => navigate("/settings/safe-zones")}
               className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F0F7F2] transition"
             >
               <div className="flex items-center gap-3">
@@ -178,12 +178,8 @@ function ProfileScreenV2() {
                 </div>
                 <span className="text-sm text-[#1A1A1A]">Safe Zones</span>
               </div>
-              <span className="text-xs text-[#6C757D]">Coming soon</span>
             </button>
-          </div>
-        </div>
-
-        {/* Trusted Contact */}
+            </button>
         <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#E9ECEF]">
           <div className="px-5 py-3 border-b border-[#E9ECEF]">
             <h3 className="font-semibold text-[#1A5632]">Trusted Contact</h3>

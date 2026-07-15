@@ -164,7 +164,7 @@ function SafeZonesScreen() {
     <div className="min-h-screen bg-[#F0F7F2] pb-20">
       <div className="bg-[#1A5632] px-5 pt-8 pb-4">
         <div className="flex items-center justify-between">
-          <button onClick={() => navigate('/settings')} className="text-white">← Back</button>
+          <button onClick={() => navigate('/profile')} className="text-white">← Back</button>
           <h1 className="text-white text-lg font-semibold">Safe Zones</h1>
           <button onClick={openCreate} className="text-white text-lg font-medium">+ Add</button>
         </div>
