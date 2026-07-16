@@ -93,7 +93,8 @@ https://kin.app`;
       const data = await response.json();
 
       if (data.success) {
-        const contactData = data.data.contacts && data.data.contacts.length > 0 ? data.data.contacts[0] : null;
+        const contacts = data?.data?.contacts ?? [];
+        const contactData = contacts.length > 0 ? contacts[0] : null;
         setContact(contactData);
         setLimit(data.data.limit);
         setUsed(data.data.used);
@@ -247,7 +248,7 @@ https://kin.app`;
   }
 
   const hasContact = contact !== null;
-  const isVerified = contact?.verified === true;
+  const isVerified = contact?.status === 'verified';
 
   return (
     <div className="min-h-screen bg-[#F0F7F2] pb-20">

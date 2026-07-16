@@ -4,11 +4,9 @@ import { FaUserPlus, FaShareAlt, FaUser, FaSync } from "react-icons/fa";
 function TrustedContactCard({ contact, inviteStatus, onShare, onReplace }) {
   const navigate = useNavigate();
 
-  console.log("🔵 TrustedContactCard rendered with:", { contact, inviteStatus });
 
   // STATE A: No trusted contact
   if (!contact || !contact.name) {
-    console.log("🔵 No contact found — showing Add Contact");
     return (
       <div className="bg-white rounded-2xl p-4 shadow-sm border border-[#E9ECEF]">
         <h3 className="text-sm font-semibold text-[#1A1A1A] mb-1">Trusted Network</h3>
@@ -25,7 +23,6 @@ function TrustedContactCard({ contact, inviteStatus, onShare, onReplace }) {
   }
 
   // STATE B: Contact exists
-  console.log("🔵 Contact found:", contact);
   const statusLabel = inviteStatus === "required" ? "Invite Required" : 
                       inviteStatus === "waiting" ? "Waiting For Acceptance" : 
                       "Active ✓";
@@ -74,4 +71,3 @@ function TrustedContactCard({ contact, inviteStatus, onShare, onReplace }) {
 }
 
 export default TrustedContactCard;
-// DEBUG: TrustedContactCard is rendering
