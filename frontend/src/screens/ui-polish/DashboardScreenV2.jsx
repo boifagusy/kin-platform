@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import HeaderV2 from "../../components/dashboard/HeaderV2";
 import SafetyScoreCardMinimal from "../../components/dashboard/SafetyScoreCardMinimal";
 import SafeZonesCard from '../../components/dashboard/SafeZonesCard';
+import SyncStatus from '../../components/dashboard/SyncStatus';
 import TrustedContactCard from "../../components/dashboard/TrustedContactCard";
 import SafetyCheckCard from "../../components/dashboard/SafetyCheckCard";
 import AssistanceOptions from "../../components/dashboard/AssistanceOptions";
@@ -231,6 +232,7 @@ const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F0F7F2] flex items-center justify-center">
+      <SyncStatus />
         <div className="text-center">
           <div className="w-10 h-10 border-3 border-[#1A5632] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
           <p className="text-[#1A5632] text-sm">Loading KIN...</p>
@@ -254,6 +256,7 @@ const nextCheckin = formatCheckinTime(dashboard?.data?.settings?.checkin_time);
 
   return (
     <div className="min-h-screen bg-[#F0F7F2] pb-20">
+      <SyncStatus />
       <HeaderV2 greeting={greeting} userName={userName} onBellClick={() => navigate("/alerts", { state: { phone } })} unreadCount={dashboard?.unread_alerts || 0} />
 
       {offline && (
