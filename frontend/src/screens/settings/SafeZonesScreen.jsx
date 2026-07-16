@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import offlineWrite from '../../services/OfflineWriteService.js';
 
 const API_BASE = import.meta.env.VITE_API_URL;
 
@@ -35,6 +36,7 @@ function SafeZonesScreen() {
   };
 
   useEffect(() => {
+  offlineWrite.syncNow().then(r => { if (r.synced > 0) fetchZones(); });
     fetchZones();
   }, []);
 
@@ -43,22 +45,21 @@ function SafeZonesScreen() {
     if (!newZone.name.trim()) return;
     setSubmitting(true);
     try {
-      const response = await fetch(`${API_BASE}/safe-zones`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({ name: newZone.name, address: newZone.address }),
+      const result = await offlineWrite.write('safe_zone', {
+        name: newZone.name,
+        address: newZone.address,
       });
-      const data = await response.json();
-      if (data.success) {
+
+      if (result.state === 'SENT') {
         setNewZone({ name: '', address: '' });
         setShowModal(false);
         await fetchZones();
+      } else if (result.state === 'QUEUED') {
+        setNewZone({ name: '', address: '' });
+        setShowModal(false);
+        setError('Saved offline. Will sync when online.');
       } else {
-        setError(data.error || 'Failed to add safe zone');
+        setError(result.error || 'Failed to add safe zone');
       }
     } catch (err) {
       setError('Network error.');
