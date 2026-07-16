@@ -31,7 +31,7 @@ class OfflineWriteService {
       method: item.method,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('kin_token')}`,
+        'Authorization': `Bearer ${localStorage.getItem('kin_token') || localStorage.getItem('sanctum_token') || ''}`,
         'Accept': 'application/json',
       },
       body: JSON.stringify(item.payload),

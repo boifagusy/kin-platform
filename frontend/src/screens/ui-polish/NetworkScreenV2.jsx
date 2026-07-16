@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import offlineWrite from "../../services/OfflineWriteService.js";
 import BottomNav from "../../components/dashboard/BottomNav";
 import { FaArrowLeft, FaUserCircle, FaShareAlt, FaSync, FaTrash, FaClock, FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
 import InviteModal from "../../components/trusted-contact/InviteModal";
@@ -78,6 +79,7 @@ https://kin.app`;
   };
 
   useEffect(() => {
+    offlineWrite.syncNow().then(r => { if (r.synced > 0) fetchContact(); });
     if (!phone) {
       navigate("/login");
       return;
@@ -152,26 +154,33 @@ https://kin.app`;
         contact_phone: validation.formatted,
       };
 
-      const response = await fetch(`${API_BASE}/trusted-contacts`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(payload),
+      const token = localStorage.getItem('kin_token');
+      if (!token) {
+        setFormError("Please log in again to add a trusted contact.");
+        setSubmitting(false);
+        return;
+      }
+      const result = await offlineWrite.write("trusted_contact", {
+        name: formData.name.trim(),
+        contact_phone: validation.formatted,
       });
 
-      const data = await response.json();
-
-      if (data.success) {
+      if (result.state === "SENT") {
         await fetchContact();
         setShowAddModal(false);
         setNewContactName(formData.name);
         setNewContactPhone(payload.contact_phone);
-        setVerificationToken(data.data?.verification_token || null);
         setInviteSent(false);
         setShowInviteModal(true);
         setFormData({ name: "", contact_phone: "" });
         setFormError("");
+      } else if (result.state === "QUEUED") {
+        await fetchContact();
+        setShowAddModal(false);
+        setFormData({ name: "", contact_phone: "" });
+        setFormError("Saved offline. Will sync when online.");
       } else {
-        if (data.message === "Unauthenticated.") { setFormError("Please log in again to add a trusted contact."); } else { setFormError(data.error || data.message || "Failed to add contact"); };
+        setFormError(result.error || "Failed to add contact");
       }
     } catch (error) {
       console.error("Error adding contact:", error);
