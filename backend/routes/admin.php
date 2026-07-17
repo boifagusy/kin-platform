@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\PlatformDashboardController;
 use App\Http\Controllers\Admin\WatchtowerDashboardController;
 use App\Http\Controllers\Admin\SafetyMonitorController;
 use App\Http\Controllers\Admin\UserManagementController;
@@ -18,6 +19,7 @@ Route::prefix('admin')->group(function () {
         // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
         Route::get('/watchtower', [WatchtowerDashboardController::class, 'index'])->name('admin.watchtower');
+        Route::get('/platform', [PlatformDashboardController::class, 'index'])->name('admin.platform');
         Route::post('/logout', [AuthController::class, 'logout'])->name('admin.logout');
         
         // Safety Monitor API
