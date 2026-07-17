@@ -113,3 +113,8 @@ Route::get('/verify-otp', [App\Http\Controllers\Admin\PasswordResetController::c
 Route::post('/verify-otp', [App\Http\Controllers\Admin\PasswordResetController::class, 'verifyOtp'])->name('admin.password.verify');
 Route::get('/reset-password', [App\Http\Controllers\Admin\PasswordResetController::class, 'showResetForm'])->name('admin.password.reset.form');
 Route::post('/reset-password', [App\Http\Controllers\Admin\PasswordResetController::class, 'reset'])->name('admin.password.update');
+
+Route::middleware('admin.auth')->prefix('admin')->group(function () {
+    Route::get('/analytics', [App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('admin.analytics');
+    Route::get('/analytics/api', [App\Http\Controllers\Admin\AnalyticsController::class, 'api'])->name('admin.analytics.api');
+});
