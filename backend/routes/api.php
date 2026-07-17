@@ -134,16 +134,8 @@ Route::post('/trusted-contacts/verify', [App\Http\Controllers\Api\V1\Verificatio
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/trusted-contacts/{id}/resend', [App\Http\Controllers\Api\V1\VerificationController::class, 'resend']);
     Route::patch('/trusted-contacts/{id}', [App\Http\Controllers\Api\V1\TrustedContactController::class, 'update']);
-    Route::post('/trusted-contacts/{id}/revoke', [App\Http\Controllers\Api\V1\TrustedContactController::class, 'revoke']);
-});
-
-Route::get('/v1/version', function () {
-    return response()->json([
-        'version' => '0.0.0',
-        'min_supported' => '0.0.0',
-        'latest_stable' => '0.0.0',
-        'platform' => 'android',
-    ]);
 });
 
 Route::get('/v1/announcements', [App\Http\Controllers\Api\V1\AnnouncementController::class, 'index']);
+
+Route::get('/v1/version', [App\Http\Controllers\Api\V1\VersionController::class, 'index']);
