@@ -1,0 +1,134 @@
+<?php
+namespace App\Services;
+
+use App\Events\TrustedContact\TrustedContactRevoked;
+use App\Events\TrustedContact\TrustedContactVerified;
+use App\Events\TrustedContact\VerificationSent;
+use App\Models\TrustedContact;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+
+class TrustedContactService
+{
+    const STATUS_PENDING = 'pending';
+    const STATUS_VERIFIED = 'verified';
+    const STATUS_EXPIRED = 'expired';
+    const STATUS_REVOKED = 'revoked';
+    const STATUS_SUSPENDED = 'suspended';
+
+    public function create(User $user, array $data): TrustedContact
+    {
+        $this->validateLimit($user);
+
+        $token = Str::random(40);
+        $expiryHours = config('kin.trusted_contacts.token_expiry_hours', 168);
+
+        $contact = TrustedContact::create([
+            'user_id' => $user->id,
+            'name' => $data['name'],
+            'phone' => $data['contact_phone'],
+            'status' => self::STATUS_PENDING,
+            'token_hash' => Hash::make($token),
+            'token_expires_at' => now()->addHours($expiryHours),
+            'resend_count' => 0,
+            'verification_method' => 'link',
+            'active' => true,
+        ]);
+
+        event(new VerificationSent($contact));
+
+        return $contact;
+    }
+
+    public function verify(string $token): TrustedContact
+    {
+        $contacts = TrustedContact::where('status', self::STATUS_PENDING)
+            ->where('token_expires_at', '>', now())
+            ->get();
+
+        foreach ($contacts as $contact) {
+            if (Hash::check($token, $contact->token_hash)) {
+                $contact->update([
+                    'status' => self::STATUS_VERIFIED,
+                    'token_hash' => null,
+                    'token_expires_at' => null,
+                    'verified_at' => now(),
+                ]);
+
+                event(new TrustedContactVerified($contact));
+                return $contact;
+            }
+        }
+
+        throw new \Exception('Invalid or expired verification token.');
+    }
+
+    public function resend(User $user, int $id): TrustedContact
+    {
+        $contact = $this->findForUser($user, $id);
+        $maxResends = config('kin.trusted_contacts.max_resends', 3);
+
+        if ($contact->resend_count >= $maxResends) {
+            throw new \Exception("Maximum resends ({$maxResends}) reached. Please re-add this contact.");
+        }
+
+        $token = Str::random(40);
+        $expiryHours = config('kin.trusted_contacts.token_expiry_hours', 168);
+
+        $contact->update([
+            'status' => self::STATUS_PENDING,
+            'token_hash' => Hash::make($token),
+            'token_expires_at' => now()->addHours($expiryHours),
+            'resend_count' => $contact->resend_count + 1,
+        ]);
+
+        event(new VerificationSent($contact));
+        return $contact;
+    }
+
+    public function update(User $user, int $id, array $data): TrustedContact
+    {
+        $contact = $this->findForUser($user, $id);
+
+        if (isset($data['phone']) && $data['phone'] !== $contact->phone) {
+            $data['status'] = self::STATUS_PENDING;
+            $data['verified_at'] = null;
+        }
+
+        $contact->update($data);
+        return $contact;
+    }
+
+    public function revoke(User $user, int $id): TrustedContact
+    {
+        $contact = $this->findForUser($user, $id);
+
+        $contact->update([
+            'status' => self::STATUS_REVOKED,
+            'revoked_at' => now(),
+        ]);
+
+        event(new TrustedContactRevoked($contact));
+        return $contact;
+    }
+
+    public function delete(User $user, int $id): void
+    {
+        $contact = $this->findForUser($user, $id);
+        $contact->delete();
+    }
+
+    public function findForUser(User $user, int $id): TrustedContact
+    {
+        return TrustedContact::forUser($user)->findOrFail($id);
+    }
+
+    private function validateLimit(User $user): void
+    {
+        $limit = config('kin.trusted_contacts.free_limit', 1);
+        if ($user->trustedContacts()->count() >= $limit) {
+            throw new \Exception("Contact limit ({$limit}) reached.");
+        }
+    }
+}

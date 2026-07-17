@@ -57,7 +57,6 @@ function PhoneEntryScreenV2() {
         );
         throw parseErr;
       }
-      console.log('📦 API Response:', data);
       setMaskedPhone(data.masked_phone);
 
       if (data.exists) {

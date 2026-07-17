@@ -1,0 +1,52 @@
+# OfflineWriteService — Public Contract
+# Gate 1 Discovery approved. Gate 2 blocked until verified.
+
+contract:
+  service: OfflineWriteService
+  version: 1.0.0
+  status: pending_verification
+  gate: 2
+  approved_by: engineering_manager
+  created: 2026-07-16
+
+interface:
+  operations:
+    - queue_for_sync
+    - process_pending
+    - get_queue_status
+    - clear_completed
+
+  input_schema:
+    queue_for_sync:
+      payload: array
+      priority: enum[high, normal, low]
+      attempts: integer
+
+  response_schema:
+    success: boolean
+    queued_id: string
+    error: string|null
+
+  error_codes:
+    - QUEUE_FULL
+    - INVALID_PAYLOAD
+    - NETWORK_REQUIRED
+    - SERVICE_UNAVAILABLE
+
+dependencies:
+  - SafetyService (reuse, no modification)
+  - LocationQueue (reuse)
+  - SyncQueue (reuse)
+  - NetworkDetection (reuse)
+
+boundaries:
+  - No direct fetch()
+  - No direct axios
+  - No duplicate queue logic
+  - No duplicate retry logic
+  - No duplicate connectivity checks
+
+rollback:
+  removal_leaves_safety_service_operational: true
+  zero_schema_changes: true
+  zero_migration_required: true

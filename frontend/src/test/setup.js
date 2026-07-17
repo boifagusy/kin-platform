@@ -58,4 +58,3 @@ vi.mock('@capacitor/core', () => ({
   },
 }));
 
-console.log('✅ Test setup complete');

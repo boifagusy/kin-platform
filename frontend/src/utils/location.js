@@ -11,7 +11,6 @@ export async function getCurrentLocation() {
         maximumAge: 0,
       });
 
-      console.log("Location obtained (Capacitor):", position.coords);
 
       return {
         latitude: position.coords.latitude,
@@ -34,7 +33,6 @@ export async function getCurrentLocation() {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        console.log("Location obtained (browser):", position.coords);
         resolve({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
@@ -60,7 +58,6 @@ export async function getBatteryLevel() {
     try {
       const battery = await navigator.getBattery();
       const level = Math.round(battery.level * 100);
-      console.log("Battery level:", level);
       return level;
     } catch (err) {
       console.warn('Battery API error:', err);

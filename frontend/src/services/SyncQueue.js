@@ -57,7 +57,6 @@ export class SyncQueue {
    * @returns {Promise<{synced: number, failed: number}>}
    */
   async syncOnStart(limit = 10, delayMs = 3000) {
-    console.log('\ud83d\udd04 SyncQueue: syncing on start');
     return this.drain(limit, delayMs);
   }
 
@@ -70,7 +69,6 @@ export class SyncQueue {
    */
   syncOnReconnect(limit = 10, delayMs = 2000) {
     this._reconnectHandler = () => {
-      console.log('\ud83d\udd04 SyncQueue: reconnected, syncing');
       this.drain(limit, delayMs).catch(err => {
         console.warn('SyncQueue: reconnect sync failed', err);
       });

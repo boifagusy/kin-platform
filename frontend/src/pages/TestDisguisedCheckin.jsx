@@ -3,7 +3,6 @@ import DisguisedCheckinButton from '../components/DisguisedCheckinButton';
 
 const TestDisguisedCheckin = () => {
   const handleNormalCheckIn = () => {
-    console.log('📋 Normal check-in performed');
   };
 
   return (

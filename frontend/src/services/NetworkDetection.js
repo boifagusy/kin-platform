@@ -9,8 +9,6 @@
  * 
  * Usage:
  *   const network = new NetworkDetection();
- *   console.log(network.getStatus()); // { online: true, type: 'wifi', effectiveType: '4g' }
- *   network.onChange((status) => { console.log('Network changed:', status); });
  */
 export class NetworkDetection {
   constructor() {
@@ -55,7 +53,6 @@ export class NetworkDetection {
     this.status.online = true;
     this._updateConnectionInfo();
     this._notifyListeners();
-    console.log('📶 Network: Online');
   }
 
   /**
@@ -66,7 +63,6 @@ export class NetworkDetection {
     this.status.online = false;
     this._updateConnectionInfo();
     this._notifyListeners();
-    console.log('📶 Network: Offline');
   }
 
   /**
@@ -76,7 +72,6 @@ export class NetworkDetection {
   _handleConnectionChange() {
     this._updateConnectionInfo();
     this._notifyListeners();
-    console.log('📶 Network: Connection changed', this.status);
   }
 
   /**
@@ -177,7 +172,6 @@ export class NetworkDetection {
   async isTrulyOnline() {
     const online = this.isOnline();
     const reachable = await this.isBackendReachable();
-    console.log('📡 isTrulyOnline:', { online, reachable });
     return online && reachable;
   }
 

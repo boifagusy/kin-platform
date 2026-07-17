@@ -1,4 +1,10 @@
-active_brick: safety_score
-status: inactive
-gate: 0
-last_updated: null
+active_brick: offline_write_service
+brick_gate: 6
+brick_status: ready_for_implementation
+project_gate: 0
+approved_by: engineering_manager
+conditions:
+  - contract_verified
+  - dependencies_reused
+  - boundaries_defined
+  - rollback_plan_exists

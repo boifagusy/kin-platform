@@ -141,3 +141,17 @@ guard_investigation() {
     echo "  ⏭️  Investigation not required at Gate $gate"
     return 0
 }
+
+# Platform Service Guard — enforce certified service usage
+platform_service_guard() {
+    local operation="$1"
+    
+    if [ -f ".sdk/engines/governance/platform_services.yaml" ]; then
+        local service=$(grep -B10 "mandatory_for:" .sdk/engines/governance/platform_services.yaml | grep "$operation" 2>/dev/null)
+        if [ -n "$service" ]; then
+            echo "  ✅ Platform service available for: $operation"
+            return 0
+        fi
+    fi
+    return 0  # Warning only — don't block yet
+}

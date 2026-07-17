@@ -20,7 +20,6 @@ class LocationTracker {
     }
 
     if (this.isTracking) {
-      console.log('LocationTracker: Already tracking');
       return;
     }
 
@@ -31,7 +30,6 @@ class LocationTracker {
       return;
     }
 
-    console.log('LocationTracker: Starting tracking...');
 
     this.watchId = navigator.geolocation.watchPosition(
       this.handlePositionUpdate.bind(this),
@@ -44,7 +42,6 @@ class LocationTracker {
     );
 
     this.isTracking = true;
-    console.log('LocationTracker: Tracking started');
   }
 
   // Stop tracking
@@ -53,7 +50,6 @@ class LocationTracker {
       navigator.geolocation.clearWatch(this.watchId);
       this.watchId = null;
       this.isTracking = false;
-      console.log('LocationTracker: Tracking stopped');
     }
   }
 
@@ -75,7 +71,6 @@ class LocationTracker {
     this.currentLocation = locationData;
     this.lastUpdate = Date.now();
 
-    console.log('LocationTracker: Location updated', locationData);
 
     // Send to backend
     this.sendLocationToBackend(locationData);

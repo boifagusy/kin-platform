@@ -19,9 +19,6 @@ function AlertsScreenV2() {
 
     try {
       const url = `${API_BASE}/incidents?phone=${encodeURIComponent(phone)}`;
-      console.log("Fetching:", url);
-      console.log("Phone:", phone);
-      console.log("Token exists:", !!localStorage.getItem("kin_token"));
 
       const token = localStorage.getItem("kin_token");
 
@@ -37,7 +34,6 @@ function AlertsScreenV2() {
       }
 
       const data = await response.json();
-      console.log("API Response:", data);
 
       if (data.success && data.data) {
         setIncidents(data.data.incidents || []);

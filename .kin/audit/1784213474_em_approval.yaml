@@ -1,0 +1,24 @@
+event: engineering_manager_approval
+timestamp: 2026-07-16T14:51:14Z
+gate: 1 — Discovery
+brick: offline_write_service
+decision: APPROVED
+verified:
+  - SafetyService exists
+  - LocationQueue reusable
+  - SyncQueue reusable
+  - NetworkDetection reusable
+  - No existing services require modification
+  - Existing features remain operational
+  - Risk LOW
+conditions:
+  - Freeze OfflineWriteService public contract before Gate 6
+  - Verify SafetyService can reuse new service
+  - Confirm single write pipeline for online/offline
+constraints:
+  - Reuse existing infrastructure
+  - No duplicated queue logic
+  - No duplicated network detection
+  - No duplicated retry mechanism
+  - No changes to existing production behaviour
+  - Backward compatible

@@ -1,0 +1,30 @@
+engine:
+  id: validate
+  version: 3.2.0
+  purpose: >
+    Runtime health and consistency checks. Project-wide validation
+    of state, engines, gates, bricks, and releases.
+  responsibility: single
+  inputs:
+    - project_state
+    - engine_registry
+    - contracts
+  outputs:
+    - validation_report
+    - health_score
+  events:
+    - validation.completed
+  commands:
+    - ai validate
+  depends_on:
+    - state_engine
+    - contracts
+  used_by:
+    - workflow
+    - release
+    - intelligence
+  owner: core
+  status: stable
+  lifecycle: frozen
+  distinct_from:
+    - verify  # verify=evidence/proof, validate=operational health

@@ -1,0 +1,36 @@
+engine:
+  id: gate
+  version: 3.2.1
+  purpose: >
+    Manage the 12-gate project lifecycle. Control progression,
+    verify entry/exit requirements, and enforce gate blocking.
+  responsibility: single
+  inputs:
+    - project_state
+    - governance_decisions
+  outputs:
+    - gate_status
+    - gate_progression
+    - block_state
+  events:
+    - gate.advanced
+    - gate.blocked
+    - gate.passed
+  commands:
+    - ai gate status
+    - ai gate list
+    - ai gate advance
+    - ai gate verify
+    - ai gate block
+    - ai gate unblock
+  depends_on:
+    - state_engine
+    - governance
+  used_by:
+    - workflow
+    - project
+    - guard
+    - intelligence
+  owner: core
+  status: stable
+  lifecycle: frozen

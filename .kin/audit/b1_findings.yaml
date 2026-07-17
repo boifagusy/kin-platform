@@ -1,0 +1,20 @@
+audit_findings:
+  - id: AUDIT-001
+    finding: 20 engines missing engine.yaml
+    target: 26/26 with engine.yaml
+    status: open
+    
+  - id: AUDIT-002
+    finding: 1 plugin ungoverned (40 plugins, 39 governed)
+    target: Identify owner or mark standalone
+    status: open
+    
+  - id: AUDIT-003
+    finding: Unknown writer for project.yaml, roadmap.yaml, task.yaml
+    target: One primary owner per state file
+    status: open
+    
+  - id: AUDIT-004
+    finding: Level 0 count shows 0 — grep parsing issue
+    target: Fix reporting logic
+    status: open

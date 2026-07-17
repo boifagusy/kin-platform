@@ -1,0 +1,33 @@
+engine:
+  id: governance
+  version: 3.3.0
+  purpose: >
+    Enforce execution policies before any command runs.
+    Apply 5-level classification and 10-point guard checks.
+  responsibility: single
+  inputs:
+    - command
+    - session_state
+    - gate_state
+    - brick_state
+  outputs:
+    - governance_decision
+    - evidence_file
+    - block_reason
+  events:
+    - governance.pass
+    - governance.block
+  commands:
+    - ai guard
+    - ai governance
+  depends_on:
+    - gate
+    - state_engine
+    - policy
+  used_by:
+    - ALL_ENGINES
+  owner: core
+  status: stable
+  lifecycle: frozen
+  candidates_for_merge:
+    - gate_guard  # Pre-implementation enforcement belongs here

@@ -16,7 +16,6 @@ const getHeaders = () => ({
 // Generic request handler
 export async function request(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
-  console.log('📡 API Request:', url);
 
   try {
     const response = await fetch(url, {

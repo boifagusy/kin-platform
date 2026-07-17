@@ -14,11 +14,9 @@ class SafetySyncManager {
 
   start() {
     if (this.started) {
-      console.log('🔄 SafetySyncManager already started');
       return;
     }
 
-    console.log('🚀 SafetySyncManager starting...');
 
     this.syncQueue = new SyncQueue(this.queue, async (item) => {
       const endpoint = `${API_BASE}/${item.type === 'sos' ? 'sos' : 'checkin'}`;
@@ -53,7 +51,6 @@ class SafetySyncManager {
     }
 
     this.started = true;
-    console.log('✅ SafetySyncManager started');
   }
 
   stop() {
@@ -62,7 +59,6 @@ class SafetySyncManager {
       this.cleanup = null;
     }
     this.started = false;
-    console.log('🔄 SafetySyncManager stopped');
   }
 }
 

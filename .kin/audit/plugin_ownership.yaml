@@ -1,0 +1,51 @@
+# Plugin Ownership Registry
+# Every plugin has exactly one classification
+
+plugin_classifications:
+  core_engine:       # Owned by a specific engine
+    - audit → audit_engine
+    - brick → brick_engine
+    - certify → certification_engine
+    - contract → contracts_engine
+    - discovery → intelligence_engine
+    - event → event_engine
+    - gate → gate_engine
+    - git → git_engine
+    - github → github_engine
+    - governance → governance_engine
+    - guard → gate_engine
+    - help → help_engine
+    - investigate → investigation_engine
+    - knowledge → knowledge_engine
+    - project → project_engine
+    - release → release_engine
+    - restore → restore_engine
+    - role → role_engine
+    - task → task_engine
+    - validate → validation_engine
+    - workflow → workflow_engine
+    
+  utility:           # Cross-cutting utilities
+    - clip → clipboard_engine
+    - copy → clipboard_engine
+    - debug → clipboard_engine
+    - note → clipboard_engine
+    
+  developer:         # Developer experience tools
+    - do → engineering_os (standalone)
+    - done → engineering_os (standalone)
+    - doctor → engineering_os (standalone)
+    - engine → engineering_os (standalone)
+    
+  bootstrap:         # OS initialization
+    - install → engineering_os
+    - compliance → engineering_os
+    - examples → help_engine
+    - explain → help_engine
+    - resume → gate_engine
+    - session → session_engine
+    - sprint → engineering_os
+    - status → engineering_os
+    - tutorial → help_engine
+    - watch → engineering_os
+    - work → gate_engine

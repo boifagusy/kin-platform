@@ -1,0 +1,11 @@
+governance_check:
+  command: engine
+  timestamp: 2026-07-14T04:20:58Z
+  level: 1
+  state:
+    gate: 0
+    role: debugger
+    brick: checkin
+    session: active
+  verdict: PASS
+  failed_guard: none

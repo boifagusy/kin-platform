@@ -35,8 +35,6 @@ function UserDetailsScreenV2() {
       updateStep(STEPS.CHECKIN);
       setError("");
 
-    console.log("📡 Request URL:", `${API_BASE}/auth/user-details`);
-    console.log("📡 Request body:", { phone, full_name: fullName.trim(), email: email.trim() });
 
     const response = await fetch(`${API_BASE}/auth/user-details`, {
         method: "POST",
@@ -51,9 +49,7 @@ function UserDetailsScreenV2() {
       });
 
       // Log response for debugging
-      console.log("📡 Status:", response.status);
       const rawText = await response.text();
-      console.log("📡 Raw response:", rawText.substring(0, 200));
 
       let data;
       try {

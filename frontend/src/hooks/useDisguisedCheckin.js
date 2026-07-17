@@ -71,7 +71,6 @@ export const useDisguisedCheckin = () => {
     setTapCount(newCount);
     setLastTapTime(now);
 
-    console.log(`👆 Disguised check-in tap ${newCount}/${TAP_THRESHOLD}`);
 
     if (newCount >= TAP_THRESHOLD) {
       resetTaps();

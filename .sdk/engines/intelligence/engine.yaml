@@ -1,0 +1,35 @@
+engine:
+  id: intelligence
+  version: 3.3.0
+  purpose: >
+    Produce project-wide intelligence, health scoring,
+    roadmap generation, and impact analysis.
+  responsibility: single
+  inputs:
+    - project_state
+    - registry
+    - contracts
+  outputs:
+    - health_report
+    - stability_score
+    - roadmap
+    - maturity_level
+  events:
+    - intelligence.completed
+  commands:
+    - ai intelligence report
+    - ai intelligence scan
+    - ai intelligence health
+    - ai intelligence roadmap
+    - ai discovery confidence
+  depends_on:
+    - governance
+    - gate
+    - contracts
+  used_by:
+    - workflow
+    - project
+    - resume
+  owner: core
+  status: stable
+  lifecycle: frozen

@@ -1,0 +1,11 @@
+governance_check:
+  command: resume
+  timestamp: 2026-07-14T02:28:48Z
+  level: 1
+  state:
+    gate: 0
+    role: debugger
+    brick: checkin
+    session: active
+  verdict: PASS
+  failed_guard: none

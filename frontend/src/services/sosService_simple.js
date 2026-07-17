@@ -10,7 +10,6 @@ class SOSService {
   async triggerSOS(options = {}) {
     const { silent = true, location = null } = options;
     
-    console.log('🆘 SOS Triggered:', { silent, location });
     
     // Store in localStorage
     localStorage.setItem('kin_sos_triggered', JSON.stringify({

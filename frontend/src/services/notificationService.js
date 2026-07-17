@@ -45,12 +45,10 @@ export const startNotificationChecker = async (phone) => {
     
     // Get pending notifications
     const pending = await LocalNotifications.getPending();
-    console.log(`📬 ${pending.notifications.length} pending notifications for ${phone}`);
     
     // Schedule daily check-in if not already scheduled
     const dailyCheckin = pending.notifications.some(n => n.id === 1);
     if (!dailyCheckin) {
-      console.log('📅 Scheduling daily check-in...');
       await scheduleDailyCheckIn();
     }
     
@@ -65,7 +63,6 @@ export const startNotificationChecker = async (phone) => {
         const data = await res.json();
 
         if (data.success && Array.isArray(data.data) && data.data.length > 0) {
-          console.log(`🔔 [${phone}] ${data.data.length} new incident notification(s)`);
 
           for (const notif of data.data) {
             await LocalNotifications.schedule({
@@ -94,7 +91,6 @@ export const startNotificationChecker = async (phone) => {
     }, 300000); // 5 minutes
 
     
-    console.log(`✅ Notification checker started for ${phone}`);
     return true;
   } catch (error) {
     console.error('❌ Start checker error:', error);
@@ -108,10 +104,8 @@ export const stopNotificationChecker = async () => {
     if (checkerInterval) {
       clearInterval(checkerInterval);
       checkerInterval = null;
-      console.log('✅ Notification checker stopped');
       return true;
     }
-    console.log('ℹ️ No active checker to stop');
     return true;
   } catch (error) {
     console.error('❌ Stop checker error:', error);
@@ -163,7 +157,6 @@ export const scheduleDailyCheckIn = async () => {
       ]
     });
 
-    console.log(`✅ Daily check-in scheduled for 8 PM (${target.toLocaleString()})`);
     return true;
   } catch (error) {
     console.error('❌ Schedule error:', error);
@@ -201,7 +194,6 @@ export const scheduleSOSNotification = async (contactName, contactPhone, inciden
       ]
     });
 
-    console.log(`✅ SOS notification scheduled for ${contactName}`);
     return true;
   } catch (error) {
     console.error('❌ SOS notification error:', error);
@@ -236,7 +228,6 @@ export const testNotification = async () => {
       ]
     });
 
-    console.log('✅ Test notification scheduled in 5 seconds');
     return true;
   } catch (error) {
     console.error('❌ Test notification error:', error);
@@ -248,7 +239,6 @@ export const testNotification = async () => {
 export const cancelAllNotifications = async () => {
   try {
     await LocalNotifications.cancelAll();
-    console.log('✅ All notifications cancelled');
     return true;
   } catch (error) {
     console.error('❌ Cancel error:', error);
@@ -269,13 +259,11 @@ export const getPendingNotifications = async () => {
 
 // Handle notification actions
 export const handleNotificationAction = (notification) => {
-  console.log('📱 Notification action:', notification);
   
   const screen = notification.extra?.screen || '/dashboard';
   const type = notification.extra?.type || 'unknown';
   const phone = notification.extra?.phone || 'unknown';
   
-  console.log(`📱 Action: ${type} for ${phone}`);
   
   // Handle different notification types
   switch(type) {
@@ -286,7 +274,6 @@ export const handleNotificationAction = (notification) => {
       window.location.href = '/sos';
       break;
     case 'test':
-      console.log('🔔 Test notification received');
       break;
     default:
       if (screen) {
@@ -298,7 +285,6 @@ export const handleNotificationAction = (notification) => {
 // Initialize notifications (call this on app start)
 export const initializeNotifications = async (phone) => {
   try {
-    console.log(`🔔 Initializing notifications for ${phone || 'unknown'}`);
     return await startNotificationChecker(phone);
   } catch (error) {
     console.error('❌ Initialize error:', error);

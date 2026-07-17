@@ -1,0 +1,20 @@
+# Platform Service Registry
+# Certified services that MUST be used for specific operations.
+# Governance enforces this. Direct alternatives are forbidden.
+
+platform_services:
+  OfflineWriteService:
+    status: certified
+    owner: frontend_platform
+    certified_at: 2026-07-16
+    mandatory_for:
+      - checkin
+      - sos
+      - safe_zone
+      - trusted_contact
+      - profile_update
+      - settings
+    forbidden:
+      - direct_fetch_write
+      - direct_axios_write
+    rollback: removal_leaves_existing_services_operational

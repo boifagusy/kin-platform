@@ -13,7 +13,6 @@ export function initializeSync() {
   
   // Create sync queue with upload function
   const syncQueue = new SyncQueue(queue, async (item) => {
-    console.log('📤 Syncing item:', item, 'type:', item.type, 'endpoint:', endpoint);
     
     // Determine the endpoint based on item type
     let endpoint = '';
@@ -25,10 +24,6 @@ export function initializeSync() {
       endpoint = `${API_BASE}/sync`;
     }
     
-        console.log('📤 Full request details:');
-    console.log('  URL:', endpoint);
-    console.log('  Headers:', headers);
-    console.log('  Body:', item);
 
     const response = await fetch(endpoint, {
         method: 'POST',
@@ -67,11 +62,9 @@ export function initializeSync() {
     }, 1000);
   }
 
-  console.log('✅ Sync initialized — auto-sync enabled');
 
   return () => {
     cleanupReconnect();
-    console.log('🔄 Sync cleanup');
   };
 }
 

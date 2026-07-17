@@ -196,3 +196,18 @@ case "${1:-status}" in
         discovery_confidence
         ;;
 esac
+
+# ── Standard Engine API ──
+intel_help()    { echo "Intelligence Engine — Project health + scoring. ai intelligence [report|health|roadmap]"; }
+intel_version() { echo "Intelligence Engine v3.3.0"; }
+intel_health()  { echo "✅ Intelligence healthy — $(bash .sdk/engines/intelligence/os_health.sh 2>/dev/null | grep Stability | tr -d ' ')"; return 0; }
+intel_doctor()  { bash .sdk/engines/intelligence/os_health.sh 2>/dev/null; }
+intel_validate(){ [ -f ".sdk/engines/intelligence/discovery/engine.sh" ] && echo "✅ Valid" || echo "❌ Missing"; }
+
+if [ "${1:-}" = "api" ]; then
+    case "${2:-help}" in
+        help) intel_help ;; version) intel_version ;; status) echo "Active";;
+        health) intel_health ;; doctor) intel_doctor ;; validate) intel_validate ;;
+    esac
+    exit 0
+fi

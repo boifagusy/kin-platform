@@ -1,39 +1,46 @@
 guard_main() {
-    source "$SDK_ROOT/engines/gate/engine.sh" 2>/dev/null
     source "$SDK_ROOT/kernel/state.sh" 2>/dev/null
     
-    local gate=$(state_read "gate.yaml" "current" 2>/dev/null | tr -d ' ')
-    gate="${gate:-0}"
-    local role=$(state_read "ai.yaml" "active_role" 2>/dev/null | tr -d ' ')
-    local brick=$(state_read "brick.yaml" "active_brick" 2>/dev/null | tr -d ' ')
     local action="${1:-implement}"
+    local project_gate=$(state_read "gate.yaml" "current" 2>/dev/null | tr -d ' ')
+    local brick_gate=$(state_read "brick.yaml" "brick_gate" 2>/dev/null | tr -d ' ')
+    local brick=$(state_read "brick.yaml" "active_brick" 2>/dev/null | tr -d ' ')
+    local role=$(state_read "ai.yaml" "active_role" 2>/dev/null | tr -d ' ')
     
-    local required_gate=0
+    # Brick gate governs implementation
+    local required_gate=6
     case "$action" in
         implement|code|develop|build|fix) required_gate=6 ;;
         test|verify) required_gate=7 ;;
-        integrate) required_gate=8 ;;
         release|deploy) required_gate=11 ;;
         plan|design) required_gate=5 ;;
+        *) required_gate=6 ;;
     esac
     
     echo ""
     echo "═══════════════════════════════════════"
-    echo "  GATE GUARD"
+    echo "  GATE GUARD — Brick-Level"
     echo "═══════════════════════════════════════"
-    echo "  Request: $action | Gate: $gate | Required: $required_gate"
-    echo "  Role: ${role:-?} | Brick: ${brick:-?}"
+    echo "  Action:       $action"
+    echo "  Brick:        ${brick:-none}"
+    echo "  Brick Gate:   ${brick_gate:-0}"
+    echo "  Project Gate: ${project_gate:-0}"
+    echo "  Required:     $required_gate"
+    echo "  Role:         ${role:-?}"
     echo ""
     
     local errors=0
     
-    [ "$gate" -lt "$required_gate" ] && {
-        echo "  ❌ Gate $gate too early — Need Gate $required_gate"
-        echo "     → ai gate advance (x$((required_gate - gate)))"
+    # Check brick gate (not project gate) for implementation
+    if [ "${brick_gate:-0}" -lt "$required_gate" ]; then
+        echo "  ❌ Brick gate ${brick_gate} too early — need $required_gate"
+        echo "     → ai brick advance"
         errors=$((errors + 1))
-    } || echo "  ✅ Gate OK"
+    else
+        echo "  ✅ Brick gate sufficient ($brick_gate ≥ $required_gate)"
+    fi
     
-    [ "$required_gate" -ge 6 ] && [ "${brick:-none}" = "none" ] && {
+    [ "${brick:-none}" = "none" ] && {
         echo "  ❌ No active brick"
         errors=$((errors + 1))
     }
@@ -45,9 +52,9 @@ guard_main() {
     
     echo ""
     if [ $errors -eq 0 ]; then
-        echo "  VERDICT: ✅ PASS — Proceed with $action"
+        echo "  VERDICT: ✅ Implementation ALLOWED"
     else
-        echo "  VERDICT: ❌ BLOCKED — $errors issue(s)"
+        echo "  VERDICT: ❌ Implementation BLOCKED — $errors issue(s)"
     fi
     echo "═══════════════════════════════════════"
 }

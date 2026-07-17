@@ -10,7 +10,6 @@ function UserDetailsScreen() {
   const location = useLocation();
   const phone = location.state?.phone;
 
-  console.log("PHONE:", phone);
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -24,7 +23,6 @@ function UserDetailsScreen() {
       setLoading(true);
       setError("");
 
-      console.log("Sending request with:", { phone, full_name: fullName, email });
 
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/auth/user-details",
@@ -43,14 +41,11 @@ function UserDetailsScreen() {
 
       const data = await response.json();
       
-      console.log("USER DETAILS RESPONSE:", data);
-      console.log("STATUS:", response.status);
 
       if (!response.ok) {
         throw new Error(data.error || data.message || "Unable to save details");
       }
 
-      console.log("Success! Navigating to checkin-settings with phone:", phone);
       alert("Success! Going to Check-In Settings");
       
       // Navigate to trusted contact screen

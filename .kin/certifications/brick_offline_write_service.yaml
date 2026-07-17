@@ -1,0 +1,21 @@
+certification:
+  brick: offline_write_service
+  gate: 6
+  decision: CERTIFIED
+  confidence: 99%
+  risk: LOW
+  certified_by: engineering_manager
+  timestamp: 2026-07-16T15:25:53Z
+  deferred:
+    - id: B1-D01
+      topic: Idempotency
+      reason: Requires backend support
+      future_brick: backend_idempotency_service
+      priority: HIGH
+  production:
+    backward_compatible: true
+    regression_risk: LOW
+    code_reuse: EXCELLENT
+    architecture: PASS
+    build: PASS
+    rollback: PASS

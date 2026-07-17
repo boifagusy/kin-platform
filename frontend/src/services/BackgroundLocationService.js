@@ -8,7 +8,6 @@ class BackgroundLocationService {
 
   // Start tracking location
   start(phone) {
-    console.log(`📍 Starting background location for ${phone}`);
     this.phone = phone;
     this.isTracking = true;
     
@@ -25,7 +24,6 @@ class BackgroundLocationService {
 
   // Stop tracking
   stop() {
-    console.log('📍 Stopping background location');
     this.isTracking = false;
     if (this.locationInterval) {
       clearInterval(this.locationInterval);
@@ -54,7 +52,6 @@ class BackgroundLocationService {
           timestamp: new Date().toISOString()
         };
         
-        console.log(`📍 Location: ${location.lat}, ${location.lng}`);
         
         // Store location for SOS
         this.lastLocation = location;

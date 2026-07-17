@@ -1,0 +1,11 @@
+governance_check:
+  command: guard
+  timestamp: 2026-07-16T18:49:33Z
+  level: 1
+  state:
+    gate: 0
+    role: debugger
+    brick: offline_write_service
+    session: active
+  verdict: PASS
+  failed_guard: none

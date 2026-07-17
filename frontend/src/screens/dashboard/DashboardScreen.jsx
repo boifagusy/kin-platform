@@ -32,12 +32,10 @@ function DashboardScreenV2() {
 
   // Trusted Contact handlers
   const handleShareInvite = () => {
-    console.log("📤 Share invite clicked");
     alert("Share invite - coming soon!");
   };
 
   const handleReplaceContact = () => {
-    console.log("🔄 Replace contact clicked");
     alert("Replace contact - coming soon!");
   };
 
@@ -45,7 +43,6 @@ function DashboardScreenV2() {
     const handleOnline = () => {
       setOffline(false);
       retryQueue(API_BASE).then(({ sent, failed }) => {
-        if (sent > 0) console.log(`Sent ${sent} queued request(s) after reconnecting`);
         if (failed > 0) console.warn(`${failed} queued request(s) still pending`);
       });
     };

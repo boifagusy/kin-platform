@@ -2,10 +2,10 @@
 
 # GOVERNANCE LEVELS — Authoritative command classification
 # Level 0: No governance (bootstrap commands to break deadlocks)
-LEVEL0_COMMANDS="help tutorial examples explain plugins version role session work status copy clip"
+LEVEL0_COMMANDS="help tutorial examples explain plugins version role session work status copy clip do done note debug resume sprint github install"
 
 # Level 1: Light check (session + role)
-LEVEL1_COMMANDS="doctor validate workflow audit event knowledge discovery"
+LEVEL1_COMMANDS="doctor validate workflow audit event knowledge discovery compliance watch"
 
 # Level 2: Planning check (session + role + gate)
 LEVEL2_COMMANDS="gate brick plan design architect project investigate contract"

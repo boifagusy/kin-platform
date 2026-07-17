@@ -1,0 +1,68 @@
+brick:
+  name: os_stabilization
+  version: 1.0.0
+  status: in_progress
+  priority: CRITICAL
+  gate: 1
+  description: >
+    Stabilize Engineering OS from v3.3 to v4.0.
+    Audit every engine, command, state file, and workflow.
+    Produce certification before building more KIN features.
+  
+  sub_bricks:
+    - id: B1
+      name: OS Audit
+      status: in_progress
+      deliverable: Complete engine/command/plugin inventory
+      
+    - id: B2
+      name: Responsibility Audit
+      status: planned
+      deliverable: Every engine documented with purpose/owner/API
+      
+    - id: B3
+      name: Workflow Audit
+      status: planned
+      deliverable: Command flow maps matching implementation
+      
+    - id: B4
+      name: State Audit
+      status: planned
+      deliverable: Single source of truth per concept
+      
+    - id: B5
+      name: Command Audit
+      status: planned
+      deliverable: No duplicates, no orphans, no deprecated
+      
+    - id: B6
+      name: Engine API Standard
+      status: planned
+      deliverable: Consistent interface across all engines
+      
+    - id: B7
+      name: Governance Audit
+      status: planned
+      deliverable: Prove no command bypasses controls
+      
+    - id: B8
+      name: Documentation Sync
+      status: planned
+      deliverable: Auto-generated from live system
+      
+    - id: B9
+      name: Enforcement
+      status: planned
+      deliverable: Lead AI, Coding AI, EM enforcement active
+
+  exit_criteria:
+    architecture: 100%
+    command_registry: 100%
+    engine_registry: 100%
+    responsibility_registry: 100%
+    workflow_integrity: 100%
+    state_integrity: 100%
+    dependency_graph: 100%
+    governance: 100%
+    documentation: 100%
+    api_consistency: 100%

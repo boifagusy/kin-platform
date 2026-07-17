@@ -1,0 +1,55 @@
+# State Ownership Registry — Single source of truth
+# One primary owner per file. No shared write authority.
+
+state_files:
+  project.yaml:
+    owner: project_engine
+    readers: [workflow, intelligence, gate, governance]
+    writers: [project_engine]
+    authority: PRIMARY
+    lifecycle: created_at_project_init, updated_on_gate_change
+    creation: ai install / project init
+    update: gate advance, brick change
+    archive: never (always current)
+    
+  session.yaml:
+    owner: session_engine
+    readers: [all]
+    writers: [session_engine]
+    authority: PRIMARY
+    
+  ai.yaml:
+    owner: role_engine
+    readers: [governance, gate, workflow]
+    writers: [role_engine, session_engine]
+    authority: PRIMARY
+    
+  gate.yaml:
+    owner: gate_engine
+    readers: [governance, workflow, intelligence, project]
+    writers: [gate_engine]
+    authority: PRIMARY
+    
+  brick.yaml:
+    owner: brick_engine
+    readers: [governance, workflow, project]
+    writers: [brick_engine, project_engine]
+    authority: PRIMARY
+    
+  task.yaml:
+    owner: task_engine
+    readers: [workflow, certification, resume]
+    writers: [task_engine, project_engine]
+    authority: PRIMARY
+    
+  github.yaml:
+    owner: git_engine
+    readers: [release, audit]
+    writers: [git_engine]
+    authority: PRIMARY
+    
+  roadmap.yaml:
+    owner: project_engine
+    readers: [intelligence, workflow, resume]
+    writers: [project_engine]
+    authority: PRIMARY

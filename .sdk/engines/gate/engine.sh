@@ -176,3 +176,19 @@ gate_init() {
     
     echo "Gate system initialized. Current: Gate 0 - Bootstrap"
 }
+
+# ── Standard Engine API ──
+gate_help()    { echo "Gate Engine — 12-gate lifecycle. ai gate [status|list|verify|advance|block|unblock]"; }
+gate_version() { echo "Gate Engine v3.2.1"; }
+gate_health()  { echo "✅ Gate Engine healthy — Gate $(gate_current 2>/dev/null)"; return 0; }
+gate_doctor()  { echo "Gate: $(gate_current 2>/dev/null) | Status: $(state_read gate.yaml status 2>/dev/null) | Blocked: $(state_read gate.yaml blocked 2>/dev/null)"; }
+gate_validate(){ gate_verify 2>/dev/null && echo "✅ Gate valid" || echo "❌ Gate invalid"; }
+
+# API dispatch
+if [ "${1:-}" = "api" ]; then
+    case "${2:-help}" in
+        help) gate_help ;; version) gate_version ;; status) gate_status 2>/dev/null ;;
+        health) gate_health ;; doctor) gate_doctor ;; validate) gate_validate ;;
+    esac
+    exit 0
+fi

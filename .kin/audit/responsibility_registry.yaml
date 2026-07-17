@@ -1,0 +1,30 @@
+# Engineering OS — Responsibility Registry
+# Single source of truth for engine responsibilities
+
+engines:
+  gate:              { responsibility: "12-gate lifecycle management", status: stable }
+  governance:        { responsibility: "Pre-execution policy enforcement", status: stable }
+  intelligence:      { responsibility: "Project health scoring and recommendations", status: stable }
+  discovery:         { responsibility: "Architecture and service discovery", status: stable }
+  investigation:     { responsibility: "Deep analysis before implementation", status: stable }
+  contracts:         { responsibility: "Interface verification and certification", status: stable }
+  certification:     { responsibility: "Task completion records", status: stable }
+  validate:          { responsibility: "Runtime health and consistency checks", status: stable }
+  workflow:          { responsibility: "Next engineering action computation", status: stable }
+  brick:             { responsibility: "Portable feature module management", status: stable }
+  project:           { responsibility: "Gate-driven project orchestration", status: stable }
+  restore:           { responsibility: "System state recovery", status: stable }
+  clipboard:         { responsibility: "Android system clipboard integration", status: stable }
+  help:              { responsibility: "Self-documenting reference system", status: stable }
+  role:              { responsibility: "AI role assignment and detection", status: stable }
+  task:              { responsibility: "Task state machine", status: stable }
+  event:             { responsibility: "Event bus for engine communication", status: stable }
+  audit:             { responsibility: "Immutable audit trail", status: stable }
+  knowledge:         { responsibility: "Patterns, bugs, lessons learned", status: stable }
+  policy:            { responsibility: "Declarative rule evaluation", status: stable }
+  git:               { responsibility: "Version control operations", status: stable }
+  github:            { responsibility: "GitHub integration", status: stable }
+  release:           { responsibility: "Release management", status: stable }
+  compliance:        { responsibility: "Constitution compliance verification", status: stable }
+  gate_guard:        { responsibility: "Pre-implementation enforcement", status: candidate_for_merge }
+  verify:            { responsibility: "Evidence and proof verification", status: distinct_from_validate }

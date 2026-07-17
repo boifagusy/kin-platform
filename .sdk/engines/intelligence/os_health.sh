@@ -1,25 +1,28 @@
 #!/data/data/com.termux/files/usr/bin/bash
-# OS STABILITY INDEX v3.3 — Final
+# OS STABILITY INDEX v3.4 — Fixed calculation
 
 os_health_check() {
     echo ""
     echo "════════════════════════════════════════════"
-    echo "  ENGINEERING OS v3.3 — STABILITY INDEX"
+    echo "  ENGINEERING OS — STABILITY INDEX"
     echo "════════════════════════════════════════════"
     echo ""
     
-    # Count all engine directories
+    # Count ALL engine directories
     total=0 healthy=0
     for dir in .sdk/engines/*/; do
         [ -d "$dir" ] || continue
         total=$((total + 1))
-        if [ -f "$dir/engine.sh" ] || find "$dir" -name "engine.sh" 2>/dev/null | grep -q "."; then
-            healthy=$((healthy + 1))
-        fi
+        [ -f "$dir/engine.sh" ] || find "$dir" -name "engine.sh" 2>/dev/null | grep -q "." && healthy=$((healthy + 1))
     done
     
+    # Registry count
     registry=$(grep -c "id:" .sdk/engines/REGISTRY.yaml 2>/dev/null)
+    [ -z "$registry" ] && registry=0
+    
+    # Supporting = total - core (use positive math only)
     supporting=$((total - registry))
+    [ "$supporting" -lt 0 ] && supporting=0
     
     echo "  Core Engines (Frozen)"
     echo "  ─────────────────────────────────"

@@ -1,4 +1,3 @@
-console.log("🔴 EmergencyModal component loaded");
 import { useEffect } from "react";
 
 function EmergencyModal({ onConfirm, onCancel }) {

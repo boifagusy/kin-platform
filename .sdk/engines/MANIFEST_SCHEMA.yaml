@@ -1,0 +1,38 @@
+# Engine Manifest Schema v1.0
+# Every engine.yaml must follow this schema
+
+engine:
+  id:              # required — unique identifier
+  version:         # required — semver
+  responsibility:  # required — single sentence purpose
+  owner:           # required — core | platform | utility
+  layer:           # required — context | knowledge | verification | delivery | utilities
+  status:          # required — experimental | beta | stable | frozen | deprecated
+  lifecycle:       # required — active | frozen | deprecated
+  
+  inputs:          # required — what this engine consumes
+    - state_files
+    - other_engines
+    
+  outputs:         # required — what this engine produces
+    - artifacts
+    - state_changes
+    
+  commands:        # required — CLI commands exposed
+    - ai_command_name
+    
+  state_owned:     # optional — state files this engine is PRIMARY owner of
+    - file.yaml
+    
+  depends_on:      # optional — engines required to function
+    - engine_id
+    
+  used_by:         # optional — engines that depend on this one
+    - engine_id
+    
+  events:          # optional — events emitted
+    - event.name
+    
+  health_check:    # required — how to verify engine is healthy
+    command: ai engine_id health
+    exit_code: 0

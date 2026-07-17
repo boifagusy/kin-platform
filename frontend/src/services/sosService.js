@@ -14,7 +14,6 @@ class SOSService {
   async triggerSOS(phone, locationData = null, batteryLevel = null, options = {}) {
     const { silent = false } = options;
 
-    console.log('🆘 SOS Triggered:', { phone, silent, locationData });
 
     const payload = {
       type: 'sos',
@@ -39,11 +38,9 @@ class SOSService {
 
     // ALWAYS QUEUE FIRST (like test harness)
     await this.queue.enqueue(payload);
-    console.log('📦 SOS enqueued');
 
     // Then try to sync immediately if online
     const trulyOnline = await networkDetection.isTrulyOnline();
-    console.log('📡 isTrulyOnline:', trulyOnline);
     
     if (trulyOnline) {
       try {
@@ -67,7 +64,6 @@ class SOSService {
         
         const result = await syncQueue.drain(1, 500);
         if (result.synced > 0) {
-          console.log('✅ SOS synced immediately');
           return {
             success: true,
             queued: false,

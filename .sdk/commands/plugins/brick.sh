@@ -1,36 +1,31 @@
-# Description: Brick management
-# Requires: state
-
 brick_main() {
-    local action="${1:-list}"
+    source "$SDK_ROOT/kernel/state.sh" 2>/dev/null
     
-    local brick_engine="$SDK_ROOT/engines/brick/engine.sh"
-    
-    if [ ! -f "$brick_engine" ]; then
-        echo "Brick engine not found"
-        return 1
-    fi
-    
-    source "$brick_engine" 2>/dev/null || {
-        echo "Failed to load brick engine"
-        return 1
-    }
-    
-    case "$action" in
-        list)    brick_list ;;
-        create)  brick_create "${2:-}" ;;
-        info)    brick_info "${2:-}" ;;
-        status)  brick_status "${2:-}" "${3:-}" ;;
-        lock)    brick_lock "${2:-}" "${3:-}" ;;
-        unlock)  brick_unlock "${2:-}" ;;
-        depend)  brick_depend "${2:-}" "${3:-}" ;;
-        validate) brick_validate "${2:-}" ;;
-        *)
-            echo "Usage: ai brick [list|create|info|status|lock|unlock|depend|validate]"
+    case "${1:-list}" in
+        advance)
+            local current=$(state_read "brick.yaml" "brick_gate" 2>/dev/null | tr -d ' ')
+            local brick=$(state_read "brick.yaml" "active_brick" 2>/dev/null | tr -d ' ')
+            local next=$((current + 1))
+            
+            state_write "brick.yaml" "brick_gate" "$next" 2>/dev/null
             echo ""
-            brick_list
+            echo "═══════════════════════════════════════"
+            echo "  BRICK ADVANCED"
+            echo "═══════════════════════════════════════"
+            echo "  Brick: $brick"
+            echo "  Gate:  $current → $next"
+            echo "═══════════════════════════════════════"
             ;;
+        status)
+            local brick=$(state_read "brick.yaml" "active_brick" 2>/dev/null | tr -d ' ')
+            local gate=$(state_read "brick.yaml" "brick_gate" 2>/dev/null | tr -d ' ')
+            local status=$(state_read "brick.yaml" "brick_status" 2>/dev/null | tr -d ' ')
+            echo "Brick: $brick | Gate: $gate | Status: $status"
+            ;;
+        list)
+            echo "Active: $(state_read brick.yaml active_brick 2>/dev/null) (Gate $(state_read brick.yaml brick_gate 2>/dev/null))"
+            ;;
+        *) echo "Usage: ai brick [advance|status|list]" ;;
     esac
 }
-
 main() { brick_main "$@"; }
