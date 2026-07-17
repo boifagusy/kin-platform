@@ -13,6 +13,7 @@ class Announcement extends Model
         'min_version', 'max_version', 'dismissible',
     ];
 
+    protected $hidden = ["deleted_at"];
     protected $casts = [
         'starts_at' => 'datetime',
         'expires_at' => 'datetime',
