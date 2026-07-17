@@ -144,3 +144,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/v1/notifications', [App\Http\Controllers\Api\V1\NotificationController::class, 'index']);
     Route::get('/v1/notifications/unread-count', [App\Http\Controllers\Api\V1\NotificationController::class, 'unreadCount']);
 });
+
+// Platform Health
+Route::get('/v1/platform/health', function () {
+    return response()->json([
+        'success' => true,
+        'platform' => 'announcement_platform',
+        'version' => '1.0',
+        'bricks_certified' => 13,
+        'services' => [
+            'announcements' => app(App\Models\Announcement::class)->count(),
+            'campaigns' => app(App\Models\PushCampaign::class)->count(),
+            'notifications' => app(App\Models\IncidentNotification::class)->count(),
+            'versions' => app(App\Models\Version::class)->count(),
+        ],
+        'status' => 'healthy',
+        'timestamp' => now()->toISOString(),
+    ]);
+});
