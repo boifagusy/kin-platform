@@ -6,6 +6,8 @@ import HeaderV2 from "../../components/dashboard/HeaderV2";
 import SafetyScoreCardMinimal from "../../components/dashboard/SafetyScoreCardMinimal";
 import SafeZonesCard from '../../components/dashboard/SafeZonesCard';
 import AnnouncementBanner from '../../components/dashboard/AnnouncementBanner';
+import UpdateDialog from '../../components/dashboard/UpdateDialog';
+import { useVersionCheck } from '../../services/useVersionCheck';
 import SyncStatus from '../../components/dashboard/SyncStatus';
 import TrustedContactCard from "../../components/dashboard/TrustedContactCard";
 import SafetyCheckCard from "../../components/dashboard/SafetyCheckCard";
@@ -23,6 +25,7 @@ const API_BASE = import.meta.env.VITE_API_URL;
 function DashboardScreenV2() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { showDialog, updateData, handleDismiss } = useVersionCheck();
   const phone = location.state?.phone || localStorage.getItem("kin_phone");
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -267,6 +270,7 @@ const nextCheckin = formatCheckinTime(dashboard?.data?.settings?.checkin_time);
 
       <div className="px-5 py-4 max-w-md mx-auto space-y-4">
       <AnnouncementBanner />
+      <UpdateDialog open={showDialog} updateData={updateData} onDismiss={handleDismiss} />
         <SafetyScoreCardMinimal score={displayScore} label={getScoreLabel(displayScore)} />
 
         <SafetyCheckCard
