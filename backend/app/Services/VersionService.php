@@ -64,6 +64,9 @@ class VersionService
             'update_available' => $clientCode < $latest->version_code,
             'update_required' => $clientCode < $minCode,
             'force_update' => $latest->force_update,
+            'policy_status' => $this->evaluatePolicy($clientCode, $platform)['policy_status'],
+            'policy_reason' => $this->evaluatePolicy($clientCode, $platform)['policy_reason'],
+            'policy_grace_ends' => $this->evaluatePolicy($clientCode, $platform)['policy_grace_ends'],
             'release_notes' => $latest->release_notes,
             'release_date' => $latest->release_date?->toISOString(),
             'channels' => $this->getChannels($latest->id, $platform),
@@ -90,5 +93,10 @@ class VersionService
     public function removeChannel(VersionChannel $channel): void
     {
         $channel->delete();
+    }
+
+    private function evaluatePolicy(int $clientCode, string $platform): array
+    {
+        return app(UpdatePolicyService::class)->evaluate($clientCode, $platform);
     }
 }
