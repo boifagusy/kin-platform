@@ -1,4 +1,4 @@
-active_brick: offline_write_service
+active_brick: authentication
 brick_gate: 6
 brick_status: ready_for_implementation
 project_gate: 0
