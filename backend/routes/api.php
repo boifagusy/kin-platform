@@ -139,3 +139,8 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/v1/announcements', [App\Http\Controllers\Api\V1\AnnouncementController::class, 'index']);
 
 Route::get('/v1/version', [App\Http\Controllers\Api\V1\VersionController::class, 'index']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/v1/notifications', [App\Http\Controllers\Api\V1\NotificationController::class, 'index']);
+    Route::get('/v1/notifications/unread-count', [App\Http\Controllers\Api\V1\NotificationController::class, 'unreadCount']);
+});
