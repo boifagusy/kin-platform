@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import HeaderV2 from "../../components/dashboard/HeaderV2";
 import SafetyScoreCardMinimal from "../../components/dashboard/SafetyScoreCardMinimal";
 import SafeZonesCard from '../../components/dashboard/SafeZonesCard';
+import AnnouncementBanner from '../../components/dashboard/AnnouncementBanner';
 import SyncStatus from '../../components/dashboard/SyncStatus';
 import TrustedContactCard from "../../components/dashboard/TrustedContactCard";
 import SafetyCheckCard from "../../components/dashboard/SafetyCheckCard";
@@ -232,7 +233,6 @@ const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F0F7F2] flex items-center justify-center">
-      <SyncStatus />
         <div className="text-center">
           <div className="w-10 h-10 border-3 border-[#1A5632] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
           <p className="text-[#1A5632] text-sm">Loading KIN...</p>
@@ -266,6 +266,7 @@ const nextCheckin = formatCheckinTime(dashboard?.data?.settings?.checkin_time);
       )}
 
       <div className="px-5 py-4 max-w-md mx-auto space-y-4">
+      <AnnouncementBanner />
         <SafetyScoreCardMinimal score={displayScore} label={getScoreLabel(displayScore)} />
 
         <SafetyCheckCard
