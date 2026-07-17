@@ -36,6 +36,11 @@ class Announcement extends Model
             });
     }
 
+    public function audiences()
+    {
+        return $this->morphToMany(AppModelsAudience::class, "targetable", "audience_targets");
+    }
+
     public function scopeForPlatform($query, string $platform)
     {
         return $query->whereIn('target_platform', ['all', $platform]);
