@@ -1,12 +1,16 @@
 @extends('layouts.admin')
-
 @section('title', 'Platform Overview')
-
 @section('content')
-<div class="mb-6">
-    <h1 class="text-2xl font-bold text-gray-800">Platform Overview</h1>
-    <p class="text-sm text-gray-500 mt-1">Announcement Platform — real-time metrics</p>
-</div>
+
+@include('admin.platform.partials.header', [
+    'title' => 'Platform Overview',
+    'description' => 'Announcement Platform — real-time metrics and management.',
+    'actions' => [
+        ['label' => '+ Announcement', 'route' => route('admin.announcements.create'), 'icon' => 'add', 'class' => 'bg-[#1A5632] text-white'],
+        ['label' => '+ Campaign', 'route' => route('admin.campaigns.create'), 'icon' => 'send', 'class' => 'bg-blue-500 text-white'],
+        ['label' => '+ Broadcast', 'route' => route('admin.broadcasts.create'), 'icon' => 'warning', 'class' => 'bg-red-500 text-white'],
+    ]
+])
 
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
     <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
@@ -53,11 +57,11 @@
         <p class="text-xs text-gray-400 mt-1">{{ $stats['emergency_broadcasts']['active'] }} active</p>
     </div>
     <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
-        <h3 class="font-semibold text-gray-800 mb-3">Quick Actions</h3>
-        <div class="flex gap-2">
-            <a href="/admin/announcements/create" class="px-4 py-2 bg-[#1A5632] text-white text-sm rounded-lg">+ Announcement</a>
-            <a href="/admin/push-campaigns/create" class="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg">+ Campaign</a>
-            <a href="/admin/emergency-broadcasts/create" class="px-4 py-2 bg-red-500 text-white text-sm rounded-lg">+ Broadcast</a>
+        <h3 class="font-semibold text-gray-800 mb-3">Quick Links</h3>
+        <div class="space-y-2">
+            <a href="{{ route('admin.announcements.index') }}" class="block px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm text-gray-700">📢 Manage Announcements →</a>
+            <a href="{{ route('admin.campaigns.index') }}" class="block px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm text-gray-700">📤 Manage Campaigns →</a>
+            <a href="{{ route('admin.broadcasts.index') }}" class="block px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm text-gray-700">⚠️ Manage Broadcasts →</a>
         </div>
     </div>
 </div>

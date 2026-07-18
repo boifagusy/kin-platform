@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 class CampaignDelivery extends Model
 {
     protected $fillable = [
-        'push_campaign_id', 'user_id', 'status', 'sent_at', 'error',
+        'push_campaign_id', 'user_id', 'status', 'sent_at', 'error', 'channel',
     ];
 
     protected $casts = [

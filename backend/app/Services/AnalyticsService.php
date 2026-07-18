@@ -5,6 +5,7 @@ use App\Models\CampaignDelivery;
 use App\Models\IncidentNotification;
 use App\Models\EmergencyBroadcast;
 use App\Models\Version;
+use App\Models\Template;
 
 class AnalyticsService
 {
@@ -20,6 +21,7 @@ class AnalyticsService
                 'total_deliveries' => CampaignDelivery::count(),
                 'sent' => CampaignDelivery::where('status', 'sent')->count(),
                 'failed' => CampaignDelivery::where('status', 'failed')->count(),
+                'pending' => CampaignDelivery::where('status', 'pending')->count(),
             ],
             'notifications' => [
                 'total' => IncidentNotification::count(),
@@ -32,6 +34,25 @@ class AnalyticsService
                 'total' => Version::count(),
                 'active' => Version::where('is_active', true)->count(),
             ],
+            'templates' => [
+                'total' => Template::count(),
+                'published' => Template::where('status', 'published')->count(),
+            ],
         ];
+    }
+
+    public function getChannelAnalytics(): array
+    {
+        $channels = ['push', 'sms', 'email', 'whatsapp'];
+        $result = [];
+        foreach ($channels as $channel) {
+            $result[$channel] = [
+                'total' => CampaignDelivery::where('channel', $channel)->count(),
+                'sent' => CampaignDelivery::where('channel', $channel)->where('status', 'sent')->count(),
+                'failed' => CampaignDelivery::where('channel', $channel)->where('status', 'failed')->count(),
+                'pending' => CampaignDelivery::where('channel', $channel)->where('status', 'pending')->count(),
+            ];
+        }
+        return $result;
     }
 }

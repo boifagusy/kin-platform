@@ -42,6 +42,40 @@
 </ul>
 
 {{-- SYSTEM SECTION --}}
+{{-- PLATFORM SECTION --}}
+<p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2">Platform</p>
+<ul class="space-y-1 mb-6">
+    <li>
+        <a href="{{ route('admin.platform') }}" class="flex items-center gap-3 px-4 py-2.5 {{ request()->routeIs('admin.platform') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600 hover:bg-gray-50' }} rounded-lg transition-all">
+            <span class="material-symbols-outlined">dashboard</span>
+            <span class="text-sm">Platform Dashboard</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ route('admin.announcements.index') }}" class="flex items-center gap-3 px-4 py-2.5 {{ request()->routeIs('admin.announcements.*') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600 hover:bg-gray-50' }} rounded-lg transition-all">
+            <span class="material-symbols-outlined">campaign</span>
+            <span class="text-sm">Announcements</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ route('admin.campaigns.index') }}" class="flex items-center gap-3 px-4 py-2.5 {{ request()->routeIs('admin.campaigns.*') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600 hover:bg-gray-50' }} rounded-lg transition-all">
+            <span class="material-symbols-outlined">send</span>
+            <span class="text-sm">Campaigns</span>
+        </a>
+    </li>
+    <li>
+        <a href="{{ route('admin.broadcasts.index') }}" class="flex items-center gap-3 px-4 py-2.5 {{ request()->routeIs('admin.broadcasts.*') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600 hover:bg-gray-50' }} rounded-lg transition-all">
+            <span class="material-symbols-outlined">warning</span>
+            <span class="text-sm">Emergency Broadcasts</span>
+    <li>
+        <a href="{{ route('admin.templates.index') }}" class="flex items-center gap-3 px-4 py-2.5 {{ request()->routeIs('admin.templates.*') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600 hover:bg-gray-50' }} rounded-lg transition-all">
+            <span class="material-symbols-outlined">description</span>
+            <span class="text-sm">Templates</span>
+        </a>
+    </li>
+        </a>
+    </li>
+</ul>
 <p class="text-xs text-gray-400 uppercase tracking-wider px-4 mb-2">System</p>
 <ul class="space-y-1 mb-6">
     <li>

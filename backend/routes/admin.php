@@ -120,3 +120,39 @@ Route::middleware('admin.auth')->prefix('admin')->group(function () {
     Route::get('/analytics', [App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('admin.analytics');
     Route::get('/analytics/api', [App\Http\Controllers\Admin\AnalyticsController::class, 'api'])->name('admin.analytics.api');
 });
+
+Route::middleware('admin.auth')->prefix('admin/announcements')->name('admin.announcements.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Admin\AnnouncementManagerController::class, 'index'])->name('index');
+    Route::get('/create', [App\Http\Controllers\Admin\AnnouncementManagerController::class, 'create'])->name('create');
+    Route::post('/', [App\Http\Controllers\Admin\AnnouncementManagerController::class, 'store'])->name('store');
+    Route::get('/{announcement}/edit', [App\Http\Controllers\Admin\AnnouncementManagerController::class, 'edit'])->name('edit');
+    Route::put('/{announcement}', [App\Http\Controllers\Admin\AnnouncementManagerController::class, 'update'])->name('update');
+    Route::delete('/{announcement}', [App\Http\Controllers\Admin\AnnouncementManagerController::class, 'destroy'])->name('destroy');
+});
+
+Route::middleware('admin.auth')->prefix('admin/campaigns')->name('admin.campaigns.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Admin\CampaignManagerController::class, 'index'])->name('index');
+    Route::get('/create', [App\Http\Controllers\Admin\CampaignManagerController::class, 'create'])->name('create');
+    Route::post('/', [App\Http\Controllers\Admin\CampaignManagerController::class, 'store'])->name('store');
+    Route::get('/{campaign}/edit', [App\Http\Controllers\Admin\CampaignManagerController::class, 'edit'])->name('edit');
+    Route::put('/{campaign}', [App\Http\Controllers\Admin\CampaignManagerController::class, 'update'])->name('update');
+    Route::delete('/{campaign}', [App\Http\Controllers\Admin\CampaignManagerController::class, 'destroy'])->name('destroy');
+});
+
+Route::middleware('admin.auth')->prefix('admin/broadcasts')->name('admin.broadcasts.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Admin\BroadcastManagerController::class, 'index'])->name('index');
+    Route::get('/create', [App\Http\Controllers\Admin\BroadcastManagerController::class, 'create'])->name('create');
+    Route::post('/', [App\Http\Controllers\Admin\BroadcastManagerController::class, 'store'])->name('store');
+    Route::get('/{broadcast}/edit', [App\Http\Controllers\Admin\BroadcastManagerController::class, 'edit'])->name('edit');
+    Route::put('/{broadcast}', [App\Http\Controllers\Admin\BroadcastManagerController::class, 'update'])->name('update');
+    Route::delete('/{broadcast}', [App\Http\Controllers\Admin\BroadcastManagerController::class, 'destroy'])->name('destroy');
+});
+
+Route::middleware('admin.auth')->prefix('admin/templates')->name('admin.templates.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Admin\TemplateManagerController::class, 'index'])->name('index');
+    Route::get('/create', [App\Http\Controllers\Admin\TemplateManagerController::class, 'create'])->name('create');
+    Route::post('/', [App\Http\Controllers\Admin\TemplateManagerController::class, 'store'])->name('store');
+    Route::get('/{template}/edit', [App\Http\Controllers\Admin\TemplateManagerController::class, 'edit'])->name('edit');
+    Route::put('/{template}', [App\Http\Controllers\Admin\TemplateManagerController::class, 'update'])->name('update');
+    Route::delete('/{template}', [App\Http\Controllers\Admin\TemplateManagerController::class, 'destroy'])->name('destroy');
+});

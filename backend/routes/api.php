@@ -162,3 +162,17 @@ Route::get('/v1/platform/health', function () {
         'timestamp' => now()->toISOString(),
     ]);
 });
+
+Route::get('/v1/platform/providers/health', function () {
+    return response()->json([
+        'success' => true,
+        'providers' => app(\App\Services\NotificationDriverManager::class)->health(),
+        'channels' => app(\App\Services\NotificationDriverManager::class)->channels(),
+    ]);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/v1/notifications/{id}/read', [App\Http\Controllers\Api\V1\NotificationController::class, 'markRead']);
+    Route::post('/v1/notifications/read-all', [App\Http\Controllers\Api\V1\NotificationController::class, 'markAllRead']);
+    Route::get('/v1/notifications/badge', [App\Http\Controllers\Api\V1\NotificationController::class, 'badge']);
+});
