@@ -1,8 +1,10 @@
 <?php
+
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Services\NotificationService;
+use App\Events\NotificationRead;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -37,7 +39,12 @@ class NotificationController extends Controller
     {
         $user = $request->user();
         if (!$user) return response()->json(['error' => 'Unauthorized'], 401);
+
         $this->service->markRead($id, $user->id);
+
+        $badgeCount = $this->service->getBadgeCount($user->id);
+        event(new NotificationRead($user->id, 'single_read', $id, $badgeCount));
+
         return response()->json(['success' => true]);
     }
 
@@ -45,7 +52,11 @@ class NotificationController extends Controller
     {
         $user = $request->user();
         if (!$user) return response()->json(['error' => 'Unauthorized'], 401);
+
         $this->service->markAllRead($user->id);
+
+        event(new NotificationRead($user->id, 'all_read', null, 0));
+
         return response()->json(['success' => true]);
     }
 }

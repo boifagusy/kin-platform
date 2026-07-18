@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import useRealtimeNotifications from '../../hooks/useRealtimeNotifications';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
 
@@ -6,6 +7,8 @@ export default function NotificationInbox({ onClose }) {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+
+  const userId = localStorage.getItem('user_id');
 
   const fetchNotifications = async () => {
     const token = localStorage.getItem('kin_token');
@@ -27,6 +30,21 @@ export default function NotificationInbox({ onClose }) {
   };
 
   useEffect(() => { fetchNotifications(); }, []);
+
+  // N8: Sync read state from other devices
+  useRealtimeNotifications({
+    userId,
+    enabled: true,
+    onReadSync: (event) => {
+      if (event.action === 'all_read') {
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      } else if (event.action === 'single_read' && event.notification_id) {
+        setNotifications(prev => prev.map(n =>
+          n.id === event.notification_id ? { ...n, read: true } : n
+        ));
+      }
+    },
+  });
 
   const categories = ['all', 'security', 'marketing', 'system'];
   const filtered = filter === 'all' ? notifications : notifications.filter(n => n.category === filter);

@@ -6,6 +6,7 @@ export default function useRealtimeNotifications({
     userId,
     onNewNotification,
     onBadgeUpdate,
+    onReadSync,
     onToast,
     enabled = true,
 }) {
@@ -17,7 +18,7 @@ export default function useRealtimeNotifications({
             const count = await notificationFeedService.getUnreadCount();
             if (onBadgeUpdate) onBadgeUpdate(count);
         } catch (e) {
-            console.warn('[N3] Catch-up fetch failed:', e);
+            console.warn('[N8] Catch-up fetch failed:', e);
         }
     }, [onBadgeUpdate]);
 
@@ -38,6 +39,7 @@ export default function useRealtimeNotifications({
 
         const channel = echo.private(`notifications.${userId}`);
 
+        // N3: New notification
         channel.listen('.NotificationDispatched', (event) => {
             if (dedupeSet.current.has(event.notification_id)) return;
             dedupeSet.current.add(event.notification_id);
@@ -58,13 +60,22 @@ export default function useRealtimeNotifications({
             }
         });
 
+        // N8: Read sync
+        channel.listen('.NotificationRead', (event) => {
+            if (dedupeSet.current.has(event.event_id)) return;
+            dedupeSet.current.add(event.event_id);
+
+            if (onBadgeUpdate) onBadgeUpdate(event.badge_count);
+            if (onReadSync) onReadSync(event);
+        });
+
         echo.connector.socket.on('connected', () => { stopPolling(); catchUp(); });
         echo.connector.socket.on('disconnected', () => startPolling());
 
         startPolling();
 
         return () => { channel.unsubscribe(); stopPolling(); };
-    }, [userId, enabled, onNewNotification, onBadgeUpdate, onToast, catchUp, startPolling, stopPolling]);
+    }, [userId, enabled, onNewNotification, onBadgeUpdate, onReadSync, onToast, catchUp, startPolling, stopPolling]);
 
     return { catchUp };
 }
