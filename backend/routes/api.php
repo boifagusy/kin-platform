@@ -176,3 +176,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/v1/notifications/read-all', [App\Http\Controllers\Api\V1\NotificationController::class, 'markAllRead']);
     Route::get('/v1/notifications/badge', [App\Http\Controllers\Api\V1\NotificationController::class, 'badge']);
 });
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/v1/preferences/notifications', [App\Http\Controllers\Api\V1\UserPreferenceController::class, 'getNotifications']);
+    Route::put('/v1/preferences/notifications', [App\Http\Controllers\Api\V1\UserPreferenceController::class, 'updateNotifications']);
+});

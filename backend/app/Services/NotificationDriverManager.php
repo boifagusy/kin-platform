@@ -1,24 +1,12 @@
 <?php
+
 namespace App\Services;
 
-use App\Notifications\Drivers\NotificationDriverInterface;
-use App\Notifications\Drivers\SmsDriver;
-use App\Notifications\Drivers\EmailDriver;
-use App\Notifications\Drivers\WhatsAppDriver;
-use App\Notifications\Drivers\LogDriver;
+use App\Models\UserPreference;
 
 class NotificationDriverManager
 {
     private array $drivers = [];
-
-    public function __construct()
-    {
-        $this->register('sms', new SmsDriver());
-        $this->register('email', new EmailDriver());
-        $this->register('whatsapp', new WhatsAppDriver());
-        $this->register('push', new LogDriver()); // Push via FCM deferred
-        $this->register('log', new LogDriver());
-    }
 
     public function register(string $channel, NotificationDriverInterface $driver): void
     {
@@ -33,8 +21,12 @@ class NotificationDriverManager
         return $this->drivers[$channel];
     }
 
-    public function send(string $channel, array $recipient, array $message): bool
+    public function send(string $channel, array $recipient, array $message, ?int $userId = null): bool
     {
+        if ($userId !== null && !$this->isChannelEnabled($userId, $channel)) {
+            return false;
+        }
+
         $driver = $this->driver($channel);
 
         return match ($channel) {
@@ -47,13 +39,25 @@ class NotificationDriverManager
         };
     }
 
+    public function isChannelEnabled(int $userId, string $channel): bool
+    {
+        $preferences = UserPreference::getPreferences($userId);
+        return $preferences['channels'][$channel] ?? true;
+    }
+
+    public function isCategoryEnabled(int $userId, string $category): bool
+    {
+        $preferences = UserPreference::getPreferences($userId);
+        return $preferences['categories'][$category] ?? true;
+    }
+
     public function health(): array
     {
         $status = [];
         foreach ($this->drivers as $channel => $driver) {
             $status[$channel] = [
                 'driver' => get_class($driver),
-                'configured' => true,
+                'healthy' => $driver->healthCheck(),
             ];
         }
         return $status;
