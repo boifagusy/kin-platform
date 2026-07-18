@@ -1,0 +1,11 @@
+governance_check:
+  command: brick
+  timestamp: 2026-07-18T19:01:42Z
+  level: 2
+  state:
+    gate: 0
+    role: debugger
+    brick: authentication
+    session: active
+  verdict: BLOCKED
+  failed_guard: gate

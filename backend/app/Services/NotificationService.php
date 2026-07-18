@@ -1,105 +1,60 @@
 <?php
+
 namespace App\Services;
 
 use App\Models\IncidentNotification;
-use App\Models\CampaignDelivery;
-use App\Models\Announcement;
-use Illuminate\Support\Collection;
+use App\Events\NotificationDispatched;
+use Carbon\Carbon;
 
 class NotificationService
 {
-    public function getUnifiedFeed(int $userId, int $page = 1, int $perPage = 20): array
+    public function getAll($userId, $category = null, $type = null, $limit = 50)
     {
-        $items = collect()
-            ->merge($this->getIncidents($userId))
-            ->merge($this->getCampaigns($userId))
-            ->merge($this->getAnnouncements())
-            ->sortByDesc('created_at')
-            ->values();
+        $query = IncidentNotification::where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->limit($limit);
 
-        $unread = $items->where('read', false)->count();
-        $offset = ($page - 1) * $perPage;
+        if ($category) {
+            $query->where('category', $category);
+        }
 
-        return [
-            'data' => $items->slice($offset, $perPage)->values()->toArray(),
-            'unread_count' => $unread,
-            'total' => $items->count(),
-            'page' => $page,
-            'has_more' => ($offset + $perPage) < $items->count(),
-        ];
+        if ($type) {
+            $query->where('type', $type);
+        }
+
+        return $query->get();
     }
 
-    private function getIncidents(int $userId): Collection
+    public function getUnreadCount($userId)
     {
-        return IncidentNotification::whereHas('incident', fn($q) => $q->where('user_id', $userId))
-            ->orderBy('created_at', 'desc')
-            ->limit(50)
-            ->get()
-            ->map(fn($n) => [
-                'id' => 'incident_' . $n->id,
-                'type' => 'incident',
-                'title' => 'Safety Alert',
-                'message' => $n->message ?? 'Incident notification',
-                'created_at' => $n->created_at?->toISOString(),
-                'read' => !is_null($n->viewed_at),
-                'category' => 'security',
-            ]);
+        return IncidentNotification::where('user_id', $userId)
+            ->whereNull('read_at')
+            ->count();
     }
 
-    private function getCampaigns(int $userId): Collection
+    public function markAllRead($userId)
     {
-        return CampaignDelivery::where('user_id', $userId)
-            ->with('campaign')
-            ->orderBy('created_at', 'desc')
-            ->limit(50)
-            ->get()
-            ->map(fn($d) => [
-                'id' => 'campaign_' . $d->id,
-                'type' => 'campaign',
-                'title' => $d->campaign->title ?? 'Campaign',
-                'message' => $d->campaign->body ?? '',
-                'created_at' => $d->created_at?->toISOString(),
-                'read' => $d->status === 'sent',
-                'category' => 'marketing',
-                'channel' => $d->channel ?? 'push',
-            ]);
+        return IncidentNotification::where('user_id', $userId)
+            ->whereNull('read_at')
+            ->update(['read_at' => Carbon::now()]);
     }
 
-    private function getAnnouncements(): Collection
+    public function createIncident($data)
     {
-        return Announcement::where('status', 'published')
-            ->orderBy('created_at', 'desc')
-            ->limit(20)
-            ->get()
-            ->map(fn($a) => [
-                'id' => 'announcement_' . $a->id,
-                'type' => 'announcement',
-                'title' => $a->title,
-                'message' => $a->message,
-                'created_at' => $a->created_at?->toISOString(),
-                'read' => false,
-                'category' => 'system',
-            ]);
+        $notification = IncidentNotification::create([
+            'user_id' => $data['user_id'],
+            'type' => $data['type'] ?? 'incident',
+            'title' => $data['title'],
+            'body' => $data['body'],
+            'category' => $data['category'] ?? null,
+            'action_url' => $data['action_url'] ?? null,
+            'incident_type' => $data['incident_type'] ?? null,
+            'latitude' => $data['latitude'] ?? null,
+            'longitude' => $data['longitude'] ?? null,
+        ]);
+
+        event(new NotificationDispatched($notification));
+
+        return $notification;
     }
 }
-
-    public function markRead(string $id, int $userId): void
-    {
-        if (str_starts_with($id, 'incident_')) {
-            $realId = substr($id, 9);
-            IncidentNotification::where('id', $realId)->update(['viewed_at' => now()]);
-        }
-        // Campaign + Announcement read state handled via their own lifecycle
-    }
-
-    public function markAllRead(int $userId): void
-    {
-        IncidentNotification::whereHas('incident', fn($q) => $q->where('user_id', $userId))
-            ->whereNull('viewed_at')
-            ->update(['viewed_at' => now()]);
-    }
-
-    public function getBadgeCount(int $userId): int
-    {
-        return $this->getUnifiedFeed($userId)['unread_count'] ?? 0;
-    }
