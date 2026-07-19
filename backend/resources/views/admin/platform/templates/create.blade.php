@@ -27,7 +27,7 @@
         </div>
         <div>
             <label class="block text-sm font-medium mb-1">SMS Content</label>
-            <textarea name="sms_content" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Use {{first_name}} for variables"></textarea>
+            <textarea name="sms_content" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Use @{{first_name}} for variables"></textarea>
         </div>
         <div>
             <label class="block text-sm font-medium mb-1">WhatsApp Content</label>
