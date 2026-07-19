@@ -26,7 +26,7 @@ class AdminManagementController extends Controller
      */
     private function checkPermission()
     {
-        if (!$this->permissionService->hasPermission(PermissionService::PERM_MANAGE_ADMINS)) {
+        if (!$this->permissionService->hasPermission(PermissionService::PERM_ADMINS_VIEW)) {
             abort(403, 'Insufficient permissions to manage admin accounts');
         }
     }
