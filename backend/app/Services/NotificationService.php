@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\IncidentNotification;
 use App\Events\NotificationDispatched;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class NotificationService
 {
@@ -41,6 +42,15 @@ class NotificationService
 
     public function createIncident($data)
     {
+        // N10: Idempotency check
+        $idempotencyKey = $data['idempotency_key'] ?? null;
+        if ($idempotencyKey) {
+            $lockKey = "notification_idempotent:{$idempotencyKey}";
+            if (Cache::has($lockKey)) {
+                return IncidentNotification::find(Cache::get($lockKey));
+            }
+        }
+
         $notification = IncidentNotification::create([
             'user_id' => $data['user_id'],
             'type' => $data['type'] ?? 'incident',
@@ -52,6 +62,11 @@ class NotificationService
             'latitude' => $data['latitude'] ?? null,
             'longitude' => $data['longitude'] ?? null,
         ]);
+
+        // N10: Store idempotency lock
+        if ($idempotencyKey) {
+            Cache::put("notification_idempotent:{$idempotencyKey}", $notification->id, now()->addMinutes(5));
+        }
 
         event(new NotificationDispatched($notification));
 

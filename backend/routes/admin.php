@@ -168,3 +168,21 @@ Route::middleware(['web', 'admin.auth'])->prefix('admin/analytics')->group(funct
     Route::post('/notifications/{id}/retry', [App\Http\Controllers\Admin\AnalyticsController::class, 'notificationRetry'])->name('admin.analytics.notifications.retry');
     Route::post('/notifications/retry-bulk', [App\Http\Controllers\Admin\AnalyticsController::class, 'notificationRetryBulk'])->name('admin.analytics.notifications.retry-bulk');
 });
+
+// N10: Rate-limited notification analytics + automation dashboard
+Route::middleware(['web', 'admin.auth', 'throttle:admin-notifications'])->prefix('admin/analytics/notifications')->group(function () {
+    Route::get('/', [App\Http\Controllers\Admin\AnalyticsController::class, 'notifications'])->name('admin.analytics.notifications');
+    Route::get('/trends', [App\Http\Controllers\Admin\AnalyticsController::class, 'notificationTrends'])->name('admin.analytics.notifications.trends');
+    Route::get('/channels', [App\Http\Controllers\Admin\AnalyticsController::class, 'notificationChannels'])->name('admin.analytics.notifications.channels');
+    Route::get('/failures', [App\Http\Controllers\Admin\AnalyticsController::class, 'notificationFailures'])->name('admin.analytics.notifications.failures');
+    Route::get('/manage', [App\Http\Controllers\Admin\AnalyticsController::class, 'notificationManage'])->name('admin.analytics.notifications.manage');
+    Route::get('/{id}', [App\Http\Controllers\Admin\AnalyticsController::class, 'notificationShow'])->name('admin.analytics.notifications.show');
+    Route::post('/{id}/retry', [App\Http\Controllers\Admin\AnalyticsController::class, 'notificationRetry'])->name('admin.analytics.notifications.retry');
+    Route::post('/retry-bulk', [App\Http\Controllers\Admin\AnalyticsController::class, 'notificationRetryBulk'])->name('admin.analytics.notifications.retry-bulk');
+});
+
+// N10: Automation Dashboard (deferred from N9)
+Route::middleware(['web', 'admin.auth'])->prefix('admin/automation')->group(function () {
+    Route::get('/logs', [App\Http\Controllers\Admin\AutomationController::class, 'logs'])->name('admin.automation.logs');
+    Route::post('/test', [App\Http\Controllers\Admin\AutomationController::class, 'test'])->name('admin.automation.test');
+});
