@@ -16,18 +16,30 @@ class VersionService
 
     public function create(array $data): Version
     {
-        return Version::create($data);
+        $version = Version::create($data);
+        Log::info('[B5] Create Version', ['id' => $version->id, 'code' => $version->version_code]);
+        return $version;
     }
 
     public function update(Version $version, array $data): Version
     {
         $version->update($data);
+        Log::info('[B5] Update Version', ['id' => $version->id, 'code' => $version->version_code]);
         return $version;
     }
 
     public function delete(Version $version): void
     {
         $version->delete();
+        Log::info('[B5] Delete Version', ['id' => $version->id, 'code' => $version->version_code]);
+    }
+
+    public function restore(int $id): Version
+    {
+        $version = Version::withTrashed()->findOrFail($id);
+        $version->restore();
+        Log::info('[B5] Restore Version', ['id' => $version->id, 'code' => $version->version_code]);
+        return $version;
     }
 
     public function activate(int $id): Version
@@ -35,12 +47,18 @@ class VersionService
         Version::where('is_active', true)->update(['is_active' => false]);
         $version = Version::findOrFail($id);
         $version->update(['is_active' => true]);
+        Log::info('[B5] Activate Version', ['id' => $version->id, 'code' => $version->version_code]);
         return $version;
     }
 
     public function getActive(): ?Version
     {
         return Version::active()->first();
+    }
+
+    public function getAllWithTrashed()
+    {
+        return Version::withTrashed()->orderBy('version_code', 'desc')->get();
     }
 
     public function compareVersion(int $clientCode, string $platform): array
@@ -98,18 +116,9 @@ class VersionService
 
     private function calculateSeverity(bool $updateAvailable, bool $updateRequired, string $policyStatus): string
     {
-        if (!$updateAvailable) {
-            return 'current';
-        }
-
-        if ($policyStatus === 'required') {
-            return 'force';
-        }
-
-        if ($updateRequired) {
-            return 'required';
-        }
-
+        if (!$updateAvailable) return 'current';
+        if ($policyStatus === 'required') return 'force';
+        if ($updateRequired) return 'required';
         return 'optional';
     }
 
@@ -127,11 +136,14 @@ class VersionService
 
     public function addChannel(Version $version, array $data): VersionChannel
     {
-        return $version->channels()->create($data);
+        $channel = $version->channels()->create($data);
+        Log::info('[B5] Add Channel', ['version_id' => $version->id, 'channel' => $channel->channel]);
+        return $channel;
     }
 
     public function removeChannel(VersionChannel $channel): void
     {
+        Log::info('[B5] Remove Channel', ['id' => $channel->id, 'channel' => $channel->channel]);
         $channel->delete();
     }
 }

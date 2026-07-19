@@ -14,6 +14,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('kin:check-missed-checkins')->everyMinute();
+        $schedule->command('version:process-scheduled')->everyMinute();
     }
 
     protected function commands()

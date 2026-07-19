@@ -186,3 +186,27 @@ Route::middleware(['web', 'admin.auth'])->prefix('admin/automation')->group(func
     Route::get('/logs', [App\Http\Controllers\Admin\AutomationController::class, 'logs'])->name('admin.automation.logs');
     Route::post('/test', [App\Http\Controllers\Admin\AutomationController::class, 'test'])->name('admin.automation.test');
 });
+
+// B5: Version Manager — Release Operations
+Route::middleware(['web', 'admin.auth'])->prefix('admin/versions')->group(function () {
+    Route::get('/', [App\Http\Controllers\Admin\VersionManagerController::class, 'index'])->name('admin.versions.index');
+    Route::get('/create', [App\Http\Controllers\Admin\VersionManagerController::class, 'create'])->name('admin.versions.create');
+    Route::post('/', [App\Http\Controllers\Admin\VersionManagerController::class, 'store'])->name('admin.versions.store');
+    Route::get('/{version}/edit', [App\Http\Controllers\Admin\VersionManagerController::class, 'edit'])->name('admin.versions.edit');
+    Route::put('/{version}', [App\Http\Controllers\Admin\VersionManagerController::class, 'update'])->name('admin.versions.update');
+    Route::delete('/{version}', [App\Http\Controllers\Admin\VersionManagerController::class, 'destroy'])->name('admin.versions.destroy');
+    Route::post('/{version}/activate', [App\Http\Controllers\Admin\VersionManagerController::class, 'activate'])->name('admin.versions.activate');
+    Route::post('/{id}/restore', [App\Http\Controllers\Admin\VersionManagerController::class, 'restore'])->name('admin.versions.restore');
+    Route::get('/analytics', [App\Http\Controllers\Admin\VersionManagerController::class, 'analytics'])->name('admin.versions.analytics');
+
+    // Channels
+    Route::get('/{version}/channels', [App\Http\Controllers\Admin\VersionManagerController::class, 'channels'])->name('admin.versions.channels');
+    Route::post('/{version}/channels', [App\Http\Controllers\Admin\VersionManagerController::class, 'storeChannel'])->name('admin.versions.channels.store');
+    Route::delete('/channels/{channel}', [App\Http\Controllers\Admin\VersionManagerController::class, 'destroyChannel'])->name('admin.versions.channels.destroy');
+
+    // Policies
+    Route::get('/{version}/policies', [App\Http\Controllers\Admin\VersionManagerController::class, 'policies'])->name('admin.versions.policies');
+    Route::post('/{version}/policies', [App\Http\Controllers\Admin\VersionManagerController::class, 'storePolicy'])->name('admin.versions.policies.store');
+    Route::put('/policies/{policy}', [App\Http\Controllers\Admin\VersionManagerController::class, 'updatePolicy'])->name('admin.versions.policies.update');
+    Route::delete('/policies/{policy}', [App\Http\Controllers\Admin\VersionManagerController::class, 'destroyPolicy'])->name('admin.versions.policies.destroy');
+});
