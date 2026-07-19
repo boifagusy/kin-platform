@@ -15,7 +15,7 @@ class AuditService
     {
         $perPage = $perPage ?? $this->adminLogsPerPage;
         
-        $query = AdminLog::with('adminUser');
+        $query = AdminLog::with('admin');
         
         if (!empty($filters['action'])) {
             $query->where('action', $filters['action']);

@@ -19,7 +19,7 @@ class AuditController extends Controller
     {
         $filters = [
             'search' => $request->get('search'),
-            'action_type' => $request->get('action_type'),
+            'action' => $request->get('action'),
             'admin_id' => $request->get('admin_id'),
             'date_from' => $request->get('date_from'),
             'date_to' => $request->get('date_to'),
@@ -40,7 +40,7 @@ class AuditController extends Controller
         $filters = [
             'date_from' => $request->get('date_from'),
             'date_to' => $request->get('date_to'),
-            'action_type' => $request->get('action_type'),
+            'action' => $request->get('action'),
         ];
 
         $logs = $this->auditService->getAuditLogs($filters, 1000);
