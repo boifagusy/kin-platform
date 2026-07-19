@@ -2,8 +2,9 @@
 
 namespace App\Services\Watchtower;
 
+use App\Models\IncidentNotification;
+use App\Models\CampaignDelivery;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class NotificationMonitorService
 {
@@ -19,67 +20,84 @@ class NotificationMonitorService
             'retries' => $this->getRetryMetrics(),
             'failures' => $this->getFailureMetrics(),
             'delivery_rate' => $this->getDeliveryRate(),
+            'queue' => $this->getQueueStats(),
+            'retry_stats' => $this->getRetryStats(),
             'overall_health' => $this->calculateOverallHealth(),
             'timestamp' => now()->toISOString(),
         ];
     }
 
     /**
-     * Get SMS metrics
+     * Get SMS metrics from incident_notifications
      */
     protected function getSmsMetrics(): array
     {
-        // In production, this would query SMS logs
+        $base = IncidentNotification::where('delivery_channel', 'sms');
+
         return [
-            'sent_today' => 45,
-            'sent_week' => 320,
-            'delivered' => 310,
-            'failed' => 10,
-            'status' => 10 < 50 ? 'healthy' : 'warning',
+            'sent_today' => (clone $base)->whereDate('created_at', today())->count(),
+            'sent_week' => (clone $base)->where('created_at', '>=', now()->subWeek())->count(),
+            'delivered' => (clone $base)->where('status', 'delivered')->count(),
+            'failed' => (clone $base)->where('status', 'failed')->count(),
+            'pending' => (clone $base)->where('status', 'pending')->count(),
         ];
     }
 
     /**
-     * Get push notification metrics
+     * Get Push metrics from incident_notifications + campaign_deliveries
      */
     protected function getPushMetrics(): array
     {
-        // In production, this would query push notification logs
+        $incidents = IncidentNotification::where('delivery_channel', 'push');
+        $campaigns = CampaignDelivery::where('channel', 'push');
+
         return [
-            'sent_today' => 120,
-            'sent_week' => 850,
-            'delivered' => 800,
-            'failed' => 50,
-            'status' => 50 < 100 ? 'healthy' : 'warning',
+            'sent_today' => (clone $incidents)->whereDate('created_at', today())->count()
+                + (clone $campaigns)->whereDate('created_at', today())->count(),
+            'sent_week' => (clone $incidents)->where('created_at', '>=', now()->subWeek())->count()
+                + (clone $campaigns)->where('created_at', '>=', now()->subWeek())->count(),
+            'delivered' => (clone $incidents)->where('status', 'delivered')->count()
+                + (clone $campaigns)->where('status', 'sent')->count(),
+            'failed' => (clone $incidents)->where('status', 'failed')->count()
+                + (clone $campaigns)->where('status', 'failed')->count(),
+            'pending' => (clone $incidents)->where('status', 'pending')->count()
+                + (clone $campaigns)->where('status', 'pending')->count(),
         ];
     }
 
     /**
-     * Get email metrics
+     * Get Email metrics
      */
     protected function getEmailMetrics(): array
     {
-        // In production, this would query email logs
+        $base = IncidentNotification::where('delivery_channel', 'email');
+
         return [
-            'sent_today' => 25,
-            'sent_week' => 180,
-            'delivered' => 170,
-            'failed' => 10,
-            'status' => 10 < 20 ? 'healthy' : 'warning',
+            'sent_today' => (clone $base)->whereDate('created_at', today())->count(),
+            'sent_week' => (clone $base)->where('created_at', '>=', now()->subWeek())->count(),
+            'delivered' => (clone $base)->where('status', 'delivered')->count(),
+            'failed' => (clone $base)->where('status', 'failed')->count(),
+            'pending' => (clone $base)->where('status', 'pending')->count(),
         ];
     }
 
     /**
-     * Get retry metrics
+     * Get retry metrics from campaign_deliveries
      */
     protected function getRetryMetrics(): array
     {
-        // In production, this would track retries
+        $retried = CampaignDelivery::whereNotNull('sent_at')
+            ->where('status', '!=', 'pending')
+            ->where('updated_at', '>', DB::raw('COALESCE(sent_at, created_at)'))
+            ->count();
+
+        $totalFailed = CampaignDelivery::where('status', 'failed')->count()
+            + IncidentNotification::where('status', 'failed')->count();
+
         return [
-            'total_retries' => 35,
-            'successful_retries' => 25,
-            'failed_retries' => 10,
-            'status' => 10 < 20 ? 'healthy' : 'warning',
+            'total_retried' => $retried,
+            'retry_candidates' => $totalFailed,
+            'retry_rate' => $totalFailed > 0 ? round(($retried / $totalFailed) * 100, 1) : 0,
         ];
     }
 
@@ -88,29 +106,89 @@ class NotificationMonitorService
      */
     protected function getFailureMetrics(): array
     {
-        // In production, this would track failures
+        $incidentFailures = IncidentNotification::where('status', 'failed')->count();
+        $campaignFailures = CampaignDelivery::where('status', 'failed')->count();
+
         return [
-            'total_failures' => 70,
-            'last_24h' => 12,
-            'status' => 12 < 20 ? 'healthy' : 'warning',
+            'total_failures' => $incidentFailures + $campaignFailures,
+            'incident_failures' => $incidentFailures,
+            'campaign_failures' => $campaignFailures,
+            'today_failures' => IncidentNotification::where('status', 'failed')->whereDate('created_at', today())->count()
+                + CampaignDelivery::where('status', 'failed')->whereDate('created_at', today())->count(),
         ];
     }
 
     /**
      * Get delivery rate
      */
-    protected function getDeliveryRate(): array
+    public function getDeliveryRate(): array
     {
-        $total = $this->getSmsMetrics()['sent_week'] + $this->getPushMetrics()['sent_week'] + $this->getEmailMetrics()['sent_week'];
-        $delivered = $this->getSmsMetrics()['delivered'] + $this->getPushMetrics()['delivered'] + $this->getEmailMetrics()['delivered'];
+        $totalIncidents = IncidentNotification::count();
+        $deliveredIncidents = IncidentNotification::where('status', 'delivered')->count();
 
-        $rate = $total > 0 ? round(($delivered / $total) * 100, 2) : 100;
+        $totalCampaigns = CampaignDelivery::count();
+        $deliveredCampaigns = CampaignDelivery::where('status', 'sent')->count();
+
+        $total = $totalIncidents + $totalCampaigns;
+        $delivered = $deliveredIncidents + $deliveredCampaigns;
 
         return [
-            'rate' => $rate,
-            'total_sent' => $total,
-            'total_delivered' => $delivered,
-            'status' => $rate > 90 ? 'healthy' : ($rate > 80 ? 'warning' : 'critical'),
+            'total' => $total,
+            'delivered' => $delivered,
+            'rate' => $total > 0 ? round(($delivered / $total) * 100, 1) : 0,
+        ];
+    }
+
+    /**
+     * Get queue statistics
+     */
+    public function getQueueStats(): array
+    {
+        try {
+            $pending = DB::table('jobs')->count();
+            $failed = DB::table('failed_jobs')->count();
+            $processing = DB::table('jobs')->whereNotNull('reserved_at')->count();
+
+            return [
+                'pending' => $pending,
+                'processing' => $processing,
+                'failed' => $failed,
+                'total' => $pending + $failed,
+                'status' => $failed > 50 ? 'warning' : ($pending > 500 ? 'busy' : 'healthy'),
+            ];
+        } catch (\Exception $e) {
+            return [
+                'pending' => 0,
+                'processing' => 0,
+                'failed' => 0,
+                'total' => 0,
+                'status' => 'error',
+            ];
+        }
+    }
+
+    /**
+     * Get retry statistics
+     */
+    public function getRetryStats(): array
+    {
+        $retryAttempts = CampaignDelivery::whereNotNull('sent_at')
+            ->where('status', '!=', 'pending')
+            ->whereColumn('updated_at', '>', 'sent_at')
+            ->count();
+
+        $successfulRetries = CampaignDelivery::where('status', 'sent')
+            ->whereNotNull('sent_at')
+            ->whereColumn('updated_at', '>', 'sent_at')
+            ->count();
+
+        $failedJobs = DB::table('failed_jobs')->count();
+
+        return [
+            'total_retries' => $retryAttempts,
+            'successful_retries' => $successfulRetries,
+            'failed_retries' => $failedJobs,
+            'success_rate' => $retryAttempts > 0 ? round(($successfulRetries / $retryAttempts) * 100, 1) : 0,
         ];
     }
 
@@ -119,36 +197,42 @@ class NotificationMonitorService
      */
     protected function calculateOverallHealth(): array
     {
-        $statuses = [
-            $this->getSmsMetrics()['status'] ?? 'healthy',
-            $this->getPushMetrics()['status'] ?? 'healthy',
-            $this->getEmailMetrics()['status'] ?? 'healthy',
-            $this->getRetryMetrics()['status'] ?? 'healthy',
-            $this->getFailureMetrics()['status'] ?? 'healthy',
-        ];
+        $delivery = $this->getDeliveryRate();
+        $queue = $this->getQueueStats();
+        $failures = $this->getFailureMetrics();
 
-        $critical = array_filter($statuses, function ($status) {
-            return $status === 'critical';
-        });
+        $score = 100;
+        $status = 'healthy';
 
-        $unhealthy = array_filter($statuses, function ($status) {
-            return $status === 'unhealthy';
-        });
-
-        if (count($critical) > 0) {
+        if ($delivery['rate'] < 80) {
             $status = 'critical';
-            $score = 30;
-        } elseif (count($unhealthy) > 0) {
+            $score -= 40;
+        } elseif ($delivery['rate'] < 95) {
             $status = 'warning';
-            $score = 60;
-        } else {
-            $status = 'healthy';
-            $score = 100;
+            $score -= 20;
+        }
+
+        if ($queue['failed'] > 100) {
+            $status = 'critical';
+            $score -= 30;
+        } elseif ($queue['failed'] > 50) {
+            $status = 'warning';
+            $score -= 15;
+        }
+
+        if ($failures['total_failures'] > 500) {
+            $status = 'critical';
+            $score -= 30;
+        } elseif ($failures['total_failures'] > 200) {
+            $status = 'warning';
+            $score -= 15;
         }
 
         return [
             'status' => $status,
-            'score' => $score,
+            'score' => max(0, $score),
+            'delivery_rate' => $delivery['rate'],
+            'failed_jobs' => $queue['failed'],
         ];
     }
 }

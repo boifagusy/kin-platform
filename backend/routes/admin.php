@@ -156,3 +156,15 @@ Route::middleware('admin.auth')->prefix('admin/templates')->name('admin.template
     Route::put('/{template}', [App\Http\Controllers\Admin\TemplateManagerController::class, 'update'])->name('update');
     Route::delete('/{template}', [App\Http\Controllers\Admin\TemplateManagerController::class, 'destroy'])->name('destroy');
 });
+
+// N7: Notification Analytics & Management
+Route::middleware(['web', 'admin.auth'])->prefix('admin/analytics')->group(function () {
+    Route::get('/notifications', [App\Http\Controllers\Admin\AnalyticsController::class, 'notifications'])->name('admin.analytics.notifications');
+    Route::get('/notifications/trends', [App\Http\Controllers\Admin\AnalyticsController::class, 'notificationTrends'])->name('admin.analytics.notifications.trends');
+    Route::get('/notifications/channels', [App\Http\Controllers\Admin\AnalyticsController::class, 'notificationChannels'])->name('admin.analytics.notifications.channels');
+    Route::get('/notifications/failures', [App\Http\Controllers\Admin\AnalyticsController::class, 'notificationFailures'])->name('admin.analytics.notifications.failures');
+    Route::get('/notifications/manage', [App\Http\Controllers\Admin\AnalyticsController::class, 'notificationManage'])->name('admin.analytics.notifications.manage');
+    Route::get('/notifications/{id}', [App\Http\Controllers\Admin\AnalyticsController::class, 'notificationShow'])->name('admin.analytics.notifications.show');
+    Route::post('/notifications/{id}/retry', [App\Http\Controllers\Admin\AnalyticsController::class, 'notificationRetry'])->name('admin.analytics.notifications.retry');
+    Route::post('/notifications/retry-bulk', [App\Http\Controllers\Admin\AnalyticsController::class, 'notificationRetryBulk'])->name('admin.analytics.notifications.retry-bulk');
+});
