@@ -268,7 +268,7 @@ const nextCheckin = formatCheckinTime(dashboard?.data?.settings?.checkin_time);
         </div>
       )}
 
-      <div className="px-5 py-4 max-w-md mx-auto space-y-4">
+      <div className="px-5 pt-2 pb-20 max-w-md mx-auto space-y-5">
       <AnnouncementBanner />
       <UpdateDialog open={showDialog} updateData={updateData} onDismiss={handleDismiss} />
         <SafetyScoreCardMinimal score={displayScore} label={getScoreLabel(displayScore)} />
