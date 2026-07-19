@@ -84,7 +84,7 @@ class PermissionService
     const PERM_FINANCE_REPORTS = 'finance.reports';
 
     // Role permission mapping
-    protected array $rolePermissions = [];
+    public array $rolePermissions = [];
 
     public function __construct()
     {
