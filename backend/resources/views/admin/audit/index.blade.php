@@ -19,7 +19,7 @@
     <!-- Stats Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="bg-white rounded-xl p-4 border border-gray-200">
-            <div class="text-2xl font-bold text-gray-800">{{ number_format($stats['total']) }}</div>
+            <div class="text-2xl font-bold text-gray-800">{{ number_format($stats['total_logs']) }}</div>
             <div class="text-xs text-gray-500">Total Actions</div>
         </div>
         <div class="bg-white rounded-xl p-4 border border-gray-200">
