@@ -8,12 +8,7 @@ use Illuminate\Http\Request;
 
 class DatabaseMonitorController extends Controller
 {
-    protected $dbMonitor;
-
-    public function __construct(DatabaseMonitorService $dbMonitor)
-    {
-        $this->dbMonitor = $dbMonitor;
-    }
+    public function __construct(private DatabaseMonitorService $dbMonitor) {}
 
     public function metrics()
     {
@@ -28,7 +23,7 @@ class DatabaseMonitorController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data' => $this->dbMonitor->checkLockContention(),
+            'data' => $this->dbMonitor->checkLocks(),
             'timestamp' => now()->toISOString(),
         ]);
     }
