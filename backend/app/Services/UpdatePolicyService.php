@@ -1,7 +1,10 @@
 <?php
+
 namespace App\Services;
+
 use App\Models\UpdatePolicy;
 use App\Models\Version;
+use Illuminate\Support\Facades\Log;
 
 class UpdatePolicyService
 {
@@ -18,7 +21,9 @@ class UpdatePolicyService
     public function evaluate(int $clientCode, string $platform): array
     {
         $version = app(VersionService::class)->getActive();
+
         if (!$version) {
+            Log::info('[B3] Policy evaluation — no active version');
             return $this->result('up_to_date');
         }
 
@@ -30,10 +35,13 @@ class UpdatePolicyService
             ->get();
 
         if ($policies->isEmpty()) {
+            Log::info('[B3] Policy evaluation — no matching policies', [
+                'platform' => $platform,
+                'version_id' => $version->id,
+            ]);
             return $this->result('up_to_date');
         }
 
-        // Find most restrictive policy
         $matched = null;
         $highestPriority = -1;
 
@@ -45,18 +53,24 @@ class UpdatePolicyService
             }
         }
 
-        // Check grace period
         $status = $matched->policy;
         $graceEnds = null;
 
         if ($matched->grace_days > 0 && $version->release_date) {
             $graceEnd = $version->release_date->addDays($matched->grace_days);
             if (now()->lt($graceEnd)) {
-                // Within grace period — downgrade required→recommended, recommended→optional
                 $status = $status === 'required' ? 'recommended' : 'optional';
                 $graceEnds = $graceEnd->toISOString();
             }
         }
+
+        Log::info('[B3] Policy matched', [
+            'client_code' => $clientCode,
+            'platform' => $platform,
+            'policy_id' => $matched->id,
+            'status' => $status,
+            'grace_ends' => $graceEnds,
+        ]);
 
         return [
             'policy_status' => $status,

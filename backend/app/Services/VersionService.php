@@ -1,7 +1,10 @@
 <?php
+
 namespace App\Services;
+
 use App\Models\Version;
 use App\Models\VersionChannel;
+use Illuminate\Support\Facades\Log;
 
 class VersionService
 {
@@ -45,6 +48,11 @@ class VersionService
         $latest = $this->getActive();
 
         if (!$latest) {
+            Log::info('[B3] Version check — no active version', [
+                'client_code' => $clientCode,
+                'platform' => $platform,
+            ]);
+
             return [
                 'current_version_code' => $clientCode,
                 'update_available' => false,
@@ -54,6 +62,20 @@ class VersionService
         }
 
         $minCode = $latest->min_version_code ?? $latest->version_code;
+        $policy = app(UpdatePolicyService::class)->evaluate($clientCode, $platform);
+        $updateAvailable = $clientCode < $latest->version_code;
+        $updateRequired = $clientCode < $minCode;
+
+        $severity = $this->calculateSeverity($updateAvailable, $updateRequired, $policy['policy_status']);
+
+        Log::info('[B3] Version comparison', [
+            'client_code' => $clientCode,
+            'platform' => $platform,
+            'latest_code' => $latest->version_code,
+            'min_code' => $minCode,
+            'update_available' => $updateAvailable,
+            'severity' => $severity,
+        ]);
 
         return [
             'current_version_code' => $clientCode,
@@ -61,16 +83,34 @@ class VersionService
             'latest_version_code' => $latest->version_code,
             'latest_version_name' => $latest->version_name,
             'minimum_version_code' => $minCode,
-            'update_available' => $clientCode < $latest->version_code,
-            'update_required' => $clientCode < $minCode,
+            'update_available' => $updateAvailable,
+            'update_required' => $updateRequired,
             'force_update' => $latest->force_update,
-            'policy_status' => $this->evaluatePolicy($clientCode, $platform)['policy_status'],
-            'policy_reason' => $this->evaluatePolicy($clientCode, $platform)['policy_reason'],
-            'policy_grace_ends' => $this->evaluatePolicy($clientCode, $platform)['policy_grace_ends'],
+            'update_severity' => $severity,
+            'policy_status' => $policy['policy_status'],
+            'policy_reason' => $policy['policy_reason'],
+            'policy_grace_ends' => $policy['policy_grace_ends'],
             'release_notes' => $latest->release_notes,
             'release_date' => $latest->release_date?->toISOString(),
             'channels' => $this->getChannels($latest->id, $platform),
         ];
+    }
+
+    private function calculateSeverity(bool $updateAvailable, bool $updateRequired, string $policyStatus): string
+    {
+        if (!$updateAvailable) {
+            return 'current';
+        }
+
+        if ($policyStatus === 'required') {
+            return 'force';
+        }
+
+        if ($updateRequired) {
+            return 'required';
+        }
+
+        return 'optional';
     }
 
     public function getChannels(int $versionId, string $platform): array
@@ -93,10 +133,5 @@ class VersionService
     public function removeChannel(VersionChannel $channel): void
     {
         $channel->delete();
-    }
-
-    private function evaluatePolicy(int $clientCode, string $platform): array
-    {
-        return app(UpdatePolicyService::class)->evaluate($clientCode, $platform);
     }
 }

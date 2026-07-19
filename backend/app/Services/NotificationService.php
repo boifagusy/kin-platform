@@ -29,15 +29,15 @@ class NotificationService
     public function getUnreadCount($userId)
     {
         return IncidentNotification::where('user_id', $userId)
-            ->whereNull('read_at')
+            ->whereNull('viewed_at')
             ->count();
     }
 
     public function markAllRead($userId)
     {
         return IncidentNotification::where('user_id', $userId)
-            ->whereNull('read_at')
-            ->update(['read_at' => Carbon::now()]);
+            ->whereNull('viewed_at')
+            ->update(['viewed_at' => Carbon::now()]);
     }
 
     public function createIncident($data)
