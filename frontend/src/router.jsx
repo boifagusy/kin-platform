@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 import App from './App';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import VersionGate from './components/auth/VersionGate';
 import WelcomeScreenV3 from './screens/ui-polish/WelcomeScreenV3';
 import PhoneEntryScreenV2 from './screens/ui-polish/PhoneEntryScreenV2';
 import CreatePinScreenV2 from './screens/ui-polish/CreatePinScreenV2';
@@ -19,56 +20,55 @@ import AlertDetailScreenV2 from './screens/ui-polish/AlertDetailScreenV2';
 const router = createBrowserRouter([
     {
         path: '/',
-    { path: 'test-safe-zone', element: <div style={{color:'red',padding:50}}>TEST ROUTE WORKS</div> },
         element: <App />,
         children: [
-            // Public routes
+            // Public routes (no version gate)
             { index: true, element: <WelcomeScreenV3 /> },
             { path: 'phone', element: <PhoneEntryScreenV2 /> },
             { path: 'create-pin', element: <CreatePinScreenV2 /> },
             { path: 'login-pin', element: <LoginPinScreenV2 /> },
             { path: 'login', element: <LoginPinScreenV2 /> },
-            
-            // Protected routes
-            { 
-                path: 'user-details', 
-                element: <ProtectedRoute><UserDetailsScreenV2 /></ProtectedRoute> 
+
+            // Protected routes with version enforcement
+            {
+                path: 'user-details',
+                element: <VersionGate><ProtectedRoute><UserDetailsScreenV2 /></ProtectedRoute></VersionGate>
             },
-            { 
-                path: 'trusted-contacts', 
-                element: <ProtectedRoute><TrustedContactScreenV2 /></ProtectedRoute> 
+            {
+                path: 'trusted-contacts',
+                element: <VersionGate><ProtectedRoute><TrustedContactScreenV2 /></ProtectedRoute></VersionGate>
             },
-            { 
-                path: 'duress-pin', 
-                element: <ProtectedRoute><DuressPinSetupScreenV2 /></ProtectedRoute> 
+            {
+                path: 'duress-pin',
+                element: <VersionGate><ProtectedRoute><DuressPinSetupScreenV2 /></ProtectedRoute></VersionGate>
             },
-            { 
-                path: 'dashboard', 
-                element: <ProtectedRoute><DashboardScreenV2 /></ProtectedRoute> 
+            {
+                path: 'dashboard',
+                element: <VersionGate><ProtectedRoute><DashboardScreenV2 /></ProtectedRoute></VersionGate>
             },
             {
                 path: "settings",
-                element: <ProtectedRoute><SettingsScreen /></ProtectedRoute>,
+                element: <VersionGate><ProtectedRoute><SettingsScreen /></ProtectedRoute></VersionGate>,
             },
             {
                 path: "settings/check-in",
-                element: <ProtectedRoute><CheckInSettingsScreen /></ProtectedRoute>,
+                element: <VersionGate><ProtectedRoute><CheckInSettingsScreen /></ProtectedRoute></VersionGate>,
             },
             {
                 path: "settings/safe-zones",
-                element: <SafeZonesScreen />,
+                element: <VersionGate><SafeZonesScreen /></VersionGate>,
             },
-            { 
-                path: 'continue-setup', 
-                element: <ProtectedRoute><ContinueSetupScreen /></ProtectedRoute> 
+            {
+                path: 'continue-setup',
+                element: <VersionGate><ProtectedRoute><ContinueSetupScreen /></ProtectedRoute></VersionGate>
             },
-            { 
-                path: 'alerts', 
-                element: <ProtectedRoute><AlertsScreenV2 /></ProtectedRoute> 
+            {
+                path: 'alerts',
+                element: <VersionGate><ProtectedRoute><AlertsScreenV2 /></ProtectedRoute></VersionGate>
             },
-            { 
-                path: 'alerts/:id', 
-                element: <ProtectedRoute><AlertDetailScreenV2 /></ProtectedRoute> 
+            {
+                path: 'alerts/:id',
+                element: <VersionGate><ProtectedRoute><AlertDetailScreenV2 /></ProtectedRoute></VersionGate>
             },
         ],
     },
