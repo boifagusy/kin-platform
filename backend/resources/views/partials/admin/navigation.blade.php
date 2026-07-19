@@ -67,6 +67,8 @@
         <a href="{{ route('admin.broadcasts.index') }}" class="flex items-center gap-3 px-4 py-2.5 {{ request()->routeIs('admin.broadcasts.*') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600 hover:bg-gray-50' }} rounded-lg transition-all">
             <span class="material-symbols-outlined">warning</span>
             <span class="text-sm">Emergency Broadcasts</span>
+        </a>
+    </li>
     <li>
         <a href="{{ route('admin.templates.index') }}" class="flex items-center gap-3 px-4 py-2.5 {{ request()->routeIs('admin.templates.*') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600 hover:bg-gray-50' }} rounded-lg transition-all">
             <span class="material-symbols-outlined">description</span>
@@ -103,7 +105,7 @@
         </a>
     </li>
     <li>
-        <a href="/admin/alerts" class="flex items-center gap-3 px-4 py-2.5 text-gray-600 hover:bg-gray-50 rounded-lg transition-all">
+        <a href="{{ route('admin.settings.index') }}" class="flex items-center gap-3 px-4 py-2.5 text-gray-600 hover:bg-gray-50 rounded-lg transition-all">
             <span class="material-symbols-outlined">admin_panel_settings</span>
             <span class="text-sm">Admin Accounts</span>
         </a>
