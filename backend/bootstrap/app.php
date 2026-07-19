@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'admin.auth' => \App\Http\Middleware\AdminAuthenticate::class,
+            'release.permission' => \App\Http\Middleware\ReleasePermissionMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

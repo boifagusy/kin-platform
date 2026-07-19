@@ -164,4 +164,30 @@ class VersionManagerController extends Controller
             'analytics' => $analytics->getVersionAnalytics(),
         ]);
     }
+
+    public function submit(Version $version)
+    {
+        $this->versionService->submitForReview($version);
+        return back()->with('success', 'Version submitted for review.');
+    }
+
+    public function approve(Version $version)
+    {
+        $adminId = auth('admin')->id();
+        $this->versionService->approve($version, $adminId);
+        return back()->with('success', 'Version approved.');
+    }
+
+    public function reject(Version $version)
+    {
+        $adminId = auth('admin')->id();
+        $this->versionService->reject($version, $adminId);
+        return back()->with('success', 'Version rejected.');
+    }
+
+    public function archive(Version $version)
+    {
+        $this->versionService->archive($version);
+        return back()->with('success', 'Version archived.');
+    }
 }

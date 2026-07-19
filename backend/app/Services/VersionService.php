@@ -146,4 +146,63 @@ class VersionService
         Log::info('[B5] Remove Channel', ['id' => $channel->id, 'channel' => $channel->channel]);
         $channel->delete();
     }
+
+    public function submitForReview(Version $version): Version
+    {
+        if ($version->status !== Version::STATUS_DRAFT && $version->status !== Version::STATUS_REJECTED) {
+            throw new \InvalidArgumentException('Only draft or rejected versions can be submitted.');
+        }
+        $version->update(['status' => Version::STATUS_REVIEW]);
+        $this->logAction('version_submitted', $version);
+        return $version;
+    }
+
+    public function approve(Version $version, int $adminId): Version
+    {
+        if ($version->status !== Version::STATUS_REVIEW) {
+            throw new \InvalidArgumentException('Only versions under review can be approved.');
+        }
+        $version->update([
+            'status' => Version::STATUS_APPROVED,
+            'approved_by' => $adminId,
+            'reviewed_at' => now(),
+        ]);
+        $this->logAction('version_approved', $version);
+        return $version;
+    }
+
+    public function reject(Version $version, int $adminId): Version
+    {
+        if ($version->status !== Version::STATUS_REVIEW) {
+            throw new \InvalidArgumentException('Only versions under review can be rejected.');
+        }
+        $version->update([
+            'status' => Version::STATUS_REJECTED,
+            'reviewed_at' => now(),
+        ]);
+        $this->logAction('version_rejected', $version);
+        return $version;
+    }
+
+    public function archive(Version $version): Version
+    {
+        $version->update([
+            'status' => Version::STATUS_ARCHIVED,
+            'is_active' => false,
+        ]);
+        $this->logAction('version_archived', $version);
+        return $version;
+    }
+
+    private function logAction(string $action, Version $version): void
+    {
+        \App\Models\AdminLog::create([
+            'admin_user_id' => auth('admin')->id() ?? 1,
+            'action' => $action,
+            'entity_type' => 'version',
+            'entity_id' => $version->id,
+            'new_values' => json_encode(['status' => $version->status, 'version_code' => $version->version_code]),
+            'ip_address' => request()->ip(),
+        ]);
+    }
 }

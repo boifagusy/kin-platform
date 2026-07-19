@@ -210,3 +210,14 @@ Route::middleware(['web', 'admin.auth'])->prefix('admin/versions')->group(functi
     Route::put('/policies/{policy}', [App\Http\Controllers\Admin\VersionManagerController::class, 'updatePolicy'])->name('admin.versions.policies.update');
     Route::delete('/policies/{policy}', [App\Http\Controllers\Admin\VersionManagerController::class, 'destroyPolicy'])->name('admin.versions.policies.destroy');
 });
+
+// B7: Release Governance
+Route::middleware(['web', 'admin.auth'])->prefix('admin/versions')->group(function () {
+    Route::post('/{version}/submit', [App\Http\Controllers\Admin\VersionManagerController::class, 'submit'])->name('admin.versions.submit');
+    Route::post('/{version}/approve', [App\Http\Controllers\Admin\VersionManagerController::class, 'approve'])
+        ->middleware('release.permission:release.approve')->name('admin.versions.approve');
+    Route::post('/{version}/reject', [App\Http\Controllers\Admin\VersionManagerController::class, 'reject'])
+        ->middleware('release.permission:release.approve')->name('admin.versions.reject');
+    Route::post('/{version}/archive', [App\Http\Controllers\Admin\VersionManagerController::class, 'archive'])
+        ->middleware('release.permission:release.archive')->name('admin.versions.archive');
+});
