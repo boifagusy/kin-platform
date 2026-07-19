@@ -13,6 +13,7 @@ use App\Listeners\CreateActivityLog;
 use App\Listeners\UpdateSafetyScore;
 use App\Listeners\RefreshDashboardCache;
 use App\Listeners\QueueSosAlert;
+use App\Listeners\EvaluateAutomationRules;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -25,11 +26,13 @@ class EventServiceProvider extends ServiceProvider
             CreateActivityLog::class,
             UpdateSafetyScore::class,
             RefreshDashboardCache::class,
+            EvaluateAutomationRules::class,
         ],
 
         SOSTriggered::class => [
             CreateActivityLog::class,
             QueueSosAlert::class,
+            EvaluateAutomationRules::class,
         ],
     ];
 
