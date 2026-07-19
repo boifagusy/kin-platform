@@ -158,21 +158,10 @@ class VersionManagerController extends Controller
     }
 
     // Analytics
-    public function analytics()
+    public function analytics(\App\Services\AnalyticsService $analytics)
     {
-        $versions = Version::withTrashed()->get();
-        $activeCount = $versions->where('is_active', true)->count();
-        $policies = UpdatePolicy::where('is_active', true)->get();
-        $scheduledCount = $policies->where('starts_at', '>', now())->count();
-        $expiredCount = $policies->where('expires_at', '<=', now())->count();
-
         return view('admin.versions.analytics', [
-            'total_versions' => $versions->count(),
-            'active_versions' => $activeCount,
-            'soft_deleted' => $versions->whereNotNull('deleted_at')->count(),
-            'total_policies' => $policies->count(),
-            'scheduled_releases' => $scheduledCount,
-            'expired_releases' => $expiredCount,
+            'analytics' => $analytics->getVersionAnalytics(),
         ]);
     }
 }

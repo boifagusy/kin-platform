@@ -250,4 +250,62 @@ class AnalyticsService
             'failed_count' => $failed,
         ];
     }
+
+    public function getVersionAnalytics(): array
+    {
+        $versions = \App\Models\Version::withTrashed()->get();
+        $policies = \App\Models\UpdatePolicy::where('is_active', true)->get();
+
+        return [
+            'summary' => [
+                'total_versions' => $versions->count(),
+                'active_versions' => $versions->where('is_active', true)->count(),
+                'scheduled_releases' => $policies->where('starts_at', '>', now())->count(),
+                'expired_releases' => $policies->where('expires_at', '<=', now())->count(),
+                'soft_deleted' => $versions->whereNotNull('deleted_at')->count(),
+            ],
+            'distribution' => [
+                'active' => $versions->where('is_active', true)->whereNull('deleted_at')->count(),
+                'inactive' => $versions->where('is_active', false)->whereNull('deleted_at')->count(),
+                'deleted' => $versions->whereNotNull('deleted_at')->count(),
+            ],
+            'scheduled' => $policies->where('starts_at', '>', now())->map(fn($p) => [
+                'version_name' => $p->version?->version_name ?? 'Unknown',
+                'platform' => $p->platform,
+                'starts_at' => $p->starts_at?->toISOString(),
+                'policy' => $p->policy,
+            ])->values()->toArray(),
+            'expired' => $policies->where('expires_at', '<=', now())->map(fn($p) => [
+                'version_name' => $p->version?->version_name ?? 'Unknown',
+                'platform' => $p->platform,
+                'expired_at' => $p->expires_at?->toISOString(),
+                'policy' => $p->policy,
+            ])->values()->toArray(),
+            'timeline' => $this->parseReleaseTimeline(),
+        ];
+    }
+
+    private function parseReleaseTimeline(): array
+    {
+        $logPath = storage_path('logs/laravel.log');
+        if (!file_exists($logPath)) {
+            return [];
+        }
+
+        $lines = file($logPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        $b5Lines = array_filter($lines, fn($l) => str_contains($l, '[B5]'));
+        $recent = array_slice(array_reverse($b5Lines), 0, 50);
+
+        $timeline = [];
+        foreach ($recent as $line) {
+            if (preg_match('/\[(.*?)\].*?\[B5\]\s+(.*?)\s*\{/', $line, $m)) {
+                $timeline[] = [
+                    'timestamp' => $m[1],
+                    'action' => trim($m[2]),
+                ];
+            }
+        }
+
+        return $timeline;
+    }
 }
