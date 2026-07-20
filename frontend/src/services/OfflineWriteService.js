@@ -1,14 +1,13 @@
 /**
- * OfflineWriteService v2.0 — Platform-wide offline-first write abstraction.
+ * OfflineWriteService v2.1 — Delegates queue operations to SyncCoordinator (S2.1).
+ * Public API unchanged (FR-08).
  * ADR: ADR-0010
  */
 
-import { LocationQueue } from './LocationQueue.js';
-import { SyncQueue } from './SyncQueue.js';
+import syncCoordinator from './SyncCoordinator.js';
 import networkDetection from './NetworkDetection.js';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
-const QUEUE_VERSION = 1;
 
 export const RESULT = {
   SENT: 'SENT',
@@ -17,14 +16,6 @@ export const RESULT = {
 };
 
 class OfflineWriteService {
-  constructor() {
-    this.queue = new LocationQueue(null, 'offline_write_queue');
-    this._startSyncOnReconnect();
-  }
-
-  /**
-   * Single network send — used by both online and sync paths.
-   */
   async _send(item) {
     const url = `${API_BASE}/${item.endpoint}`;
     const response = await fetch(url, {
@@ -49,15 +40,8 @@ class OfflineWriteService {
     return { status: response.status, data };
   }
 
-  /**
-   * Public write API.
-   * @param {string} type — 'checkin' | 'sos' | 'safe_zone' | 'trusted_contact'
-   * @param {object} payload — The data to send
-   * @param {string} method — HTTP method (default: 'POST')
-   */
   async write(type, payload, method = 'POST') {
     const item = {
-      version: QUEUE_VERSION,
       type,
       method,
       endpoint: this._endpoint(type),
@@ -65,19 +49,17 @@ class OfflineWriteService {
       timestamp: Date.now(),
     };
 
-    await this.queue.enqueue(item);
+    // Delegate queue to SyncCoordinator
+    await syncCoordinator.enqueue(type, payload);
 
     if (await networkDetection.isTrulyOnline()) {
       try {
         const result = await this._send(item);
-        await this.queue.dequeue();
         return { state: RESULT.SENT, ...result };
       } catch (error) {
         if (this._isRetryable(error)) {
-          console.warn(`OfflineWrite: ${type} queued (${error.status})`);
           return { state: RESULT.QUEUED, queued: true };
         }
-        await this.queue.dequeue();
         return { state: RESULT.FAILED, error: error.message };
       }
     }
@@ -87,36 +69,22 @@ class OfflineWriteService {
 
   _endpoint(type) {
     const map = { checkin: 'checkin', sos: 'sos', safe_zone: 'safe-zones', trusted_contact: 'trusted-contacts' };
-    return map[type] || type;
+    return map[type] || 'sync';
   }
 
   _isRetryable(error) {
-    const status = error.status || 0;
-    return status === 0 || status >= 500 || status === 429;
+    return error.status >= 500 || error.status === 429 || error.status === 0;
   }
 
-  _startSyncOnReconnect() {
-    this._cleanup = new SyncQueue(this.queue, async (item) => {
-      await this._send(item);
-      return true;
-    }).syncOnReconnect(10, 2000);
+  async flushAll() {
+    const status = await syncCoordinator.getStatus();
+    return { queued: status.queue_size, dead: status.dead_letter_count };
   }
 
-
-  async syncNow() {
-    const count = await this.queue.size();
-    if (count === 0) return { synced: 0 };
-    const sq = new SyncQueue(this.queue, async (item) => {
-      await this._send(item);
-      return true;
-    });
-    return sq.drain(count, 500);
-  }
-
-  async pendingCount() {
-    return this.queue.size();
+  async getQueueSize() {
+    const status = await syncCoordinator.getStatus();
+    return status.queue_size;
   }
 }
 
-const offlineWriteService = new OfflineWriteService();
-export default offlineWriteService;
+export default OfflineWriteService;
