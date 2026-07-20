@@ -215,4 +215,32 @@ export class LocationQueue {
   hasFailed() {
     return (this._failed || []).length > 0;
   }
+
+  /**
+   * Move an exhausted item to the dead-letter queue.
+   * Preserves the original item immutably with metadata alongside.
+   * @param {object} item - Original queue item
+   * @param {object} metadata - { retry_count, failure_reason, failed_at, last_attempt_at }
+   */
+  async addDeadLetter(item, metadata = {}) {
+    const deadLetters = await this.adapter.get("dead_letter_queue") || [];
+    deadLetters.push({
+      original_item: item,
+      metadata: {
+        retry_count: metadata.retry_count || 0,
+        failure_reason: metadata.failure_reason || "Unknown",
+        failed_at: metadata.failed_at || new Date().toISOString(),
+        last_attempt_at: metadata.last_attempt_at || new Date().toISOString(),
+      }
+    });
+    await this.adapter.set("dead_letter_queue", deadLetters);
+  }
+
+  /**
+   * Get all dead-letter items (diagnostics only in v1).
+   * @returns {Promise<Array>}
+   */
+  async getDeadLetters() {
+    return await this.adapter.get("dead_letter_queue") || [];
+  }
 }
