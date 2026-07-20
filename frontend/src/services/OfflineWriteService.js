@@ -49,7 +49,6 @@ class OfflineWriteService {
       timestamp: Date.now(),
     };
 
-    // Delegate queue to SyncCoordinator
     await syncCoordinator.enqueue(type, payload);
 
     if (await networkDetection.isTrulyOnline()) {
@@ -84,6 +83,11 @@ class OfflineWriteService {
   async getQueueSize() {
     const status = await syncCoordinator.getStatus();
     return status.queue_size;
+  }
+
+  // S2.1-P1: Compatibility method for SyncStatus component
+  async pendingCount() {
+    return await this.getQueueSize();
   }
 }
 
