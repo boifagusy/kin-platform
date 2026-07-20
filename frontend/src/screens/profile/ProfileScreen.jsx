@@ -65,6 +65,13 @@ function ProfileScreen() {
     }
   };
   
+  const getScoreLabel = (score) => {
+    if (score >= 90) return "Excellent";
+    if (score >= 70) return "Good";
+    if (score >= 50) return "Fair";
+    return "Needs Attention";
+  };
+
   const handleSignOut = () => {
     localStorage.removeItem('kin_phone');
     localStorage.removeItem('kin_token');
@@ -100,26 +107,29 @@ function ProfileScreen() {
       
       <div className="px-4 py-5 space-y-4 max-w-md mx-auto">
         
-        {/* Profile Card - Premium Glass Design */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm text-center">
-          <div className="relative inline-block">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#1A5632] to-[#2F6A44] flex items-center justify-center text-white text-3xl font-bold shadow-md">
-              {userInitial}
+        {/* Profile Card — Minimal M5.1 */}
+        <Card>
+          <div className="flex flex-col items-center py-6">
+            <div className="w-16 h-16 rounded-full border-2 border-[#1A5632] bg-white shadow-sm flex items-center justify-center">
+              <span className="text-xl font-semibold text-[#1A5632]">{userInitial}</span>
             </div>
-            <div className="absolute bottom-0 right-0 w-6 h-6 bg-[#D4A017] rounded-full border-2 border-white flex items-center justify-center">
-              <FaStar className="text-white text-[10px]" />
+            <h2 className="mt-4 text-xl font-semibold text-[#1A5632]">{userName}</h2>
+            <div className="mt-1 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-green-500"></span>
+              <span className="text-sm text-gray-500">Active</span>
+            </div>
+            <div className="mt-4 w-full px-4">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-gray-500">Safety Score</span>
+                <span className="text-xs font-semibold text-[#1A5632]">{safetyScore}%</span>
+              </div>
+              <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-[#1A5632] rounded-full transition-all" style={{"width": `${safetyScore}%`}}></div>
+              </div>
+              <p className="text-xs text-gray-400 mt-1 text-right">{getScoreLabel(safetyScore)}</p>
             </div>
           </div>
-          <h2 className="text-2xl font-bold text-[#1A5632] mt-4">{user?.name || "User"}</h2>
-          <div className="flex items-center justify-center gap-2 mt-2">
-            <div className="w-2 h-2 rounded-full bg-green-500" />
-            <span className="text-xs text-gray-500">Active</span>
-          </div>
-          <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50">
-            <FaShieldAlt className="text-[#1A5632] text-sm" />
-            <span className="text-sm font-medium text-[#1A5632]">Safety Score: {safetyScore}%</span>
-          </div>
-        </div>
+        </Card>
         
         {/* Contact Info */}
         <div className="bg-white rounded-2xl p-4 shadow-sm">
@@ -252,7 +262,7 @@ function ProfileScreen() {
           KIN v1.0.0 • Protecting what matters
         </p>
       </div>
-    <BottomNav activeTab="profile" />
+      <BottomNav activeTab="profile" />
     </div>
   );
 }

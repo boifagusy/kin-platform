@@ -16,6 +16,7 @@ import CheckInSettingsScreen from './screens/settings/CheckInSettingsScreen';
 import ContinueSetupScreen from './screens/onboarding/ContinueSetupScreen';
 import AlertsScreenV2 from './screens/ui-polish/AlertsScreenV2';
 import AlertDetailScreenV2 from './screens/ui-polish/AlertDetailScreenV2';
+import ProfileScreenV2 from './screens/ui-polish/ProfileScreenV2';
 
 const router = createBrowserRouter([
     {
@@ -47,6 +48,10 @@ const router = createBrowserRouter([
                 element: <VersionGate><ProtectedRoute><DashboardScreenV2 /></ProtectedRoute></VersionGate>
             },
             {
+            {
+                path: "profile",
+                element: <VersionGate><ProtectedRoute><ProfileScreenV2 /></ProtectedRoute></VersionGate>,
+            },
                 path: "settings",
                 element: <VersionGate><ProtectedRoute><SettingsScreen /></ProtectedRoute></VersionGate>,
             },

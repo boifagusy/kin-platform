@@ -68,7 +68,7 @@ function SettingsScreen() {
       {/* Header */}
       <div className="px-5 pt-12 pb-6">
         <button onClick={() => navigate(-1)} className="text-[#1A5632] text-sm font-medium mb-4 flex items-center gap-1">
-          <span className="material-symbols-rounded text-lg">arrow_back</span> Back
+          <span className="material-symbols-outlined text-lg">arrow_back</span> Back
         </button>
         <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
       </div>
@@ -78,13 +78,13 @@ function SettingsScreen() {
         <CardMotion className="bg-white rounded-2xl p-5 shadow-sm">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-full bg-[#1A5632] flex items-center justify-center">
-              <span className="material-symbols-rounded text-white text-2xl">person</span>
+              <span className="material-symbols-outlined text-white text-2xl">person</span>
             </div>
             <div className="flex-1">
               <p className="font-semibold text-gray-900 text-base">Sarah Okafor</p>
               <p className="text-sm text-gray-500">+234 812 345 6789</p>
             </div>
-            <span className="material-symbols-rounded text-gray-400">chevron_right</span>
+            <span className="material-symbols-outlined text-gray-400">chevron_right</span>
           </div>
         </CardMotion>
 
@@ -98,7 +98,7 @@ function SettingsScreen() {
               { icon: 'location_on', label: 'Safe Zones', value: 'Set', color: 'text-emerald-600' },
             ].map(item => (
               <div key={item.label} className="text-center">
-                <span className={`material-symbols-rounded text-xl ${item.color}`}>{item.icon}</span>
+                <span className={`material-symbols-outlined text-xl ${item.color}`}>{item.icon}</span>
                 <p className="text-xs text-gray-500 mt-1">{item.label}</p>
                 <p className={`text-sm font-semibold ${item.color}`}>{item.value}</p>
               </div>
@@ -120,12 +120,12 @@ function SettingsScreen() {
                     }}
                     className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-gray-50 transition-colors"
                   >
-                    <span className="material-symbols-rounded text-gray-500 text-xl">{item.icon}</span>
+                    <span className="material-symbols-outlined text-gray-500 text-xl">{item.icon}</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900">{item.label}</p>
                       <p className="text-xs text-gray-400 truncate">{item.desc}</p>
                     </div>
-                    <span className="material-symbols-rounded text-gray-300 text-lg">chevron_right</span>
+                    <span className="material-symbols-outlined text-gray-300 text-lg">chevron_right</span>
                   </button>
                 </ListItemMotion>
               ))}
