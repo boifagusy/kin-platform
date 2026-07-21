@@ -15,6 +15,9 @@ function AlertsScreenV2() {
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
   const [feedback, setFeedback] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
+  const [resolveNote, setResolveNote] = useState("");
+  const [showResolveConfirm, setShowResolveConfirm] = useState(null);
 
   const fetchIncidents = async () => {
     try {
@@ -28,7 +31,9 @@ function AlertsScreenV2() {
       });
       if (!response.ok) throw new Error(`Failed to load alerts: ${response.status}`);
       const data = await response.json();
-      setIncidents((data.data || []).filter(i => i.status !== 'resolved'));
+      const filtered = (data.data || []).filter(i => i.status !== 'resolved');
+      filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      setIncidents(filtered);
     } catch (err) {
       setError("Unable to load alerts. Please try again.");
     } finally {
@@ -46,8 +51,8 @@ function AlertsScreenV2() {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}` },
       });
+      setIncidents(prev => prev.map(i => i.id === id ? { ...i, read_at: new Date().toISOString(), can_mark_read: false } : i));
       setFeedback("Marked as read");
-      fetchIncidents();
     } catch {
       setFeedback("Failed to mark as read");
     } finally {
@@ -56,17 +61,24 @@ function AlertsScreenV2() {
     }
   };
 
+  const handleResolveConfirm = (id) => {
+    setShowResolveConfirm(id);
+    setResolveNote("");
+  };
+
   const handleResolve = async (id) => {
     setActionLoading(id);
     try {
       const token = localStorage.getItem("kin_token");
       await fetch(`${API_BASE}/incidents/${id}/resolve`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ role: "trusted_contact" }),
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ role: "trusted_contact", note: resolveNote }),
       });
+      setIncidents(prev => prev.filter(i => i.id !== id));
+      setExpandedId(null);
+      setShowResolveConfirm(null);
       setFeedback("Alert resolved");
-      fetchIncidents();
     } catch {
       setFeedback("Failed to resolve");
     } finally {
@@ -75,20 +87,24 @@ function AlertsScreenV2() {
     }
   };
 
+  const toggleExpand = (id) => {
+    setExpandedId(expandedId === id ? null : id);
+  };
+
+  const isSOS = (incident) => incident.type === "sos_triggered";
+
   const getIcon = (type) => {
     switch (type) {
       case "missed_checkin": return "warning";
       case "sos_triggered": return "emergency";
-      case "test": return "notifications";
-      default: return "description";
+      default: return "notifications";
     }
   };
 
   const getLabel = (type) => {
     switch (type) {
       case "missed_checkin": return "Missed Check-In";
-      case "sos_triggered": return "SOS Alert";
-      case "test": return "Test Alert";
+      case "sos_triggered": return "SOS Emergency";
       default: return "Alert";
     }
   };
@@ -104,11 +120,15 @@ function AlertsScreenV2() {
     return date.toLocaleDateString();
   };
 
-  const statusBadge = (status) => {
-    if (status === "active") {
-      return <span className="text-xs font-medium text-red-500 bg-red-50 px-2 py-0.5 rounded-full">Active</span>;
-    }
-    return <span className="text-xs font-medium text-green-500 bg-green-50 px-2 py-0.5 rounded-full">Resolved</span>;
+  const getMapsUrl = (incident) => {
+    const lat = incident.latitude || incident.location_lat;
+    const lng = incident.longitude || incident.location_lng;
+    if (lat && lng) return `https://www.google.com/maps?q=${lat},${lng}`;
+    return null;
+  };
+
+  const getUserPhone = (incident) => {
+    return incident.user_phone || incident.phone || phone;
   };
 
   if (loading) {
@@ -133,11 +153,7 @@ function AlertsScreenV2() {
               </button>
               <h1 className="text-lg font-bold text-[#1A5632]">Alerts</h1>
             </div>
-            <button
-              onClick={fetchIncidents}
-              title="Refresh alerts"
-              className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"
-            >
+            <button onClick={fetchIncidents} title="Refresh" className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center">
               <span className="material-symbols-outlined text-[#1A5632]">refresh</span>
             </button>
           </div>
@@ -145,9 +161,7 @@ function AlertsScreenV2() {
 
         <div className="px-5 pt-4 pb-24 space-y-4 max-w-md mx-auto">
           {feedback && (
-            <div className="bg-[#1A5632] text-white text-sm text-center py-2 rounded-xl">
-              {feedback}
-            </div>
+            <div className="bg-[#1A5632] text-white text-sm text-center py-2 rounded-xl">{feedback}</div>
           )}
 
           {error && (
@@ -165,54 +179,109 @@ function AlertsScreenV2() {
             </div>
           )}
 
-          {incidents.map((incident) => (
-            <Card key={incident.id}>
-              <button
-                onClick={() => navigate(`/alerts/${incident.id}`, { state: { incident, phone } })}
-                className="w-full text-left"
-              >
-                <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-2xl text-[#1A5632] mt-0.5">
-                    {getIcon(incident.type)}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <p className="font-semibold text-gray-900 text-sm">{getLabel(incident.type)}</p>
-                      {statusBadge(incident.status)}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-0.5">{incident.message || "No details"}</p>
-                    <p className="text-xs text-gray-400 mt-1">{formatTime(incident.created_at)}</p>
-                  </div>
-                  <span className="material-symbols-outlined text-gray-300">chevron_right</span>
-                </div>
-              </button>
+          {incidents.map((incident) => {
+            const isExpanded = expandedId === incident.id;
+            const isEmergency = isSOS(incident);
+            const mapsUrl = getMapsUrl(incident);
+            const userPhone = getUserPhone(incident);
 
-              <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
-                {incident.can_mark_read && (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={(e) => { e.stopPropagation(); handleMarkRead(incident.id); }}
-                    disabled={actionLoading === incident.id}
-                    className="flex-1"
-                  >
-                    {actionLoading === incident.id ? "..." : "Mark Read"}
-                  </Button>
+            return (
+              <Card key={incident.id} className={isEmergency ? "border-l-4 border-l-red-500" : ""}>
+                <button
+                  onClick={() => toggleExpand(incident.id)}
+                  className="w-full text-left"
+                >
+                  <div className="flex items-start gap-3">
+                    <span className={`material-symbols-outlined text-2xl mt-0.5 ${isEmergency ? "text-red-500" : "text-[#1A5632]"}`}>
+                      {getIcon(incident.type)}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className={`font-semibold text-sm ${isEmergency ? "text-red-600" : "text-gray-900"}`}>
+                          {getLabel(incident.type)}
+                        </p>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${isEmergency ? "text-red-500 bg-red-50" : "text-red-500 bg-red-50"}`}>
+                          Active
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-0.5 truncate">{incident.message || "No details"}</p>
+                      <p className="text-xs text-gray-400 mt-1">{formatTime(incident.created_at)}</p>
+                    </div>
+                    <span className="material-symbols-outlined text-gray-300 transition-transform" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                      expand_more
+                    </span>
+                  </div>
+                </button>
+
+                {isExpanded && (
+                  <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
+                    <div className="text-xs text-gray-500 space-y-1">
+                      {incident.location_lat && incident.location_lng && (
+                        <p>📍 {incident.location_lat}, {incident.location_lng}</p>
+                      )}
+                      <p>🕒 {new Date(incident.created_at).toLocaleString()}</p>
+                      {incident.battery_level && <p>🔋 {incident.battery_level}%</p>}
+                      {incident.message && <p className="mt-1">{incident.message}</p>}
+                    </div>
+
+                    {isEmergency && (
+                      <div className="flex gap-2">
+                        {mapsUrl && (
+                          <a
+                            href={mapsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl bg-blue-50 text-blue-600 text-xs font-medium"
+                          >
+                            <span className="material-symbols-outlined text-sm">map</span> Open Maps
+                          </a>
+                        )}
+                        {userPhone && (
+                          <a
+                            href={`tel:${userPhone}`}
+                            className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl bg-green-50 text-green-600 text-xs font-medium"
+                          >
+                            <span className="material-symbols-outlined text-sm">call</span> Call
+                          </a>
+                        )}
+                      </div>
+                    )}
+
+                    {showResolveConfirm === incident.id ? (
+                      <div className="space-y-2">
+                        <textarea
+                          value={resolveNote}
+                          onChange={(e) => setResolveNote(e.target.value)}
+                          placeholder="Resolution note (optional)..."
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs"
+                          rows={2}
+                        />
+                        <div className="flex gap-2">
+                          <Button variant="secondary" size="sm" onClick={() => setShowResolveConfirm(null)} className="flex-1">Cancel</Button>
+                          <Button variant="primary" size="sm" onClick={() => handleResolve(incident.id)} disabled={actionLoading === incident.id} className="flex-1">
+                            {actionLoading === incident.id ? "..." : "Resolve SOS"}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        {incident.can_mark_read && (
+                          <Button variant="secondary" size="sm" onClick={(e) => { e.stopPropagation(); handleMarkRead(incident.id); }} disabled={actionLoading === incident.id} className="flex-1">
+                            {actionLoading === incident.id ? "..." : "Mark Read"}
+                          </Button>
+                        )}
+                        {incident.can_resolve && (
+                          <Button variant="primary" size="sm" onClick={(e) => { e.stopPropagation(); handleResolveConfirm(incident.id); }} disabled={actionLoading === incident.id} className="flex-1">
+                            {actionLoading === incident.id ? "..." : "Resolve SOS"}
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 )}
-                {incident.can_resolve && (
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={(e) => { e.stopPropagation(); handleResolve(incident.id); }}
-                    disabled={actionLoading === incident.id}
-                    className="flex-1"
-                  >
-                    {actionLoading === incident.id ? "..." : "Resolve"}
-                  </Button>
-                )}
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       </PageMotion>
     </ScreenLayout>

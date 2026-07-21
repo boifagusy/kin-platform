@@ -25,6 +25,10 @@ class IncidentController extends Controller
                 'type' => $i->type ?? 'incident',
                 'status' => $i->status,
                 'message' => $i->message,
+                'location_lat' => $i->location_lat,
+                'location_lng' => $i->location_lng,
+                'battery_level' => $i->battery_level,
+                'user_phone' => $i->user?->phone,
                 'created_at' => $i->created_at?->toISOString(),
                 'resolved_at' => $i->resolved_at?->toISOString(),
                 'can_resolve' => $i->status !== 'resolved',
@@ -97,8 +101,14 @@ class IncidentController extends Controller
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
             }
 
-            $incident = SafetyIncident::where('user_id', $user->id)
-                ->where('id', $id)
+            // Allow incident owner OR trusted contact to resolve
+            $incident = SafetyIncident::where('id', $id)
+                ->where(function ($q) use ($user) {
+                    $q->where('user_id', $user->id)
+                      ->orWhereHas('user.trustedContacts', function ($q2) use ($user) {
+                          $q2->where('contact_user_id', $user->id);
+                      });
+                })
                 ->first();
 
             if (!$incident) {

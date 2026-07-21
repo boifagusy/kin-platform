@@ -1,5 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom';
-import App from './App';
+import RootLayout from './RootLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import VersionGate from './components/auth/VersionGate';
 import WelcomeScreenV3 from './screens/ui-polish/WelcomeScreenV3';
@@ -22,7 +22,7 @@ import NetworkScreenV2 from './screens/ui-polish/NetworkScreenV2';
 const router = createBrowserRouter([
     {
         path: '/',
-        element: <App />,
+        element: <RootLayout />,
         children: [
             // Public routes (no version gate)
             { index: true, element: <WelcomeScreenV3 /> },
