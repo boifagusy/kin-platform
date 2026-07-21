@@ -72,6 +72,7 @@ class SyncCoordinator {
         'Accept': 'application/json',
       };
       if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (item.operation_id) headers['X-Operation-Id'] = item.operation_id;
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -141,6 +142,7 @@ class SyncCoordinator {
       type,
       payload,
       timestamp: Date.now(),
+      operation_id: crypto.randomUUID(),
     };
     await this.queue.enqueue(item);
 

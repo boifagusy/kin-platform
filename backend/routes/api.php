@@ -23,12 +23,12 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/confirm-phone', [AuthController::class, 'confirmPhone']);
     Route::post('/auth/create-pin', [AuthController::class, 'createPin']);
     Route::post('/auth/login-pin', [AuthController::class, 'loginPin']);
-   Route::post('/sos', [SosController::class, 'store'])->middleware('auth:sanctum');
+   Route::post('/sos', [SosController::class, 'store'])->middleware('auth:sanctum', 'idempotency');
 
 
  
 Route::get('/trusted-contacts', [TrustedContactController::class, 'index'])->middleware('auth:sanctum');
-Route::post('/trusted-contacts', [TrustedContactController::class, 'store'])->middleware('auth:sanctum');
+Route::post('/trusted-contacts', [TrustedContactController::class, 'store'])->middleware('auth:sanctum', 'idempotency');
 Route::delete('/trusted-contacts/{id}', [TrustedContactController::class, 'destroy'])->middleware('auth:sanctum');
 
     Route::get('/incidents', [IncidentController::class, 'index'])->middleware('auth:sanctum');
@@ -43,7 +43,7 @@ Route::post('/incidents/{id}/resolve', [IncidentController::class, 'markResolved
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index']);
         Route::get('/dashboard/activities', [DashboardController::class, 'activities']);
-        Route::post('/checkin', [CheckInController::class, 'store']);
+        Route::post('/checkin', [CheckInController::class, 'store'])->middleware('idempotency');
         Route::post('/assistance', [AssistanceController::class, 'store']);
         Route::get('/checkin-settings', [CheckInSettingsController::class, 'get']);
         Route::post('/checkin-settings', [CheckInSettingsController::class, 'update']);
@@ -122,7 +122,7 @@ Route::get('/health', function () {
 require_once __DIR__.'/watchtower.php';
 
 // Safe Zones
-Route::prefix('v1/safe-zones')->middleware('auth:sanctum')->group(function () {
+Route::prefix('v1/safe-zones')->middleware('auth:sanctum', 'idempotency')->group(function () {
     Route::get('/', [App\Http\Controllers\Api\V1\SafeZoneController::class, 'index']);
     Route::post('/', [App\Http\Controllers\Api\V1\SafeZoneController::class, 'store']);
     Route::patch('/{id}', [App\Http\Controllers\Api\V1\SafeZoneController::class, 'update']);
