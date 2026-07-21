@@ -28,7 +28,7 @@ function AlertsScreenV2() {
       });
       if (!response.ok) throw new Error(`Failed to load alerts: ${response.status}`);
       const data = await response.json();
-      setIncidents(data.data || []);
+      setIncidents((data.data || []).filter(i => i.status !== 'resolved'));
     } catch (err) {
       setError("Unable to load alerts. Please try again.");
     } finally {
