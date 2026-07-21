@@ -1,101 +1,114 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaArrowLeft, FaSync } from "react-icons/fa";
+import ScreenLayout from '../../design-system/layouts/ScreenLayout';
+import Card from '../../design-system/components/Card';
+import Button from '../../design-system/components/Button';
+import PageMotion from '../../motion/page';
 
 const API_BASE = import.meta.env.VITE_API_URL;
 
 function AlertsScreenV2() {
   const navigate = useNavigate();
+  const phone = localStorage.getItem("kin_phone");
   const [incidents, setIncidents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  const phone = localStorage.getItem("kin_phone") || "";
+  const [actionLoading, setActionLoading] = useState(null);
+  const [feedback, setFeedback] = useState(null);
 
   const fetchIncidents = async () => {
-    setLoading(true);
-    setError(null);
-
     try {
-      const url = `${API_BASE}/incidents?phone=${encodeURIComponent(phone)}`;
-
+      setError(null);
       const token = localStorage.getItem("kin_token");
-
+      const url = phone
+        ? `${API_BASE}/incidents?phone=${encodeURIComponent(phone)}`
+        : `${API_BASE}/incidents`;
       const response = await fetch(url, {
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": token ? `Bearer ${token}` : '',
-        },
+        headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
       });
-
-      if (!response.ok) {
-        throw new Error(`Failed to load alerts: ${response.status}`);
-      }
-
+      if (!response.ok) throw new Error(`Failed to load alerts: ${response.status}`);
       const data = await response.json();
-
-      if (data.success && data.data) {
-        setIncidents(data.data.incidents || []);
-        setUnreadCount(data.data.unread || 0);
-      } else {
-        setIncidents([]);
-      }
+      setIncidents(data.data || []);
     } catch (err) {
-      console.error("Error fetching incidents:", err);
       setError("Unable to load alerts. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (phone) {
-      fetchIncidents();
-    } else {
-      setError("No phone number found. Please log in again.");
-      setLoading(false);
-    }
-  }, [phone]);
+  useEffect(() => { fetchIncidents(); }, []);
 
-  const handleRefresh = () => {
-    fetchIncidents();
+  const handleMarkRead = async (id) => {
+    setActionLoading(id);
+    try {
+      const token = localStorage.getItem("kin_token");
+      await fetch(`${API_BASE}/incidents/${id}/read`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setFeedback("Marked as read");
+      fetchIncidents();
+    } catch {
+      setFeedback("Failed to mark as read");
+    } finally {
+      setActionLoading(null);
+      setTimeout(() => setFeedback(null), 3000);
+    }
+  };
+
+  const handleResolve = async (id) => {
+    setActionLoading(id);
+    try {
+      const token = localStorage.getItem("kin_token");
+      await fetch(`${API_BASE}/incidents/${id}/resolve`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ role: "trusted_contact" }),
+      });
+      setFeedback("Alert resolved");
+      fetchIncidents();
+    } catch {
+      setFeedback("Failed to resolve");
+    } finally {
+      setActionLoading(null);
+      setTimeout(() => setFeedback(null), 3000);
+    }
   };
 
   const getIcon = (type) => {
     switch (type) {
-      case "missed_checkin": return "⚠️";
-      case "sos_triggered": return "🚨";
-      case "test": return "🔔";
-      default: return "📋";
+      case "missed_checkin": return "warning";
+      case "sos_triggered": return "emergency";
+      case "test": return "notifications";
+      default: return "description";
     }
   };
 
-  const getTimeGroup = (dateString) => {
-    const date = new Date(dateString);
+  const getLabel = (type) => {
+    switch (type) {
+      case "missed_checkin": return "Missed Check-In";
+      case "sos_triggered": return "SOS Alert";
+      case "test": return "Test Alert";
+      default: return "Alert";
+    }
+  };
+
+  const formatTime = (dateStr) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) return 'Today';
-    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
-    return 'Earlier';
+    if (date.toDateString() === today.toDateString()) return "Today " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+    return date.toLocaleDateString();
   };
 
-  const getStatusBadge = (status) => {
-    if (status === 'active') {
-      return <span className="inline-block text-xs font-medium text-red-500 bg-red-50 px-2 py-0.5 rounded-full">Active</span>;
+  const statusBadge = (status) => {
+    if (status === "active") {
+      return <span className="text-xs font-medium text-red-500 bg-red-50 px-2 py-0.5 rounded-full">Active</span>;
     }
-    return <span className="inline-block text-xs font-medium text-green-500 bg-green-50 px-2 py-0.5 rounded-full">Resolved</span>;
-  };
-
-  const getTitle = (type) => {
-    switch (type) {
-      case "missed_checkin": return "Missed Check-In";
-      case "sos_triggered": return "SOS Triggered";
-      case "test": return "Test Alert";
-      default: return "Safety Alert";
-    }
+    return <span className="text-xs font-medium text-green-500 bg-green-50 px-2 py-0.5 rounded-full">Resolved</span>;
   };
 
   if (loading) {
@@ -110,108 +123,99 @@ function AlertsScreenV2() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F0F7F2] pb-24">
-      {/* Header */}
-      <div className="bg-white px-5 py-4 border-b border-[#E9ECEF] sticky top-0 z-10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button onClick={() => navigate(-1)} className="text-[#1A5632] text-xl">
-              <FaArrowLeft />
-            </button>
-            <h1 className="text-lg font-bold text-[#1A5632]">Alerts</h1>
-            {unreadCount > 0 && (
-              <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                {unreadCount}
-              </span>
-            )}
-          </div>
-          <button
-            onClick={handleRefresh}
-            className="p-2 rounded-full hover:bg-[#F0F7F2] transition-colors"
-            title="Refresh alerts"
-          >
-            <FaSync className="text-[#1A5632] text-sm" />
-          </button>
-        </div>
-      </div>
-
-      <div className="px-4 py-5 max-w-md mx-auto">
-        {error && (
-          <div className="bg-red-50 rounded-2xl p-6 text-center border border-red-200">
-            <p className="text-red-600 text-sm">{error}</p>
-            <button
-              onClick={handleRefresh}
-              className="mt-3 px-4 py-2 rounded-xl bg-[#1A5632] text-white text-sm font-medium hover:opacity-90 transition"
-            >
-              Retry
-            </button>
-          </div>
-        )}
-
-        {!error && incidents.length === 0 && (
-          <div className="bg-white rounded-2xl p-8 text-center shadow-sm border border-[#E9ECEF]">
-            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#E8F3EA] flex items-center justify-center">
-              <span className="material-symbols-outlined text-4xl text-[#1A5632]">shield</span>
+    <ScreenLayout>
+      <PageMotion>
+        <div className="bg-white px-5 py-4 border-b border-[#E9ECEF] sticky top-0 z-10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button onClick={() => navigate(-1)} className="text-[#1A5632]">
+                <span className="material-symbols-outlined">arrow_back</span>
+              </button>
+              <h1 className="text-lg font-bold text-[#1A5632]">Alerts</h1>
             </div>
-            <h3 className="text-lg font-semibold text-[#1A1A1A]">No Active Alerts</h3>
-            <p className="text-sm text-[#6C757D] mt-1">You're safe. Safety incidents will appear here when they occur.</p>
+            <button
+              onClick={fetchIncidents}
+              title="Refresh alerts"
+              className="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center"
+            >
+              <span className="material-symbols-outlined text-[#1A5632]">refresh</span>
+            </button>
           </div>
-        )}
+        </div>
 
-        {!error && incidents.length > 0 && (
-          <div className="space-y-4">
-            {['Today', 'Yesterday', 'Earlier'].map((group) => {
-              const grouped = incidents
-                .filter(i => getTimeGroup(i.created_at) === group)
-                .sort((a, b) => {
-                  if (a.status === 'active' && b.status !== 'active') return -1;
-                  if (a.status !== 'active' && b.status === 'active') return 1;
-                  return 0;
-                });
+        <div className="px-5 pt-4 pb-24 space-y-4 max-w-md mx-auto">
+          {feedback && (
+            <div className="bg-[#1A5632] text-white text-sm text-center py-2 rounded-xl">
+              {feedback}
+            </div>
+          )}
 
-              if (grouped.length === 0) return null;
+          {error && (
+            <div className="text-center py-12">
+              <p className="text-red-500 text-sm mb-4">{error}</p>
+              <Button variant="secondary" size="md" onClick={fetchIncidents}>Retry</Button>
+            </div>
+          )}
 
-              return (
-                <div key={group}>
-                  <h3 className="text-xs font-semibold text-[#6C757D] uppercase tracking-wider mb-2 px-1">
-                    {group}
-                  </h3>
-                  <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#E9ECEF]">
-                    {grouped.map((incident, idx) => (
-                      <div
-                        key={incident.id}
-                        onClick={() => navigate("/alert-detail", { state: { incident } })}
-                        className={`px-5 py-4 flex gap-3 cursor-pointer hover:bg-[#F8F9FA] transition-colors ${
-                          idx < grouped.length - 1 ? "border-b border-[#E9ECEF]" : ""
-                        }`}
-                      >
-                        <div className="w-10 h-10 rounded-full bg-[#F3F4F6] flex items-center justify-center text-xl flex-shrink-0">
-                          {getIcon(incident.type)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <h4 className="text-sm font-semibold text-[#1F2937] truncate">
-                              {getTitle(incident.type)}
-                            </h4>
-                            <span className="text-xs text-[#9CA3AF] whitespace-nowrap flex-shrink-0">
-                              {new Date(incident.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          </div>
-                          <p className="text-sm text-[#6B728D] mt-0.5 line-clamp-2">
-                            {incident.message}
-                          </p>
-                          {getStatusBadge(incident.status)}
-                        </div>
-                      </div>
-                    ))}
+          {!error && incidents.length === 0 && (
+            <div className="text-center py-12">
+              <span className="material-symbols-outlined text-5xl text-gray-300 mb-4">inbox</span>
+              <h3 className="text-base font-semibold text-gray-700">No Active Alerts</h3>
+              <p className="text-sm text-gray-400 mt-1">You're all caught up.</p>
+            </div>
+          )}
+
+          {incidents.map((incident) => (
+            <Card key={incident.id}>
+              <button
+                onClick={() => navigate(`/alerts/${incident.id}`, { state: { incident, phone } })}
+                className="w-full text-left"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="material-symbols-outlined text-2xl text-[#1A5632] mt-0.5">
+                    {getIcon(incident.type)}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <p className="font-semibold text-gray-900 text-sm">{getLabel(incident.type)}</p>
+                      {statusBadge(incident.status)}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5">{incident.message || "No details"}</p>
+                    <p className="text-xs text-gray-400 mt-1">{formatTime(incident.created_at)}</p>
                   </div>
+                  <span className="material-symbols-outlined text-gray-300">chevron_right</span>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
+              </button>
+
+              <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                {incident.can_mark_read && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={(e) => { e.stopPropagation(); handleMarkRead(incident.id); }}
+                    disabled={actionLoading === incident.id}
+                    className="flex-1"
+                  >
+                    {actionLoading === incident.id ? "..." : "Mark Read"}
+                  </Button>
+                )}
+                {incident.can_resolve && (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={(e) => { e.stopPropagation(); handleResolve(incident.id); }}
+                    disabled={actionLoading === incident.id}
+                    className="flex-1"
+                  >
+                    {actionLoading === incident.id ? "..." : "Resolve"}
+                  </Button>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+      </PageMotion>
+    </ScreenLayout>
   );
 }
 

@@ -34,6 +34,7 @@ Route::delete('/trusted-contacts/{id}', [TrustedContactController::class, 'destr
     Route::get('/incidents', [IncidentController::class, 'index'])->middleware('auth:sanctum');
 Route::get('/incidents/{id}', [IncidentController::class, 'show'])->middleware('auth:sanctum');
 Route::post('/incidents/{id}/resolve', [IncidentController::class, 'markResolved'])->middleware('auth:sanctum');
+Route::patch('/incidents/{id}/read', [IncidentController::class, 'markRead'])->middleware('auth:sanctum');
     Route::get('/trusted-contact/notifications/{phone}', [IncidentController::class, 'notifications']);
 
     Route::post('/auth/user-details', [AuthController::class, 'userDetails']);

@@ -36,7 +36,7 @@ function SafeZonesScreen() {
   };
 
   useEffect(() => {
-  offlineWrite.syncNow().then(r => { if (r.synced > 0) fetchZones(); });
+  // syncNow removed in S2.1 — SyncCoordinator handles startup sync
     fetchZones();
   }, []);
 
