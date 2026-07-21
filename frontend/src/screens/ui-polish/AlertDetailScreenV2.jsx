@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FaArrowLeft, FaPhone, FaWhatsapp, FaMapMarkerAlt, FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
+import { FaArrowLeft, FaPhone, FaWhatsapp, FaMapMarkerAlt, FaCheck, FaExclamationTriangle } from "react-icons/fa";
 
 const API_BASE = import.meta.env.VITE_API_URL;
 
@@ -37,7 +37,7 @@ function AlertDetailScreenV2() {
         setError(null);
 
         // Fetch incident details
-        const incidentRes = await fetch(`${API_BASE}/incidents/${incidentFromState.id}`);
+        const incidentRes = await fetch(`${API_BASE}/incidents/${incidentFromState.id}`, { headers: { Authorization: `Bearer ${localStorage.getItem("kin_token")}` } });
         const incidentData = await incidentRes.json();
 
         if (incidentData.success) {
@@ -54,7 +54,7 @@ function AlertDetailScreenV2() {
         }
 
         // Fetch location data
-        const locationRes = await fetch(`${API_BASE}/location?phone=${encodeURIComponent(phone)}`);
+        const locationRes = await fetch(`${API_BASE}/location?phone=${encodeURIComponent(phone)}`, { headers: { Authorization: `Bearer ${localStorage.getItem("kin_token")}` } });
         const locationData = await locationRes.json();
 
         if (locationData.success && locationData.data) {
@@ -297,7 +297,7 @@ function AlertDetailScreenV2() {
             onClick={handleResolve}
             className="w-full h-12 rounded-xl bg-[#1A5632] text-white font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all"
           >
-            <FaCheckCircle />
+            <FaCheck />
             Resolve Alert
           </button>
         )}
