@@ -17,6 +17,7 @@ import ContinueSetupScreen from './screens/onboarding/ContinueSetupScreen';
 import AlertsScreenV2 from './screens/ui-polish/AlertsScreenV2';
 import AlertDetailScreenV2 from './screens/ui-polish/AlertDetailScreenV2';
 import ProfileScreenV2 from './screens/ui-polish/ProfileScreenV2';
+import NetworkScreenV2 from './screens/ui-polish/NetworkScreenV2';
 
 const router = createBrowserRouter([
     {
@@ -61,6 +62,10 @@ const router = createBrowserRouter([
             },
             {
                 path: "settings/safe-zones",
+            {
+                path: "network",
+                element: <VersionGate><ProtectedRoute><NetworkScreenV2 /></ProtectedRoute></VersionGate>,
+            },
                 element: <VersionGate><SafeZonesScreen /></VersionGate>,
             },
             {

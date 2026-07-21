@@ -79,7 +79,7 @@ https://kin.app`;
   };
 
   useEffect(() => {
-    offlineWrite.syncNow().then(r => { if (r.synced > 0) fetchContact(); });
+    // syncNow removed in S2.1 — SyncCoordinator handles startup sync
     if (!phone) {
       navigate("/login");
       return;
