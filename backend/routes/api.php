@@ -30,6 +30,9 @@ Route::prefix('v1')->group(function () {
 Route::get('/trusted-contacts', [TrustedContactController::class, 'index'])->middleware('auth:sanctum');
 Route::post('/trusted-contacts', [TrustedContactController::class, 'store'])->middleware('auth:sanctum', 'idempotency');
 Route::delete('/trusted-contacts/{id}', [TrustedContactController::class, 'destroy'])->middleware('auth:sanctum');
+    Route::patch('/trusted-contacts/{id}', [TrustedContactController::class, 'update'])->middleware('auth:sanctum');
+    Route::post('/trusted-contacts/{id}/resend', [TrustedContactController::class, 'resend'])->middleware('auth:sanctum');
+    Route::post('/trusted-contacts/verify', [TrustedContactController::class, 'verify']);
 
     Route::get('/incidents', [IncidentController::class, 'index'])->middleware('auth:sanctum');
 Route::get('/incidents/{id}', [IncidentController::class, 'show'])->middleware('auth:sanctum');
@@ -131,10 +134,7 @@ Route::prefix('v1/safe-zones')->middleware('auth:sanctum', 'idempotency')->group
 });
 
 // Trusted Contact Verification
-Route::post('/trusted-contacts/verify', [App\Http\Controllers\Api\V1\VerificationController::class, 'verify']);
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/trusted-contacts/{id}/resend', [App\Http\Controllers\Api\V1\VerificationController::class, 'resend']);
-    Route::patch('/trusted-contacts/{id}', [App\Http\Controllers\Api\V1\TrustedContactController::class, 'update']);
 });
 
 Route::get('/v1/announcements', [App\Http\Controllers\Api\V1\AnnouncementController::class, 'index']);

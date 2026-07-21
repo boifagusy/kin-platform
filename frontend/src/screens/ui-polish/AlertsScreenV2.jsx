@@ -16,6 +16,7 @@ function AlertsScreenV2() {
   const [actionLoading, setActionLoading] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
+  const [newlyResolved, setNewlyResolved] = useState(null);
   const [resolveNote, setResolveNote] = useState("");
   const [showResolveConfirm, setShowResolveConfirm] = useState(null);
 
@@ -35,6 +36,7 @@ function AlertsScreenV2() {
       filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       setIncidents(filtered);
     } catch (err) {
+      alert(`DEBUG alerts fetch failed:\nname: ${err.name}\nmessage: ${err.message}\ntoken present: ${!!token}\nAPI_BASE: ${API_BASE}`);
       setError("Unable to load alerts. Please try again.");
     } finally {
       setLoading(false);
@@ -75,10 +77,14 @@ function AlertsScreenV2() {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ role: "trusted_contact", note: resolveNote }),
       });
-      setIncidents(prev => prev.filter(i => i.id !== id));
-      setExpandedId(null);
+      setNewlyResolved(id);
       setShowResolveConfirm(null);
-      setFeedback("Alert resolved");
+      setFeedback("Alert resolved — dismissed");
+      setTimeout(() => {
+        setIncidents(prev => prev.filter(i => i.id !== id));
+        setNewlyResolved(null);
+        setExpandedId(null);
+      }, 2000);
     } catch {
       setFeedback("Failed to resolve");
     } finally {
@@ -183,10 +189,13 @@ function AlertsScreenV2() {
             const isExpanded = expandedId === incident.id;
             const isEmergency = isSOS(incident);
             const mapsUrl = getMapsUrl(incident);
+            const isResolvedPreview = newlyResolved === incident.id;
+            const lat = incident.latitude || incident.location_lat;
+            const lng = incident.longitude || incident.location_lng;
             const userPhone = getUserPhone(incident);
 
             return (
-              <Card key={incident.id} className={isEmergency ? "border-l-4 border-l-red-500" : ""}>
+              <Card key={incident.id} className={`${isEmergency ? "border-l-4 border-l-red-500" : ""} ${isResolvedPreview ? "opacity-60 bg-green-50" : ""}`}>
                 <button
                   onClick={() => toggleExpand(incident.id)}
                   className="w-full text-left"
@@ -200,8 +209,8 @@ function AlertsScreenV2() {
                         <p className={`font-semibold text-sm ${isEmergency ? "text-red-600" : "text-gray-900"}`}>
                           {getLabel(incident.type)}
                         </p>
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${isEmergency ? "text-red-500 bg-red-50" : "text-red-500 bg-red-50"}`}>
-                          Active
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${isResolvedPreview ? "text-green-600 bg-green-100" : "text-red-500 bg-red-50"}`}>
+                          {isResolvedPreview ? "Resolved" : "Active"}
                         </span>
                       </div>
                       <p className="text-xs text-gray-500 mt-0.5 truncate">{incident.message || "No details"}</p>
@@ -216,8 +225,8 @@ function AlertsScreenV2() {
                 {isExpanded && (
                   <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
                     <div className="text-xs text-gray-500 space-y-1">
-                      {incident.location_lat && incident.location_lng && (
-                        <p>📍 {incident.location_lat}, {incident.location_lng}</p>
+                      {lat && lng && (
+                        <p>📍 {lat}, {lng}</p>
                       )}
                       <p>🕒 {new Date(incident.created_at).toLocaleString()}</p>
                       {incident.battery_level && <p>🔋 {incident.battery_level}%</p>}

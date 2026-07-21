@@ -101,17 +101,25 @@ class IncidentController extends Controller
                 return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
             }
 
-            // Allow incident owner OR trusted contact to resolve
-            $incident = SafetyIncident::where('id', $id)
-                ->where(function ($q) use ($user) {
-                    $q->where('user_id', $user->id)
-                      ->orWhereHas('user.trustedContacts', function ($q2) use ($user) {
-                          $q2->where('contact_user_id', $user->id);
-                      });
-                })
-                ->first();
-
+            $incident = SafetyIncident::where('id', $id)->first();
             if (!$incident) {
+                return response()->json(['success' => false, 'message' => 'Incident not found'], 404);
+            }
+
+            $isOwner = $incident->user_id === $user->id;
+            $isTrustedContact = false;
+
+            if (!$isOwner) {
+                $permissionService = app(\App\Services\EmergencyPermissionService::class);
+                $normalizedUserPhone = $permissionService->normalizePhone($user->phone);
+
+                $isTrustedContact = \App\Models\TrustedContact::where('user_id', $incident->user_id)
+                    ->where('verified', true)
+                    ->get()
+                    ->contains(fn($tc) => $permissionService->normalizePhone($tc->phone) === $normalizedUserPhone);
+            }
+
+            if (!$isOwner && !$isTrustedContact) {
                 return response()->json(['success' => false, 'message' => 'Incident not found'], 404);
             }
 

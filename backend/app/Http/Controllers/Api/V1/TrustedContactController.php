@@ -77,13 +77,9 @@ class TrustedContactController extends Controller
             return ApiResponse::error('Free plan limit reached. Upgrade to premium for more contacts.', 403);
         }
 
-        $contact = TrustedContact::create([
-            'user_id' => $user->id,
+        $contact = $this->service->create($user, [
             'name' => $request->name,
             'phone' => $request->contact_phone,
-            'verified' => false,
-            'verification_token' => Str::random(40),
-            'active' => true,
         ]);
 
         return ApiResponse::success($contact, 'Trusted contact added', 201);
@@ -113,16 +109,11 @@ class TrustedContactController extends Controller
 
     public function verify($token)
     {
-        $contact = TrustedContact::where('verification_token', $token)->first();
+        $contact = $this->service->verify($token);
 
         if (!$contact) {
             return response("Invalid or expired verification link.", 404);
         }
-
-        $contact->update([
-            'verified' => true,
-            'verification_token' => null,
-        ]);
 
         return response("You have been verified as a trusted contact for KIN. Thank you!", 200);
     }
