@@ -75,6 +75,10 @@
             <span class="text-sm">Templates</span>
         </a>
     </li>
+    <li>
+        <a href="{{ route('admin.versions.index') }}" class="flex items-center gap-3 px-4 py-2.5 {{ request()->routeIs('admin.versions.*') ? 'text-primary font-semibold bg-green-50' : 'text-gray-600 hover:bg-gray-50' }} rounded-lg transition-all">
+            <span class="material-symbols-outlined">deployed_code</span>
+            <span class="text-sm">Version Manager</span>
         </a>
     </li>
 </ul>
