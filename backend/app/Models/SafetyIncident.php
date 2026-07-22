@@ -22,7 +22,7 @@ class SafetyIncident extends Model
         'battery_level',
         'message',
         'resolved_at',
-        'escalated_at',
+        'escalated_at', 'resolved_by_user_id', 'resolved_by_role', 'resolution_note', 'silent',
     ];
 
     protected $casts = [
@@ -31,7 +31,7 @@ class SafetyIncident extends Model
         'location_accuracy' => 'integer',
         'battery_level' => 'integer',
         'resolved_at' => 'datetime',
-        'escalated_at' => 'datetime',
+        'escalated_at' => 'datetime', 'silent' => 'boolean',
     ];
 
     public function user()
