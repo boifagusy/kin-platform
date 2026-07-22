@@ -1,9 +1,80 @@
 import { useNavigate } from "react-router-dom";
-import { FaUserPlus, FaShareAlt, FaUser, FaSync } from "react-icons/fa";
+import { FaUserPlus, FaShareAlt, FaUser, FaSync, FaCheck, FaTimes } from "react-icons/fa";
+import { useState } from "react";
 
-function TrustedContactCard({ contact, inviteStatus, onShare, onReplace }) {
+function TrustedContactCard({ contact, inviteStatus, onShare, onReplace, pendingInvitations = [], onApprove, onReject }) {
   const navigate = useNavigate();
+  const [approving, setApproving] = useState(null);
+  const [rejecting, setRejecting] = useState(null);
 
+  const handleApprove = async (id) => {
+    if (onApprove) {
+      setApproving(id);
+      try {
+        await onApprove(id);
+      } finally {
+        setApproving(null);
+      }
+    }
+  };
+
+  const handleReject = async (id) => {
+    if (onReject) {
+      setRejecting(id);
+      try {
+        await onReject(id);
+      } finally {
+        setRejecting(null);
+      }
+    }
+  };
+
+  // STATE C: Pending invitations received by this user
+  if (pendingInvitations && pendingInvitations.length > 0) {
+    return (
+      <div className="space-y-3">
+        {pendingInvitations.map((invite) => (
+          <div key={invite.id} className="bg-blue-50 rounded-2xl p-4 border border-blue-200">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                  <FaUser className="text-blue-600 text-sm" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-[#1A1A1A]">{invite.name}</p>
+                  <p className="text-xs text-[#6C757D]">📱 {invite.phone}</p>
+                </div>
+              </div>
+              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                Pending Your Action
+              </span>
+            </div>
+            <p className="text-xs text-[#6C757D] mb-3">
+              {invite.name} wants to add you as a trusted contact
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleApprove(invite.id)}
+                disabled={approving === invite.id}
+                className="flex-1 h-9 rounded-xl bg-[#1A5632] text-white font-medium text-xs flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-60"
+              >
+                <FaCheck size={12} />
+                {approving === invite.id ? "Approving..." : "Approve"}
+              </button>
+              <button
+                onClick={() => handleReject(invite.id)}
+                disabled={rejecting === invite.id}
+                className="flex-1 h-9 rounded-xl bg-red-100 text-red-600 font-medium text-xs flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-60"
+              >
+                <FaTimes size={12} />
+                {rejecting === invite.id ? "Rejecting..." : "Reject"}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   // STATE A: No trusted contact
   if (!contact || !contact.name) {
@@ -23,11 +94,11 @@ function TrustedContactCard({ contact, inviteStatus, onShare, onReplace }) {
   }
 
   // STATE B: Contact exists
-  const statusLabel = inviteStatus === "required" ? "Invite Required" : 
-                      inviteStatus === "waiting" ? "Waiting For Acceptance" : 
+  const statusLabel = inviteStatus === "required" ? "Invite Required" :
+                      inviteStatus === "waiting" ? "Waiting For Acceptance" :
                       "Active ✓";
-  const statusIcon = inviteStatus === "required" ? "📤" : 
-                     inviteStatus === "waiting" ? "⏳" : 
+  const statusIcon = inviteStatus === "required" ? "📤" :
+                     inviteStatus === "waiting" ? "⏳" :
                      "✅";
 
   return (

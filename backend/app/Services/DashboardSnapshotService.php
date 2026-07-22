@@ -94,6 +94,21 @@ class DashboardSnapshotService
             ->exists();
 
         $activeSOS = \App\Models\SosEvent::where("user_id", $user->id)->whereNull("resolved_at")->latest("triggered_at")->first();
+        
+        // Get pending invitations WHERE THIS USER IS THE RECIPIENT (by phone)
+        $pendingInvitations = TrustedContact::where('phone', $user->phone)
+            ->where('status', 'pending')
+            ->get()
+            ->map(function ($invite) {
+                return [
+                    'id' => $invite->id,
+                    'name' => $invite->name ?? 'Unknown',
+                    'phone' => $invite->phone,
+                    'created_at' => $invite->created_at?->toISOString(),
+                ];
+            })
+            ->toArray();
+
         return [
             'user' => [
                 'name' => $user->name,
@@ -125,6 +140,7 @@ class DashboardSnapshotService
             'active_sos_started_at' => $activeSOS?->triggered_at?->toISOString(),
             // ✅ ADDED: Duress PIN field
             'duress_pin_created' => !empty($user->duress_pin_hash),
+            'pending_invitations' => $pendingInvitations,
         ];
     }
 

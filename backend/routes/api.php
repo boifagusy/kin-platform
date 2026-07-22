@@ -32,11 +32,14 @@ Route::post('/trusted-contacts', [TrustedContactController::class, 'store'])->mi
 Route::delete('/trusted-contacts/{id}', [TrustedContactController::class, 'destroy'])->middleware('auth:sanctum');
     Route::patch('/trusted-contacts/{id}', [TrustedContactController::class, 'update'])->middleware('auth:sanctum');
     Route::post('/trusted-contacts/{id}/resend', [TrustedContactController::class, 'resend'])->middleware('auth:sanctum');
+    Route::post('/trusted-contacts/{id}/approve', [TrustedContactController::class, 'approve'])->middleware('auth:sanctum');
     Route::post('/trusted-contacts/verify', [TrustedContactController::class, 'verify']);
+    Route::post('/trusted-contacts/{id}/reject', [TrustedContactController::class, 'reject'])->middleware('auth:sanctum');
 
     Route::get('/incidents', [IncidentController::class, 'index'])->middleware('auth:sanctum');
 Route::get('/incidents/{id}', [IncidentController::class, 'show'])->middleware('auth:sanctum');
 Route::post('/incidents/{id}/resolve', [IncidentController::class, 'markResolved'])->middleware('auth:sanctum');
+Route::patch('incidents/{id}/respond', [IncidentController::class, 'respond'])->middleware('auth:sanctum');
 Route::patch('/incidents/{id}/read', [IncidentController::class, 'markRead'])->middleware('auth:sanctum');
     Route::get('/trusted-contact/notifications/{phone}', [IncidentController::class, 'notifications']);
 

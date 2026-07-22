@@ -68,6 +68,29 @@ function AlertsScreenV2() {
     setResolveNote("");
   };
 
+  const handleRespond = async (id) => {
+    setActionLoading(id);
+    try {
+      const token = localStorage.getItem("kin_token");
+      const res = await fetch(`${API_BASE}/incidents/${id}/respond`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIncidents(prev => prev.map(i => i.id === id ? { ...i, ...data.data, can_respond: false } : i));
+        setFeedback("You are now responding");
+      } else {
+        setFeedback(data.message || "Failed to respond");
+      }
+    } catch {
+      setFeedback("Network error");
+    } finally {
+      setActionLoading(null);
+      setTimeout(() => setFeedback(null), 3000);
+    }
+  };
+
   const handleResolve = async (id) => {
     setActionLoading(id);
     try {
@@ -273,7 +296,12 @@ function AlertsScreenV2() {
                         </div>
                       </div>
                     ) : (
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
+                        {incident.can_respond && (
+                          <Button variant="primary" size="sm" onClick={(e) => { e.stopPropagation(); handleRespond(incident.id); }} disabled={actionLoading === incident.id} className="flex-1">
+                            {actionLoading === incident.id ? "..." : "I'm Responding"}
+                          </Button>
+                        )}
                         {incident.can_mark_read && (
                           <Button variant="secondary" size="sm" onClick={(e) => { e.stopPropagation(); handleMarkRead(incident.id); }} disabled={actionLoading === incident.id} className="flex-1">
                             {actionLoading === incident.id ? "..." : "Mark Read"}

@@ -1,0 +1,43 @@
+export const E1_TESTS = [
+  {
+    id: "E1-001",
+    name: "Owner cannot respond to own SOS",
+    endpoint: "/incidents/{incidentId}/respond",
+    method: "PATCH",
+    role: "owner",
+    expected: { status: 403, message: "You cannot respond to your own SOS." },
+  },
+  {
+    id: "E1-002",
+    name: "Contact A responds successfully",
+    endpoint: "/incidents/{incidentId}/respond",
+    method: "PATCH",
+    role: "contact_a",
+    expected: { status: 200, data: { status: "responding", status_label: "Responding", status_color: "warning" } },
+  },
+  {
+    id: "E1-003",
+    name: "Contact B gets 409 (already responding)",
+    endpoint: "/incidents/{incidentId}/respond",
+    method: "PATCH",
+    role: "contact_b",
+    expected: { status: 409, message: "Another trusted contact is already responding." },
+  },
+  {
+    id: "E1-004",
+    name: "Double-tap idempotent (Contact A again)",
+    endpoint: "/incidents/{incidentId}/respond",
+    method: "PATCH",
+    role: "contact_a",
+    expected: { status: 409 },
+  },
+  {
+    id: "E1-005",
+    name: "Resolve after responding",
+    endpoint: "/incidents/{incidentId}/resolve",
+    method: "POST",
+    role: "contact_a",
+    body: { role: "trusted_contact", note: "E1 verification test" },
+    expected: { status: 200, data: { success: true } },
+  },
+];

@@ -44,15 +44,13 @@ class SendSosAlertJob implements ShouldQueue
             // Determine escalation level based on duress and confidence
             $level = $this->determineEscalationLevel();
             
-            // Create safety incident
-            $incident = SafetyIncident::create([
-                'user_id' => $this->user->id,
-                'type' => 'sos',
-                'status' => 'active',
-                'is_duress' => $this->isDuress,
-                'confidence_score' => $this->confidence,
-                'description' => $this->isDuress ? 'Duress SOS triggered' : 'SOS triggered',
-                'location' => $this->location ? json_encode($this->location) : null,
+            // Create safety incident via EmergencyLifecycleService
+            $incident = app(\App\Services\EmergencyLifecycleService::class)->trigger($this->user->id, [
+                'type' => $this->isDuress ? 'duress' : 'sos_triggered',
+                'message' => $this->isDuress ? 'Duress SOS triggered' : 'SOS triggered',
+                'location_lat' => $this->location['lat'] ?? null,
+                'location_lng' => $this->location['lng'] ?? null,
+                'silent' => false,
             ]);
 
             // Create escalation

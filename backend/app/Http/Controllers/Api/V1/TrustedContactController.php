@@ -9,9 +9,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use App\Services\TrustedContactService;
 
 class TrustedContactController extends Controller
 {
+    protected TrustedContactService $service;
+
+    public function __construct(TrustedContactService $service)
+    {
+        $this->service = $service;
+    }
+
     const FREE_LIMIT = 1;
     const PREMIUM_LIMIT = 5;
     const REMOVAL_COOLDOWN_DAYS = 30;
@@ -79,7 +87,7 @@ class TrustedContactController extends Controller
 
         $contact = $this->service->create($user, [
             'name' => $request->name,
-            'phone' => $request->contact_phone,
+            'contact_phone' => $request->contact_phone,
         ]);
 
         return ApiResponse::success($contact, 'Trusted contact added', 201);
@@ -116,5 +124,21 @@ class TrustedContactController extends Controller
         }
 
         return response("You have been verified as a trusted contact for KIN. Thank you!", 200);
+    }
+
+    public function approve(Request $request, $id)
+    {
+        $user = $request->user();
+        $contact = $this->service->approveFromDashboard($user, (int)$id);
+
+        return ApiResponse::success($contact, 'Trusted contact approved', 200);
+    }
+
+    public function reject(Request $request, $id)
+    {
+        $user = $request->user();
+        $this->service->rejectFromDashboard($user, (int)$id);
+
+        return ApiResponse::success(null, 'Trusted contact rejected', 200);
     }
 }

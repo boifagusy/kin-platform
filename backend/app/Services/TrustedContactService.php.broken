@@ -131,6 +131,7 @@ class TrustedContactService
             throw new \Exception("Contact limit ({$limit}) reached.");
         }
     }
+}
 
     public function approveFromDashboard(User $user, int $id): TrustedContact
     {
@@ -161,4 +162,3 @@ class TrustedContactService
 
         $contact->delete();
     }
-}

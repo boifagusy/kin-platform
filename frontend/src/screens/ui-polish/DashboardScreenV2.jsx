@@ -36,6 +36,7 @@ function DashboardScreenV2() {
   const [offline, setOffline] = useState(!navigator.onLine);
   const [activeTab, setActiveTab] = useState("home");
   const [trustedContactStatus, setTrustedContactStatus] = useState(Date.now());
+  const [pendingInvitations, setPendingInvitations] = useState([]);
 
   // Trusted Contact handlers
   const handleShareInvite = () => {
@@ -44,6 +45,44 @@ function DashboardScreenV2() {
 
   const handleReplaceContact = () => {
     alert("Replace contact - coming soon!");
+  };
+
+  const handleApproveTrustedContact = async (id) => {
+    try {
+      const res = await fetch(`${API_BASE}/trusted-contacts/${id}/approve`, {
+        method: 'POST',
+        headers: { "Authorization": `Bearer ${localStorage.getItem("kin_token")}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        const refreshRes = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)}`, {
+          headers: { "Authorization": `Bearer ${localStorage.getItem("kin_token")}` },
+        });
+        const refreshData = await refreshRes.json();
+        if (refreshData.success) {
+          setDashboard(refreshData);
+          setPendingInvitations(refreshData.data?.pending_invitations || []);
+        }
+      }
+    } catch (err) {
+      console.error("Approve error:", err);
+      alert("Failed to approve contact");
+    }
+  };
+
+  const handleRejectTrustedContact = async (id) => {
+    try {
+      const res = await fetch(`${API_BASE}/trusted-contacts/${id}/reject`, {
+        method: 'POST',
+        headers: { "Authorization": `Bearer ${localStorage.getItem("kin_token")}` },
+      });
+      if (res.ok) {
+        setPendingInvitations(pendingInvitations.filter(i => i.id !== id));
+      }
+    } catch (err) {
+      console.error("Reject error:", err);
+      alert("Failed to reject contact");
+    }
   };
 
 
@@ -82,6 +121,7 @@ const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)
             trusted_contact: data.data?.trusted_contact || null,
             has_verified_contact: data.data?.has_verified_contact || false,
         });
+          setPendingInvitations(data.data?.pending_invitations || []);
         setCheckInState(data.data?.recent_checkin ? "done" : "idle");
         }
         // Clear onboarding draft
@@ -293,7 +333,15 @@ const nextCheckin = formatCheckinTime(dashboard?.data?.settings?.checkin_time);
         )}
 
         {/* Trusted Contact Card */}
-        {!dashboard?.data?.has_verified_contact || false && (
+        {pendingInvitations.length > 0 && (
+          <TrustedContactCard
+            pendingInvitations={pendingInvitations}
+            onApprove={handleApproveTrustedContact}
+            onReject={handleRejectTrustedContact}
+          />
+        )}
+
+        {!dashboard?.data?.has_verified_contact && pendingInvitations.length === 0 && (
           <TrustedContactCard
             contact={dashboard?.data?.trusted_contact || null}
             inviteStatus={dashboard?.invite_status}

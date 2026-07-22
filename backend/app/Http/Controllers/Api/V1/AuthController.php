@@ -40,7 +40,7 @@ class AuthController extends Controller
         $existing = PasswordReset::where('phone', $phone)->first();
 
         if ($existing) {
-            $secondsSinceLastSend = now()->diffInSeconds($existing->updated_at);
+            $secondsSinceLastSend = $existing->updated_at->diffInSeconds(now());
 
             if ($secondsSinceLastSend < $cooldownSeconds) {
                 $wait = $cooldownSeconds - $secondsSinceLastSend;
@@ -74,7 +74,8 @@ class AuthController extends Controller
             ]
         );
 
-        app(NotificationService::class)->sendOtp($phone, $otp);
+        // TODO: Re-implement SMS/WhatsApp OTP sending
+        // app(NotificationService::class)->sendOtp($phone, $otp);
 
         return response()->json(['message' => 'Code sent', 'user_id' => $user->id], 200);
     }
@@ -148,6 +149,20 @@ class AuthController extends Controller
      */
     private function triggerDuressSos(User $user)
     {
+        // Check if user already triggered duress in last 5 minutes
+        $recentDuress = SosEvent::where('user_id', $user->id)
+            ->where('is_duress', true)
+            ->where('triggered_at', '>', now()->subMinutes(5))
+            ->first();
+
+        if ($recentDuress) {
+            \Illuminate\Support\Facades\Log::info('Duress SOS cooldown active', [
+                'user_id' => $user->id,
+                'last_triggered' => $recentDuress->triggered_at,
+            ]);
+            return; // Skip duplicate within 5 minutes
+        }
+
         // Create SOS event
         SosEvent::create([
             'user_id' => $user->id,

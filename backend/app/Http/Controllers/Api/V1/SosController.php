@@ -149,18 +149,13 @@ class SosController extends Controller
                 'is_duress' => $request->is_duress ?? false,
             ]);
 
-            // Create SafetyIncident for consistency
-            $incident = SafetyIncident::create([
-                'user_id' => $user->id,
-                'type' => 'sos',
-                'status' => 'active',
-                'is_duress' => $request->is_duress ?? false,
-                'description' => $request->is_duress ? 'Duress SOS triggered' : 'SOS triggered by user',
-                'location' => json_encode([
-                    'lat' => $request->latitude,
-                    'lng' => $request->longitude,
-                ]),
-                'confidence_score' => app(SafetyScoreService::class)->getForUser($user),
+            // Create SafetyIncident via EmergencyLifecycleService
+            $incident = app(\App\Services\EmergencyLifecycleService::class)->trigger($user->id, [
+                'type' => $request->is_duress ? 'duress' : 'sos_triggered',
+                'message' => $request->is_duress ? 'Duress SOS triggered' : 'SOS triggered by user',
+                'location_lat' => $request->latitude,
+                'location_lng' => $request->longitude,
+                'silent' => $request->silent ?? false,
             ]);
 
             // Fire event
