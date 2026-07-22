@@ -16,6 +16,7 @@ class SosEvent extends Model
         'is_duress',
         'accuracy',
         'battery_level',
+        'safety_incident_id',
     ];
 
     protected $casts = [
@@ -29,5 +30,10 @@ class SosEvent extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function safetyIncident(): BelongsTo
+    {
+        return $this->belongsTo(SafetyIncident::class);
     }
 }

@@ -6,6 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class SafetyIncident extends Model
 {
+    // Lifecycle Status
+    const STATUS_ACTIVE = 'active';
+    const STATUS_RESPONDING = 'responding';
+    const STATUS_RESOLVED = 'resolved';
+    const STATUS_EXPIRED = 'expired';
+
     protected $fillable = [
         'user_id',
         'type',
@@ -36,5 +42,15 @@ class SafetyIncident extends Model
     public function notifications()
     {
         return $this->hasMany(IncidentNotification::class);
+    }
+
+    public function sosEvent()
+    {
+        return $this->hasOne(SosEvent::class);
+    }
+
+    public function escalations()
+    {
+        return $this->hasMany(EmergencyEscalation::class);
     }
 }
