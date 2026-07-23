@@ -31,7 +31,16 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1.5">Deleted Account Retention (Days)</label>
-                        <input type="number" id="deleted_account_retention_days" value="{{ $settings['deleted_account_retention_days'] ?? 30 }}" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200">
+                        <select id="deleted_account_retention_days" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200">
+                            <option value="0" @if(($settings["deleted_account_retention_days"] ?? 30) == 0) selected @endif>Never Delete</option>
+                            <option value="7" @if(($settings["deleted_account_retention_days"] ?? 30) == 7) selected @endif>7 Days</option>
+                            <option value="14" @if(($settings["deleted_account_retention_days"] ?? 30) == 14) selected @endif>14 Days</option>
+                            <option value="30" @if(($settings["deleted_account_retention_days"] ?? 30) == 30) selected @endif>30 Days (Default)</option>
+                            <option value="60" @if(($settings["deleted_account_retention_days"] ?? 30) == 60) selected @endif>60 Days</option>
+                            <option value="90" @if(($settings["deleted_account_retention_days"] ?? 30) == 90) selected @endif>90 Days</option>
+                            <option value="180" @if(($settings["deleted_account_retention_days"] ?? 30) == 180) selected @endif>180 Days</option>
+                            <option value="365" @if(($settings["deleted_account_retention_days"] ?? 30) == 365) selected @endif>365 Days</option>
+                        </select>
                         <p class="text-xs text-gray-400 mt-1">How long to keep deleted account data before permanent removal</p>
                     </div>
                 </div>

@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('kin:check-missed-checkins')->everyMinute();
         $schedule->command('version:process-scheduled')->everyMinute();
+        $schedule->command("users:purge")->daily();
     }
 
     protected function commands()

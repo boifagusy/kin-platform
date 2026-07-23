@@ -173,6 +173,18 @@ class SystemSettingsController extends Controller
             'backup_retention_days',
         ]);
 
+
+        // Validate retention days - only allow predefined values
+        $allowed = [0, 7, 14, 30, 60, 90, 180, 365];
+        if (isset($settings["deleted_account_retention_days"])) {
+            $value = (int)$settings["deleted_account_retention_days"];
+            if (!in_array($value, $allowed)) {
+                return response()->json([
+                    "success" => false,
+                    "message" => "Invalid retention period. Allowed: 0, 7, 14, 30, 60, 90, 180, 365"
+                ], 422);
+            }
+        }
         $success = $this->settingsService->updateSettings($settings);
         return response()->json(['success' => $success]);
     }
