@@ -159,7 +159,6 @@ class SosController extends Controller
             ]);
 
             // Fire event
-            event(new SOSTriggered($user, $sos));
 
             // Log for monitoring
             Log::info('SOS triggered for user: ' . $user->id, [

@@ -35,7 +35,7 @@ class CreateActivityLog implements ShouldQueue
             }
 
             // Handle SOSTriggered event
-            if ($event instanceof SOSTriggered) {
+            if ($event instanceof \App\Events\EmergencyTriggered) {
                 // Try to get user from sos relationship
                 if (isset($event->sos) && isset($event->sos->user_id)) {
                     $userId = $event->sos->user_id;

@@ -2,14 +2,11 @@
 
 namespace App\Listeners;
 
-use App\Events\SOSTriggered;
+use App\Events\EmergencyTriggered;
 use App\Jobs\SendSosAlertJob;
 
 class QueueSosAlert
 {
-    /**
-     * Create the event listener.
-     */
     public function __construct()
     {
         //
@@ -18,21 +15,22 @@ class QueueSosAlert
     /**
      * Handle the event.
      */
-    public function handle(SOSTriggered $event): void
+    public function handle(EmergencyTriggered $event): void
     {
+        $incident = $event->incident;
+
         $location = null;
-        if ($event->sosEvent->latitude && $event->sosEvent->longitude) {
+        if ($incident->location_lat && $incident->location_lng) {
             $location = [
-                'lat' => $event->sosEvent->latitude,
-                'lng' => $event->sosEvent->longitude,
-                'accuracy' => $event->sosEvent->accuracy,
+                'lat' => $incident->location_lat,
+                'lng' => $incident->location_lng,
             ];
         }
 
         SendSosAlertJob::dispatch(
-            $event->user,
+            $incident->user,
             $location,
-            $event->sosEvent->is_duress ?? false
+            false
         );
     }
 }

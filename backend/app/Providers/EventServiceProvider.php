@@ -9,7 +9,6 @@ use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvi
 use App\Events\CheckInCompleted;
 use App\Events\EmergencyTriggered;
 use App\Events\EmergencyResolved;
-use App\Events\SOSTriggered;
 
 use App\Listeners\CreateActivityLog;
 use App\Listeners\UpdateSafetyScore;
@@ -35,6 +34,10 @@ class EventServiceProvider extends ServiceProvider
         ],
 
         EmergencyTriggered::class => [
+            CreateActivityLog::class,
+            QueueSosAlert::class,
+            EvaluateAutomationRules::class,
+            UpdateSafetyScore::class,
             EscalationListener::class,
             TrustedContactNotifier::class,
         ],
@@ -43,11 +46,7 @@ class EventServiceProvider extends ServiceProvider
             ResolutionAuditListener::class,
         ],
 
-        SOSTriggered::class => [
-            CreateActivityLog::class,
-            QueueSosAlert::class,
-            EvaluateAutomationRules::class,
-        ],
+
     ];
 
     public function boot(): void
