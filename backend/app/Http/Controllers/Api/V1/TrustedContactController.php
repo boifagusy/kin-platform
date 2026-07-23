@@ -41,7 +41,7 @@ class TrustedContactController extends Controller
                 'active' => $contact->active,
                 'created_at' => $contact->created_at,
                 'can_remove' => $daysSinceCreation >= self::REMOVAL_COOLDOWN_DAYS,
-                'days_until_removal' => max(0, self::REMOVAL_COOLDOWN_DAYS - $daysSinceCreation),
+                'days_until_removal' => max(0, ceil(self::REMOVAL_COOLDOWN_DAYS - $daysSinceCreation)),
             ];
         });
 
@@ -106,7 +106,7 @@ class TrustedContactController extends Controller
         $daysSinceCreation = Carbon::parse($contact->created_at)->diffInDays(now());
 
         if ($daysSinceCreation < self::REMOVAL_COOLDOWN_DAYS) {
-            $daysRemaining = self::REMOVAL_COOLDOWN_DAYS - $daysSinceCreation;
+            $daysRemaining = ceil(self::REMOVAL_COOLDOWN_DAYS - $daysSinceCreation);
             return ApiResponse::error("Cannot remove trusted contact for {$daysRemaining} more days. This prevents abuse.", 403);
         }
 
