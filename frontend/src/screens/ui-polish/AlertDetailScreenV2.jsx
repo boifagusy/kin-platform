@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import ScreenLayout from '../../design-system/layouts/ScreenLayout';
 import Card from '../../design-system/components/Card';
 import Button from '../../design-system/components/Button';
@@ -9,8 +9,7 @@ const API_BASE = import.meta.env.VITE_API_URL;
 
 function AlertDetailScreenV2() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const id = location.pathname.split("/").pop();
+  const { id } = useParams();
   const [incident, setIncident] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
