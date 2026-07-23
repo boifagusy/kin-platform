@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { FaShieldAlt, FaCheckCircle, FaExclamationTriangle, FaBell } from "react-icons/fa";
 
 const API_BASE = import.meta.env.VITE_API_URL;
 
@@ -114,7 +113,7 @@ function CheckInPopupV2({ phone, message, checkinTime, onClose, onComplete }) {
       <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl p-8 w-full max-w-sm text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
-            <FaCheckCircle className="text-3xl text-green-600" />
+            <span className="material-symbols-outlined text-3xl text-green-600">check_circle</span>
           </div>
           <h3 className="text-lg font-bold text-[#1A1A1A]">You're Safe</h3>
           <p className="text-sm text-[#6C757D] mt-2">Your trusted contacts have been notified.</p>
@@ -129,7 +128,7 @@ function CheckInPopupV2({ phone, message, checkinTime, onClose, onComplete }) {
       <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl p-8 w-full max-w-sm text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-100 flex items-center justify-center">
-            <FaExclamationTriangle className="text-3xl text-yellow-600" />
+            <span className="material-symbols-outlined text-3xl text-yellow-600">warning</span>
           </div>
           <h3 className="text-lg font-bold text-[#1A1A1A]">Assistance Requested</h3>
           <p className="text-sm text-[#6C757D] mt-2">Help is on the way.</p>
@@ -144,7 +143,7 @@ function CheckInPopupV2({ phone, message, checkinTime, onClose, onComplete }) {
       <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl p-8 w-full max-w-sm text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
-            <span className="text-3xl">🚨</span>
+            <span className="material-symbols-outlined text-3xl text-red-600">emergency</span>
           </div>
           <h3 className="text-lg font-bold text-[#1A1A1A]">SOS Sent</h3>
           <p className="text-sm text-[#6C757D] mt-2">Your trusted contacts are being notified.</p>
@@ -160,7 +159,7 @@ function CheckInPopupV2({ phone, message, checkinTime, onClose, onComplete }) {
       <div className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
-            <span className="text-3xl">🚨</span>
+            <span className="material-symbols-outlined text-3xl text-red-600">emergency</span>
           </div>
           <h3 className="text-xl font-bold text-[#1A1A1A] text-center mb-2">Emergency SOS</h3>
           <p className="text-sm text-[#6C757D] text-center mb-6">
@@ -192,7 +191,7 @@ function CheckInPopupV2({ phone, message, checkinTime, onClose, onComplete }) {
         {/* Header */}
         <div className="text-center mb-4">
           <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-[#E8F3EA] flex items-center justify-center">
-            <FaShieldAlt className="text-[#1A5632] text-2xl" />
+            <span className="material-symbols-outlined text-2xl text-[#1A5632]">verified_user</span>
           </div>
           <h2 className="text-lg font-black text-[#1A5632] tracking-[0.15em]">KIN</h2>
           <p className="text-xs font-semibold text-[#6C757D] tracking-wider mt-1">DAILY SAFETY CHECK-IN</p>
@@ -214,23 +213,26 @@ function CheckInPopupV2({ phone, message, checkinTime, onClose, onComplete }) {
         <div className="space-y-3">
           <button
             onClick={handleSafe}
-            className="w-full h-14 rounded-xl bg-[#1A5632] text-white font-bold text-base shadow-lg shadow-[#1A5632]/20 hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2"
+            disabled={loading}
+            className="w-full h-14 rounded-xl bg-[#1A5632] text-white font-bold text-base shadow-lg shadow-[#1A5632]/20 hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <FaCheckCircle className="text-lg" />
+            <span className="material-symbols-outlined text-lg">check_circle</span>
             I'M SAFE
           </button>
           <button
             onClick={handleAssistance}
-            className="w-full h-14 rounded-xl bg-[#D4A017] text-white font-bold text-base shadow-lg shadow-[#D4A017]/20 hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2"
+            disabled={loading}
+            className="w-full h-14 rounded-xl bg-[#D4A017] text-white font-bold text-base shadow-lg shadow-[#D4A017]/20 hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <FaExclamationTriangle className="text-lg" />
+            <span className="material-symbols-outlined text-lg">warning</span>
             NEED ASSISTANCE
           </button>
           <button
             onClick={() => setShowEmergencyConfirm(true)}
-            className="w-full h-14 rounded-xl bg-red-500 text-white font-bold text-base shadow-lg shadow-red-500/30 hover:bg-red-600 active:scale-95 transition-all flex items-center justify-center gap-2"
+            disabled={loading}
+            className="w-full h-14 rounded-xl bg-red-500 text-white font-bold text-base shadow-lg shadow-red-500/30 hover:bg-red-600 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span className="text-lg">🚨</span>
+            <span className="material-symbols-outlined text-lg">emergency</span>
             EMERGENCY SOS
           </button>
         </div>
@@ -238,7 +240,8 @@ function CheckInPopupV2({ phone, message, checkinTime, onClose, onComplete }) {
         {/* Not Now */}
         <button
           onClick={onClose}
-          className="w-full mt-4 py-2 text-sm font-medium text-[#6C757D] hover:text-[#1A1A1A] transition-colors"
+          disabled={loading}
+          className="w-full mt-4 py-2 text-sm font-medium text-[#6C757D] hover:text-[#1A1A1A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Not now
         </button>
