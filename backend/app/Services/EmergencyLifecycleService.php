@@ -10,12 +10,11 @@ class EmergencyLifecycleService
 {
     /**
      * Trigger a new emergency incident.
-     * Creates SafetyIncident. Creates SosEvent only when trigger source requires it.
      * Dispatches EmergencyTriggered (v1) after commit.
      */
     public function trigger(int $userId, array $data): SafetyIncident
     {
-        return DB::transaction(function () use ($userId, $data) {
+        $incident = DB::transaction(function () use ($userId, $data) {
             $incident = SafetyIncident::create([
                 'user_id' => $userId,
                 'type' => $data['type'] ?? 'sos_triggered',
@@ -27,7 +26,6 @@ class EmergencyLifecycleService
                 'silent' => $data['silent'] ?? false,
             ]);
 
-            // Create SosEvent only when trigger source requires it (e.g., duress)
             if (($data['requires_sos_event'] ?? false) === true) {
                 SosEvent::create([
                     'user_id' => $userId,
@@ -41,14 +39,14 @@ class EmergencyLifecycleService
             return $incident;
         });
 
-        // Event dispatched after commit
-        // event(new EmergencyTriggered($incident));
-        // Note: Event class to be wired when EmergencyTriggered exists
+        event(new \App\Events\EmergencyTriggered($incident));
+
+        return $incident;
     }
 
     /**
      * Resolve an emergency incident.
-     * Persists resolver metadata. Dispatches EmergencyResolved (v1) after commit.
+     * Dispatches EmergencyResolved (v1) after commit.
      */
     public function resolve(int $incidentId, int $resolverId, string $role, ?string $note = null): SafetyIncident
     {
@@ -66,9 +64,7 @@ class EmergencyLifecycleService
             return $incident;
         });
 
-        // Event dispatched after commit
-        // event(new EmergencyResolved($incident));
-        // Note: Event class to be wired when EmergencyResolved exists
+        event(new \App\Events\EmergencyResolved($incident));
 
         return $incident;
     }
