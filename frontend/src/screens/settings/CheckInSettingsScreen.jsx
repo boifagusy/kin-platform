@@ -1,12 +1,14 @@
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { FaArrowLeft, FaClock, FaHourglassHalf, FaToggleOn, FaToggleOff } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import ScreenLayout from '../../design-system/layouts/ScreenLayout';
+import Card from '../../design-system/components/Card';
+import Button from '../../design-system/components/Button';
+import PageMotion from '../../motion/page';
 
 function CheckInSettingsScreen() {
-  const location = useLocation();
   const navigate = useNavigate();
-  const phone = location.state?.phone || localStorage.getItem("kin_phone");
+  const phone = localStorage.getItem("kin_phone");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -80,169 +82,135 @@ function CheckInSettingsScreen() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: "100vh", background: "#F0F7F2", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ width: 40, height: 40, border: "3px solid #1A5632", borderTop: "3px solid transparent", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 10px" }}></div>
-          <div style={{ color: "#1A5632" }}>Loading settings...</div>
+      <div className="min-h-screen bg-[#F0F7F2] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-10 h-10 border-3 border-[#1A5632] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-[#1A5632] text-sm">Loading settings...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#F0F7F2" }}>
-
-      {/* Header */}
-      <div style={{ background: "white", padding: "16px 20px", borderBottom: "1px solid #e5e7eb", position: "sticky", top: 0, zIndex: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <button onClick={() => navigate(-1)} style={{ background: "none", border: "none", cursor: "pointer" }}>
-            <FaArrowLeft style={{ fontSize: 20, color: "#1A5632" }} />
-          </button>
-          <h1 style={{ fontSize: 20, fontWeight: "bold", color: "#1A5632", margin: 0 }}>Check-In Settings</h1>
-        </div>
-      </div>
-
-      <div style={{ padding: "20px", maxWidth: 500, margin: "0 auto" }}>
-
-        {/* Enable/Disable Card */}
-        <div style={{ background: "white", borderRadius: 24, padding: 20, marginBottom: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <h3 style={{ fontWeight: "bold", color: "#1A5632", margin: 0 }}>Automatic Check-Ins</h3>
-              <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>Enable daily safety reminders</p>
-            </div>
-            <button
-              onClick={() => setSettings({ ...settings, enabled: !settings.enabled })}
-              style={{ background: "none", border: "none", cursor: "pointer" }}
-            >
-              {settings.enabled ? (
-                <FaToggleOn style={{ fontSize: 48, color: "#1A5632" }} />
-              ) : (
-                <FaToggleOff style={{ fontSize: 48, color: "#9ca3af" }} />
-              )}
+    <ScreenLayout>
+      <PageMotion>
+        <div className="bg-white px-5 py-4 border-b border-[#E9ECEF] sticky top-0 z-10">
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate(-1)} className="text-[#1A5632]">
+              <span className="material-symbols-outlined">arrow_back</span>
             </button>
+            <h1 className="text-lg font-bold text-[#1A5632]">Check-In Settings</h1>
           </div>
         </div>
 
-        {/* Check-In Time Card */}
-        <div style={{ background: "white", borderRadius: 24, padding: 20, marginBottom: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 20, background: "#e8f5e9", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <FaClock style={{ fontSize: 20, color: "#1A5632" }} />
-            </div>
-            <h3 style={{ fontWeight: "bold", color: "#1A5632", margin: 0 }}>Daily Check-In Time</h3>
-          </div>
-          <input
-            type="time"
-            value={settings.checkin_time}
-            onChange={(e) => setSettings({ ...settings, checkin_time: e.target.value })}
-            disabled={!settings.enabled}
-            style={{
-              width: "100%",
-              padding: "14px",
-              fontSize: "18px",
-              border: "2px solid #e5e7eb",
-              borderRadius: 16,
-              outline: "none",
-              background: settings.enabled ? "white" : "#f3f4f6",
-              cursor: settings.enabled ? "pointer" : "not-allowed",
-            }}
-          />
-          <p style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>
-            You'll receive a reminder at this time every day
-          </p>
-        </div>
+        <div className="px-5 pt-4 pb-24 space-y-4 max-w-md mx-auto">
 
-        {/* Grace Period Card */}
-        <div style={{ background: "white", borderRadius: 24, padding: 20, marginBottom: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 20, background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <FaHourglassHalf style={{ fontSize: 20, color: "#D4A017" }} />
+          {/* Enable/Disable Card */}
+          <Card>
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="font-semibold text-gray-900">Automatic Check-Ins</h3>
+                <p className="text-xs text-gray-500 mt-1">Enable daily safety reminders</p>
+              </div>
+              <button
+                onClick={() => setSettings({ ...settings, enabled: !settings.enabled })}
+                className="text-3xl"
+              >
+                <span className="material-symbols-outlined">
+                  {settings.enabled ? 'toggle_on' : 'toggle_off'}
+                </span>
+              </button>
             </div>
-            <h3 style={{ fontWeight: "bold", color: "#1A5632", margin: 0 }}>Grace Period</h3>
+          </Card>
+
+          {/* Check-In Time Card */}
+          <Card>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                <span className="material-symbols-outlined text-[#1A5632]">schedule</span>
+              </div>
+              <h3 className="font-semibold text-gray-900">Daily Check-In Time</h3>
+            </div>
+            <input
+              type="time"
+              value={settings.checkin_time}
+              onChange={(e) => setSettings({ ...settings, checkin_time: e.target.value })}
+              disabled={!settings.enabled}
+              className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-xl outline-none"
+              style={{
+                background: settings.enabled ? "white" : "#f3f4f6",
+                cursor: settings.enabled ? "pointer" : "not-allowed",
+              }}
+            />
+            <p className="text-xs text-gray-500 mt-2">
+              You'll receive a reminder at this time every day
+            </p>
+          </Card>
+
+          {/* Grace Period Card */}
+          <Card>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                <span className="material-symbols-outlined text-yellow-600">timer</span>
+              </div>
+              <h3 className="font-semibold text-gray-900">Grace Period</h3>
+            </div>
+            <select
+              value={settings.grace_minutes}
+              onChange={(e) => setSettings({ ...settings, grace_minutes: parseInt(e.target.value) })}
+              disabled={!settings.enabled}
+              className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-xl outline-none"
+              style={{
+                background: settings.enabled ? "white" : "#f3f4f6",
+                cursor: settings.enabled ? "pointer" : "not-allowed",
+              }}
+            >
+              <option value="5">5 minutes</option>
+              <option value="10">10 minutes</option>
+              <option value="15">15 minutes (Recommended)</option>
+              <option value="30">30 minutes</option>
+              <option value="60">60 minutes</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-2">
+              After this period, your trusted contacts will be notified
+            </p>
+          </Card>
+
+          {/* Info Card */}
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <p className="text-xs text-[#1A5632] leading-relaxed">
+              💡 When enabled, KIN will:
+              <br/>• Remind you to check in daily
+              <br/>• Alert trusted contacts if you miss your check-in
+              <br/>• Keep your safety network informed
+            </p>
           </div>
-          <select
-            value={settings.grace_minutes}
-            onChange={(e) => setSettings({ ...settings, grace_minutes: parseInt(e.target.value) })}
-            disabled={!settings.enabled}
-            style={{
-              width: "100%",
-              padding: "14px",
-              fontSize: "16px",
-              border: "2px solid #e5e7eb",
-              borderRadius: 16,
-              outline: "none",
-              background: settings.enabled ? "white" : "#f3f4f6",
-              cursor: settings.enabled ? "pointer" : "not-allowed",
-            }}
+
+          {/* Message */}
+          {message && (
+            <div className={`mt-4 p-3 rounded-lg text-xs text-center ${
+              message.type === "success" 
+                ? "bg-green-100 text-green-700" 
+                : "bg-red-100 text-red-700"
+            }`}>
+              {message.text}
+            </div>
+          )}
+
+          {/* Action Button */}
+          <Button
+            onClick={saveAndContinue}
+            disabled={saving}
+            variant="primary"
+            size="lg"
+            className="w-full mt-2"
           >
-            <option value="5">5 minutes</option>
-            <option value="10">10 minutes</option>
-            <option value="15">15 minutes (Recommended)</option>
-            <option value="30">30 minutes</option>
-            <option value="60">60 minutes</option>
-          </select>
-          <p style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>
-            After this period, your trusted contacts will be notified
-          </p>
+            {saving ? "Saving & Continuing..." : "→ Continue to Duress PIN"}
+          </Button>
+
         </div>
-
-        {/* Info Card */}
-        <div style={{ background: "#e8f5e9", borderRadius: 16, padding: 16, marginBottom: 20 }}>
-          <p style={{ fontSize: 13, color: "#1A5632", margin: 0, lineHeight: 1.5 }}>
-            💡 When enabled, KIN will:
-            <br/>• Remind you to check in daily
-            <br/>• Alert trusted contacts if you miss your check-in
-            <br/>• Keep your safety network informed
-          </p>
-        </div>
-
-        {/* Message */}
-        {message && (
-          <div style={{
-            marginTop: 16,
-            padding: 12,
-            borderRadius: 12,
-            background: message.type === "success" ? "#d1fae5" : "#fee2e2",
-            color: message.type === "success" ? "#065f46" : "#991b1b",
-            textAlign: "center",
-            fontSize: 14,
-          }}>
-            {message.text}
-          </div>
-        )}
-
-        {/* SINGLE BUTTON: Saves AND Continues */}
-        <button
-          onClick={saveAndContinue}
-          disabled={saving}
-          style={{
-            width: "100%",
-            padding: "16px",
-            background: saving ? "#B7D4BF" : "linear-gradient(135deg, #D4A017 0%, #B8860B 100%)",
-            color: "white",
-            border: "none",
-            borderRadius: 16,
-            fontSize: 18,
-            fontWeight: "bold",
-            cursor: saving ? "not-allowed" : "pointer",
-            opacity: saving ? 0.7 : 1,
-            marginTop: 12,
-            marginBottom: 20,
-          }}
-        >
-          {saving ? "Saving & Continuing..." : "→ Continue to Duress PIN"}
-        </button>
-
-      </div>
-
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
-    </div>
+      </PageMotion>
+    </ScreenLayout>
   );
 }
 
