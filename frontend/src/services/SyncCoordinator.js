@@ -65,6 +65,8 @@ class SyncCoordinator {
       let endpoint = `${API_BASE}/sync`;
       if (item.type === 'sos') endpoint = `${API_BASE}/sos`;
       else if (item.type === 'checkin') endpoint = `${API_BASE}/checkin`;
+      else if (item.type === 'safe_zone') endpoint = `${API_BASE}/safe-zones`;
+      else if (item.type === 'trusted_contact') endpoint = `${API_BASE}/trusted-contacts`;
 
       const token = localStorage.getItem('kin_token');
       const headers = {
