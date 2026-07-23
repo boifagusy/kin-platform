@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import offlineWrite from '../../services/OfflineWriteService.js';
+import syncCoordinator from '../../services/SyncCoordinator.js';
 
 const API_BASE = import.meta.env.VITE_API_URL;
 
@@ -36,8 +37,10 @@ function SafeZonesScreen() {
   };
 
   useEffect(() => {
-  // syncNow removed in S2.1 — SyncCoordinator handles startup sync
+  syncCoordinator.start();
+    setTimeout(() => {
     fetchZones();
+    }, 100);
   }, []);
 
   const handleAddZone = async (e) => {
