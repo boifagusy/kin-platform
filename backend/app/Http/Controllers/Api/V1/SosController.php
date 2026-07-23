@@ -8,7 +8,6 @@ use App\Models\TrustedContact;
 use App\Models\SafetyIncident;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Events\SOSTriggered;
 use App\Services\SafetyScoreService;
 
 class SosController extends Controller

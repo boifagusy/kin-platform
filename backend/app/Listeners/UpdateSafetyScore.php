@@ -3,7 +3,6 @@
 namespace App\Listeners;
 
 use App\Events\CheckInCompleted;
-use App\Events\SOSTriggered;
 use App\Services\SafetyScoreService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
@@ -27,8 +26,8 @@ class UpdateSafetyScore implements ShouldQueue
                 $userId = $event->checkIn->user_id;
             }
 
-            // Get user from SOSTriggered event
-            if ($event instanceof SOSTriggered) {
+            // Get user from EmergencyTriggered event
+            if ($event instanceof \App\Events\EmergencyTriggered) {
                 if (isset($event->sos) && isset($event->sos->user_id)) {
                     $userId = $event->sos->user_id;
                 } elseif (isset($event->user_id)) {

@@ -3,7 +3,6 @@
 namespace App\Listeners;
 
 use App\Events\CheckInCompleted;
-use App\Events\SOSTriggered;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Cache;
 

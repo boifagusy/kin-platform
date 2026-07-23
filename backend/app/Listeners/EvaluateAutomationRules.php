@@ -46,7 +46,6 @@ class EvaluateAutomationRules
     private function resolveEventType(object $event): string
     {
         return match (get_class($event)) {
-            \App\Events\SOSTriggered::class => 'sos_triggered',
             \App\Events\CheckInCompleted::class => 'checkin_completed',
             default => strtolower(class_basename($event)),
         };
@@ -56,7 +55,6 @@ class EvaluateAutomationRules
     {
         $payload = ['event_type' => $this->resolveEventType($event)];
 
-        // SOSTriggered
         if (property_exists($event, 'incident') && $event->incident) {
             $incident = $event->incident;
             $payload['user_id'] = $incident->user_id ?? null;

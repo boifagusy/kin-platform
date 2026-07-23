@@ -3,7 +3,6 @@
 namespace App\Listeners;
 
 use App\Events\CheckInCompleted;
-use App\Events\SOSTriggered;
 use App\Models\ActivityLog;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
@@ -34,7 +33,7 @@ class CreateActivityLog implements ShouldQueue
                 ];
             }
 
-            // Handle SOSTriggered event
+            
             if ($event instanceof \App\Events\EmergencyTriggered) {
                 // Try to get user from sos relationship
                 if (isset($event->sos) && isset($event->sos->user_id)) {
