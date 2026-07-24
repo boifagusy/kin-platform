@@ -1,43 +1,33 @@
 // frontend/src/services/api.js
-// API service for KIN frontend
+// API Service Compatibility Layer
+//
+// This module provides backward compatibility with the existing application.
+// All functions delegate to the Platform layer while preserving the public interface.
+
+import * as platformClient from '../platform/network/client';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
-// Helper to get auth token
-const getToken = () => localStorage.getItem('kin_token');
+// ============= CORE REQUEST (for backward compatibility) =============
 
-// Helper headers
-const getHeaders = () => ({
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-  ...(getToken() && { 'Authorization': `Bearer ${getToken()}` })
-});
-
-// Generic request handler
 export async function request(endpoint, options = {}) {
-  const url = `${API_BASE_URL}${endpoint}`;
-
   try {
-    const response = await fetch(url, {
-      ...options,
-      headers: { ...getHeaders(), ...options.headers }
-    });
-
-    // Check if response is JSON
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      const text = await response.text();
-      console.error('❌ Non-JSON response:', text.substring(0, 100));
-      throw new Error('Server returned non-JSON response');
+    const method = options.method || 'GET';
+    
+    switch (method.toUpperCase()) {
+      case 'GET':
+        return await platformClient.get(endpoint, options);
+      case 'POST':
+        return await platformClient.post(endpoint, options.body, options);
+      case 'PUT':
+        return await platformClient.put(endpoint, options.body, options);
+      case 'PATCH':
+        return await platformClient.patch(endpoint, options.body, options);
+      case 'DELETE':
+        return await platformClient.delete(endpoint, options);
+      default:
+        throw new Error(`Unsupported method: ${method}`);
     }
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || data.error || 'Request failed');
-    }
-
-    return data;
   } catch (error) {
     console.error('❌ API Error:', error.message);
     throw error;
@@ -46,145 +36,88 @@ export async function request(endpoint, options = {}) {
 
 // ============= AUTH ENDPOINTS =============
 
-// Check if phone exists
 export const checkPhone = async (phone) => {
-  return request('/auth/check-phone', {
-    method: 'POST',
-    body: JSON.stringify({ phone })
-  });
+  return platformClient.post('/auth/check-phone', { phone });
 };
 
-// Confirm phone with last 4 digits
 export const confirmPhone = async (phone, lastFourDigits) => {
-  return request('/auth/confirm-phone', {
-    method: 'POST',
-    body: JSON.stringify({ phone, last_four_digits: lastFourDigits })
-  });
+  return platformClient.post('/auth/confirm-phone', { phone, last_four_digits: lastFourDigits });
 };
 
-// Create login PIN
 export const createPin = async (pin, pinConfirmation) => {
-  return request('/auth/create-pin', {
-    method: 'POST',
-    body: JSON.stringify({ pin, pin_confirmation: pinConfirmation })
-  });
+  return platformClient.post('/auth/create-pin', { pin, pin_confirmation: pinConfirmation });
 };
 
-// Login with PIN
 export const loginPin = async (phone, pin) => {
-  return request('/auth/login-pin', {
-    method: 'POST',
-    body: JSON.stringify({ phone, pin })
-  });
+  return platformClient.post('/auth/login-pin', { phone, pin });
 };
 
-// Save user details (name, email)
 export const saveUserDetails = async (phone, fullName, email) => {
-  return request('/auth/user-details', {
-    method: 'POST',
-    body: JSON.stringify({ phone, full_name: fullName, email })
-  });
+  return platformClient.post('/auth/user-details', { phone, full_name: fullName, email });
 };
 
-// Save trusted contact
 export const saveTrustedContact = async (data) => {
-  return request('/auth/trusted-contact', {
-    method: 'POST',
-    body: JSON.stringify(data)
-  });
+  return platformClient.post('/auth/trusted-contact', data);
 };
 
-// Complete onboarding
 export const completeOnboarding = async () => {
-  return request('/auth/complete-onboarding', {
-    method: 'POST'
-  });
+  return platformClient.post('/auth/complete-onboarding');
 };
 
 // ============= TRUSTED CONTACTS ENDPOINTS =============
 
-// Get all trusted contacts
 export const getTrustedContacts = async () => {
-  return request('/trusted-contacts', {
-    method: 'GET'
-  });
+  return platformClient.get('/trusted-contacts');
 };
 
-// Delete trusted contact
 export const deleteTrustedContact = async (id) => {
-  return request(`/trusted-contacts/${id}`, {
-    method: 'DELETE'
-  });
+  return platformClient.delete(`/trusted-contacts/${id}`);
 };
 
 // ============= CHECK-IN ENDPOINTS =============
 
-// Send check-in
 export const sendCheckIn = async (status = 'safe', location = null) => {
-  return request('/checkin', {
-    method: 'POST',
-    body: JSON.stringify({ status, location })
-  });
+  return platformClient.post('/checkin', { status, location });
 };
 
-// Get check-in status
 export const getCheckInStatus = async () => {
-  return request('/checkin/status', {
-    method: 'GET'
-  });
+  return platformClient.get('/checkin/status');
 };
 
 // ============= SOS / DURESS ENDPOINTS =============
 
-// Activate duress mode (secret emergency)
 export const activateDuress = async (location = null) => {
-  return request('/duress/activate', {
-    method: 'POST',
-    body: JSON.stringify({ location })
-  });
+  return platformClient.post('/duress/activate', { location });
 };
 
-// Get SOS history
 export const getSosHistory = async () => {
-  return request('/sos/history', {
-    method: 'GET'
-  });
+  return platformClient.get('/sos/history');
 };
 
 // ============= DASHBOARD ENDPOINTS =============
 
-// Get dashboard data
 export const getDashboard = async () => {
-  return request('/dashboard', {
-    method: 'GET'
-  });
+  return platformClient.get('/dashboard');
 };
 
-// Get safety stats
 export const getSafetyStats = async () => {
-  return request('/safety/stats', {
-    method: 'GET'
-  });
+  return platformClient.get('/safety/stats');
 };
 
 // ============= ONBOARDING DRAFT ENDPOINTS =============
 
-// Get onboarding draft
 export const getOnboardingDraft = async () => {
-  return request('/onboarding/draft', {
-    method: 'GET'
-  });
+  return platformClient.get('/onboarding/draft');
 };
 
-// Save onboarding draft
 export const saveOnboardingDraft = async (data) => {
-  return request('/onboarding/draft', {
-    method: 'POST',
-    body: JSON.stringify(data)
-  });
+  return platformClient.post('/onboarding/draft', data);
 };
+
+// ============= DEFAULT EXPORT =============
 
 export default {
+  request,
   checkPhone,
   confirmPhone,
   createPin,
