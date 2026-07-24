@@ -1,13 +1,56 @@
 /**
- * Platform Network Client
+ * Platform Network Client (Enhanced)
  * 
- * High-level HTTP client combining request and response handling.
- * Public interface for making API calls.
+ * High-level HTTP client with:
+ * - Retry logic for transient failures
+ * - Request/response interceptors
+ * - Error normalization
+ * - Request/response normalization
  */
 
 import { logger } from '../core/logger';
 import { request } from './request';
 import { handleResponse } from './response';
+import { retry, isRetryable } from './retry';
+import { interceptors } from './interceptor';
+import { normalizeRequest, normalizeResponse, normalizeError } from './normalize';
+
+/**
+ * Execute request with retry and interceptors
+ * @param {string} endpoint - API endpoint
+ * @param {Object} options - Request options
+ * @returns {Promise<any>} Response data
+ */
+async function executeRequest(endpoint, options = {}) {
+  const config = normalizeRequest({
+    url: endpoint,
+    ...options,
+  });
+
+  // Execute request interceptors
+  const interceptedConfig = await interceptors.executeRequestInterceptors(config);
+
+  // Execute with retry
+  let response;
+  try {
+    const result = await retry(async () => {
+      const res = await request(interceptedConfig.url, interceptedConfig);
+      return res;
+    });
+    response = result.response;
+  } catch (err) {
+    const normalized = normalizeError(err, err.statusCode);
+    logger.error('Request failed', normalized);
+    throw err;
+  }
+
+  // Handle response and execute interceptors
+  const data = await handleResponse(response);
+  const normalized = normalizeResponse(response, data);
+  await interceptors.executeResponseInterceptors(normalized);
+
+  return data;
+}
 
 /**
  * Make HTTP GET request
@@ -17,11 +60,10 @@ import { handleResponse } from './response';
  */
 export async function get(endpoint, options = {}) {
   logger.debug(`GET ${endpoint}`);
-  const { response } = await request(endpoint, {
+  return executeRequest(endpoint, {
     method: 'GET',
     ...options,
   });
-  return handleResponse(response);
 }
 
 /**
@@ -33,12 +75,11 @@ export async function get(endpoint, options = {}) {
  */
 export async function post(endpoint, body = null, options = {}) {
   logger.debug(`POST ${endpoint}`);
-  const { response } = await request(endpoint, {
+  return executeRequest(endpoint, {
     method: 'POST',
     body: body instanceof FormData ? body : JSON.stringify(body),
     ...options,
   });
-  return handleResponse(response);
 }
 
 /**
@@ -50,12 +91,11 @@ export async function post(endpoint, body = null, options = {}) {
  */
 export async function put(endpoint, body = null, options = {}) {
   logger.debug(`PUT ${endpoint}`);
-  const { response } = await request(endpoint, {
+  return executeRequest(endpoint, {
     method: 'PUT',
     body: JSON.stringify(body),
     ...options,
   });
-  return handleResponse(response);
 }
 
 /**
@@ -67,12 +107,11 @@ export async function put(endpoint, body = null, options = {}) {
  */
 export async function patch(endpoint, body = null, options = {}) {
   logger.debug(`PATCH ${endpoint}`);
-  const { response } = await request(endpoint, {
+  return executeRequest(endpoint, {
     method: 'PATCH',
     body: JSON.stringify(body),
     ...options,
   });
-  return handleResponse(response);
 }
 
 /**
@@ -83,11 +122,10 @@ export async function patch(endpoint, body = null, options = {}) {
  */
 export async function httpDelete(endpoint, options = {}) {
   logger.debug(`DELETE ${endpoint}`);
-  const { response } = await request(endpoint, {
+  return executeRequest(endpoint, {
     method: 'DELETE',
     ...options,
   });
-  return handleResponse(response);
 }
 
 export default {
