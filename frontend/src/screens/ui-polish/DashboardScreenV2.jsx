@@ -19,6 +19,7 @@ import BottomNav from "../../components/dashboard/BottomNav";
 import { getCurrentLocation, getBatteryLevel } from "../../utils/location";
 import { startNotificationChecker, stopNotificationChecker, scheduleSOSNotification } from "../../services/notificationService";
 import safetyService from '../../services/SafetyService.js';
+import { getDashboard } from '../../services/api';
 
 const API_BASE = import.meta.env.VITE_API_URL;
 
@@ -55,10 +56,7 @@ function DashboardScreenV2() {
       });
       const data = await res.json();
       if (data.success) {
-        const refreshRes = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)}`, {
-          headers: { "Authorization": `Bearer ${localStorage.getItem("kin_token")}` },
-        });
-        const refreshData = await refreshRes.json();
+        const refreshData = await getDashboard();
         if (refreshData.success) {
           setDashboard(refreshData);
           setPendingInvitations(refreshData.data?.pending_invitations || []);
@@ -109,12 +107,7 @@ function DashboardScreenV2() {
     async function loadDashboard() {
       try {
 
-const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)}`, {
-
-
-  headers: { "Authorization": `Bearer ${localStorage.getItem("kin_token")}` },
-        });
-        const data = await res.json();
+const data = await getDashboard();
         if (data.success) {
           setDashboard({
             ...data,
@@ -200,10 +193,7 @@ const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)
 
       if (result.state === "SENT") {
         setCheckInState("done");
-        const refreshRes = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)}`, {
-          headers: { "Authorization": `Bearer ${localStorage.getItem("kin_token")}` },
-        });
-        const refreshData = await refreshRes.json();
+        const refreshData = await getDashboard();
         if (refreshData.success) setDashboard(refreshData);
       } else if (result.state === "QUEUED") {
         setCheckInState("offline");
@@ -247,10 +237,7 @@ const res = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)
     
       if (result.state === "SENT") {
         setCheckInState("done");
-        const refreshRes = await fetch(`${API_BASE}/dashboard?phone=${encodeURIComponent(phone)}`, {
-          headers: { "Authorization": `Bearer ${localStorage.getItem("kin_token")}` },
-        });
-        const refreshData = await refreshRes.json();
+        const refreshData = await getDashboard();
         if (refreshData.success) setDashboard(refreshData);
       } else if (result.state === "QUEUED") {
         setCheckInState("offline");
