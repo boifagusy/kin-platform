@@ -31,8 +31,6 @@ function UserDetailsScreenV2() {
 
     try {
       setLoading(true);
-      updateProfile({ name: fullName, email: email });
-      updateStep(STEPS.CHECKIN);
       setError("");
 
 
@@ -66,6 +64,9 @@ function UserDetailsScreenV2() {
       if (!response.ok) {
         throw new Error(data.error || data.message || "Unable to save details");
       }
+
+      updateProfile({ name: fullName, email: email });
+      updateStep(STEPS.CHECKIN);
 
       navigate("/checkin-settings", {
         state: { phone, full_name: fullName.trim() },
