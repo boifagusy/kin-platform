@@ -57,7 +57,7 @@ export const saveUserDetails = async (phone, fullName, email) => {
 };
 
 export const saveTrustedContact = async (data) => {
-  return platformClient.post('/auth/trusted-contact', data);
+  return platformClient.post('/trusted-contacts', data);
 };
 
 export const completeOnboarding = async () => {
