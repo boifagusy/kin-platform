@@ -25,14 +25,26 @@ class CreatePinAction
             ];
         }
 
-        // Find or create user
-        $user = User::firstOrCreate(
-            ['phone' => $phone],
-            [
+        // WHY: the users_phone_unique index covers the raw phone column and
+        // ignores deleted_at, while SoftDeletes hides trashed rows from the
+        // default query. firstOrCreate() therefore saw "no user", attempted an
+        // INSERT, and collided with a soft-deleted row holding the same phone.
+        // Look up including trashed rows and restore rather than re-insert.
+        $user = User::withTrashed()
+            ->where('phone', $phone)
+            ->first();
+
+        if ($user) {
+            if ($user->trashed()) {
+                $user->restore();
+            }
+        } else {
+            $user = User::create([
+                'phone' => $phone,
                 'name' => 'Kin User',
-                'email' => 'user_' . time() . '@kin.local'
-            ]
-        );
+                'email' => 'user_' . time() . '@kin.local',
+            ]);
+        }
 
         // Hash and save the PIN
         $hashedPin = Hash::make($pin);
