@@ -34,7 +34,7 @@ class SaveUserDetailsAction
             $normalizedEmail = strtolower(trim($email));
 
             // Prevent duplicate email assignment
-            $emailExists = User::where('email', $normalizedEmail)
+            $emailExists = User::withTrashed()->where('email', $normalizedEmail)
                 ->where('id', '!=', $user->id)
                 ->exists();
 
