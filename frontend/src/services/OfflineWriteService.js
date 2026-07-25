@@ -91,4 +91,4 @@ class OfflineWriteService {
   }
 }
 
-export default OfflineWriteService;
+export default new OfflineWriteService();
