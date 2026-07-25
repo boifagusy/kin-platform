@@ -43,9 +43,9 @@ Route::patch('incidents/{id}/respond', [IncidentController::class, 'respond'])->
 Route::patch('/incidents/{id}/read', [IncidentController::class, 'markRead'])->middleware('auth:sanctum');
     Route::get('/trusted-contact/notifications/{phone}', [IncidentController::class, 'notifications']);
 
-    Route::post('/auth/user-details', [AuthController::class, 'userDetails']);
-    Route::post('/auth/trusted-contact', [AuthController::class, 'saveTrustedContact']);
-    Route::post('/auth/complete-onboarding', [AuthController::class, 'completeOnboarding']);
+    Route::post('/auth/user-details', [AuthController::class, 'userDetails'])->middleware('auth:sanctum');
+    Route::post('/auth/trusted-contact', [AuthController::class, 'saveTrustedContact'])->middleware('auth:sanctum');
+    Route::post('/auth/complete-onboarding', [AuthController::class, 'completeOnboarding'])->middleware('auth:sanctum');
 
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index']);

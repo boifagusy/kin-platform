@@ -10,15 +10,12 @@ class SaveUserDetailsAction
      * Save user profile details.
      */
     public function execute(
-        string $phone,
+        int $userId,
         string $fullName,
         ?string $email = null
     ): array {
 
-        $user = User::where(
-            'phone',
-            $phone
-        )->first();
+        $user = User::find($userId);
 
         if (!$user) {
             return [
@@ -35,7 +32,7 @@ class SaveUserDetailsAction
         // Only update email if provided and not empty
         if ($email && trim($email) !== '') {
             $normalizedEmail = strtolower(trim($email));
-            
+
             // Prevent duplicate email assignment
             $emailExists = User::where('email', $normalizedEmail)
                 ->where('id', '!=', $user->id)

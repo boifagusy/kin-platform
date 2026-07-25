@@ -6,9 +6,9 @@ use App\Models\User;
 
 class CompleteOnboardingAction
 {
-    public function execute(string $phone, ?string $checkInTime = null, int $gracePeriodMinutes = 15, ?array $trustedContact = null): array
+    public function execute(int $userId, ?string $checkInTime = null, int $gracePeriodMinutes = 15, ?array $trustedContact = null): array
     {
-        $user = User::where('phone', $phone)->first();
+        $user = User::find($userId);
         
         if (!$user) {
             return [

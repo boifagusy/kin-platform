@@ -204,7 +204,7 @@ class AuthController extends Controller
     public function saveTrustedContact(Request $request, SaveTrustedContactAction $action)
     {
         $result = $action->execute(
-            $request->input('phone'),
+            $request->user()->id,
             $request->input('contact_name'),
             $request->input('contact_phone'),
             $request->input('invite_sent', false)
@@ -218,7 +218,7 @@ class AuthController extends Controller
     public function completeOnboarding(Request $request, CompleteOnboardingAction $action)
     {
         $result = $action->execute(
-            $request->input('phone'),
+            $request->user()->id,
             $request->input('check_in_time'),
             (int) $request->input('grace_period_minutes', 15),
             $request->input('trusted_contact')
@@ -236,7 +236,7 @@ class AuthController extends Controller
     {
         try {
             $result = $action->execute(
-                $request->input('phone'),
+                $request->user()->id,
                 $request->input('full_name'),
                 $request->input('email')
             );

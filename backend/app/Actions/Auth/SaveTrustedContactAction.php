@@ -19,16 +19,16 @@ class SaveTrustedContactAction
      * @return array
      */
     public function execute(
-        string $userPhone,
+        int $userId,
         string $contactName,
         string $contactPhone,
         bool $inviteSent = false
     ): array {
-        // Find the user by phone
-        $user = User::where('phone', $userPhone)->first();
+        // Find the user by ID (authenticated)
+        $user = User::find($userId);
 
         if (!$user) {
-            Log::warning('SaveTrustedContactAction: User not found', ['phone' => $userPhone]);
+            Log::warning('SaveTrustedContactAction: User not found', ['user_id' => $userId]);
             return [
                 'success' => false,
                 'error' => 'User not found',
