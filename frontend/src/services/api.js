@@ -6,7 +6,7 @@
 
 import * as platformClient from '../platform/network/client';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001/api/v1';
 
 // ============= CORE REQUEST (for backward compatibility) =============
 
