@@ -9,11 +9,6 @@ use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvi
 use App\Events\CheckInCompleted;
 use App\Events\EmergencyTriggered;
 use App\Events\EmergencyResolved;
-use App\Events\TrustedContact\TrustedContactRequestCreated;
-use App\Events\TrustedContact\TrustedContactRequestAccepted;
-use App\Events\TrustedContact\TrustedContactRequestDeclined;
-use App\Events\TrustedContact\TrustedContactInvitationAccepted;
-use App\Events\TrustedContact\TrustedContactRemoved;
 
 use App\Listeners\CreateActivityLog;
 use App\Listeners\UpdateSafetyScore;
@@ -52,25 +47,25 @@ class EventServiceProvider extends ServiceProvider
             ResolutionAuditListener::class,
         ],
 
-        // Trusted Contact Events
-        TrustedContactRequestCreated::class => [
-            TrustedContactNotificationListener::class,
+        // Trusted Contact Events (with explicit method names)
+        'App\Events\TrustedContact\TrustedContactRequestCreated' => [
+            TrustedContactNotificationListener::class . '@handleTrustedContactRequestCreated',
         ],
 
-        TrustedContactRequestAccepted::class => [
-            TrustedContactNotificationListener::class,
+        'App\Events\TrustedContact\TrustedContactRequestAccepted' => [
+            TrustedContactNotificationListener::class . '@handleTrustedContactRequestAccepted',
         ],
 
-        TrustedContactRequestDeclined::class => [
-            TrustedContactNotificationListener::class,
+        'App\Events\TrustedContact\TrustedContactRequestDeclined' => [
+            TrustedContactNotificationListener::class . '@handleTrustedContactRequestDeclined',
         ],
 
-        TrustedContactInvitationAccepted::class => [
-            TrustedContactNotificationListener::class,
+        'App\Events\TrustedContact\TrustedContactInvitationAccepted' => [
+            TrustedContactNotificationListener::class . '@handleTrustedContactInvitationAccepted',
         ],
 
-        TrustedContactRemoved::class => [
-            TrustedContactNotificationListener::class,
+        'App\Events\TrustedContact\TrustedContactRemoved' => [
+            TrustedContactNotificationListener::class . '@handleTrustedContactRemoved',
         ],
     ];
 

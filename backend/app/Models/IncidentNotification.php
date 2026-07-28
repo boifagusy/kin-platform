@@ -10,15 +10,22 @@ class IncidentNotification extends Model
     use HasFactory;
 
     protected $fillable = [
-        'incident_id', 'trusted_contact_id',
-        'delivery_channel', 'status', 'message',
-        'delivered_at', 'viewed_at', 'silent',
+        'user_id', 'incident_id', 'trusted_contact_id',
+        'type', 'category', 'title', 'body', 'message',
+        'action_url', 'metadata',
+        'delivery_channel', 'status',
+        'read', 'read_at', 'resolved_at', 'delivered_at', 'viewed_at',
+        'silent',
         'registry_key', 'trigger', 'priority',
         'action_required', 'action_completed', 'action_data',
         'storage_policy', 'sync_status', 'expires_at', 'lifecycle_state',
     ];
 
     protected $casts = [
+        'metadata' => 'array',
+        'read' => 'boolean',
+        'read_at' => 'datetime',
+        'resolved_at' => 'datetime',
         'delivered_at' => 'datetime',
         'viewed_at' => 'datetime',
         'expires_at' => 'datetime',

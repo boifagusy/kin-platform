@@ -3,6 +3,7 @@
 namespace App\Events\TrustedContact;
 
 use App\Models\TrustedContact;
+use App\Models\User;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -14,14 +15,19 @@ class TrustedContactRequestCreated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
+    public int $recipientUserId;
+
     public function __construct(
         public TrustedContact $contact,
         public int $initiatorUserId,
-    ) {}
+    ) {
+        $recipient = User::where('phone', $this->contact->phone)->first();
+        $this->recipientUserId = $recipient?->id ?? 0;
+    }
 
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel('notifications.' . $this->contact->user_id);
+        return new PrivateChannel('notifications.' . $this->recipientUserId);
     }
 
     public function broadcastWith(): array

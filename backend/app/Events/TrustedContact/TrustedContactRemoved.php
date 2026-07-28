@@ -3,6 +3,7 @@
 namespace App\Events\TrustedContact;
 
 use App\Models\TrustedContact;
+use App\Models\User;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -14,14 +15,18 @@ class TrustedContactRemoved implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
+    public int $recipientUserId;
+
     public function __construct(
         public TrustedContact $contact,
-        public int $initiatorUserId,
-    ) {}
+    ) {
+        $recipient = User::where('phone', $this->contact->phone)->first();
+        $this->recipientUserId = $recipient?->id ?? 0;
+    }
 
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel('notifications.' . $this->contact->user_id);
+        return new PrivateChannel('notifications.' . $this->recipientUserId);
     }
 
     public function broadcastWith(): array
@@ -31,7 +36,7 @@ class TrustedContactRemoved implements ShouldBroadcast
             'event_id' => Str::uuid()->toString(),
             'contact_id' => $this->contact->id,
             'contact_name' => $this->contact->name,
-            'message' => $this->contact->name . ' removed you as a trusted contact.',
+            'message' => $this->contact->name . ' removed you from their Trusted Contacts.',
             'timestamp' => now()->toIso8601String(),
         ];
     }

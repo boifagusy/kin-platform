@@ -34,7 +34,7 @@ return new class extends Migration
                 FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
             );');
             
-            DB::statement('INSERT INTO safety_incidents SELECT * FROM _safety_incidents_old;');
+            DB::statement('INSERT INTO safety_incidents (id, created_at, updated_at) SELECT id, created_at, updated_at FROM _safety_incidents_old;');
             DB::statement('DROP TABLE _safety_incidents_old;');
             DB::statement('PRAGMA foreign_keys=on;');
         } else {
@@ -70,7 +70,7 @@ return new class extends Migration
                 escalated_at DATETIME
             );');
             
-            DB::statement('INSERT INTO safety_incidents SELECT * FROM _safety_incidents_old;');
+            DB::statement('INSERT INTO safety_incidents (id, created_at, updated_at) SELECT id, created_at, updated_at FROM _safety_incidents_old;');
             DB::statement('DROP TABLE _safety_incidents_old;');
             DB::statement('PRAGMA foreign_keys=on;');
         } else {

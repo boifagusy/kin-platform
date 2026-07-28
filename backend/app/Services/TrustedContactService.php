@@ -1,164 +1,102 @@
 <?php
+
 namespace App\Services;
 
-use App\Events\TrustedContact\TrustedContactRevoked;
-use App\Events\TrustedContact\TrustedContactVerified;
-use App\Events\TrustedContact\VerificationSent;
 use App\Models\TrustedContact;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class TrustedContactService
 {
-    const STATUS_PENDING = 'pending';
-    const STATUS_VERIFIED = 'verified';
-    const STATUS_EXPIRED = 'expired';
-    const STATUS_REVOKED = 'revoked';
-    const STATUS_SUSPENDED = 'suspended';
+    const STATUS_PENDING_REQUEST = 'pending_request';
+    const STATUS_PENDING_INVITATION = 'pending_invitation';
+    const STATUS_ACCEPTED = 'accepted';
+    const STATUS_DECLINED = 'declined';
+    const STATUS_REMOVED = 'removed';
 
-    public function create(User $user, array $data): TrustedContact
+    const STATUS_PENDING = 'pending_request';
+
+    /**
+     * Create a trusted contact
+     */
+    public function create(int $userId, string $name, string $phone, ?string $invitationToken = null): TrustedContact
     {
-        $this->validateLimit($user);
-
-        $token = Str::random(40);
-        $expiryHours = config('kin.trusted_contacts.token_expiry_hours', 168);
+        $existingUser = User::where('phone', $phone)->first();
 
         $contact = TrustedContact::create([
-            'user_id' => $user->id,
-            'name' => $data['name'],
-            'phone' => $data['contact_phone'],
-            'status' => self::STATUS_PENDING,
-            'token_hash' => Hash::make($token),
-            'token_expires_at' => now()->addHours($expiryHours),
-            'resend_count' => 0,
-            'verification_method' => 'link',
-            'active' => true,
+            'user_id' => $userId,
+            'name' => $name,
+            'phone' => $phone,
+            'status' => $existingUser ? self::STATUS_PENDING_REQUEST : self::STATUS_PENDING_INVITATION,
+            'token_hash' => $invitationToken ? hash('sha256', $invitationToken) : null,
         ]);
 
-        event(new VerificationSent($contact));
+        return $contact;
+    }
+
+    /**
+     * Accept a trusted contact request
+     */
+    public function accept(int $userId, int $contactId): TrustedContact
+    {
+        $contact = $this->findForUser($userId, $contactId);
+
+        if (!in_array($contact->status, [self::STATUS_PENDING_REQUEST, self::STATUS_PENDING_INVITATION])) {
+            throw new \Exception('Only pending contacts can be accepted.');
+        }
+
+        $contact->update(['status' => self::STATUS_ACCEPTED]);
 
         return $contact;
     }
 
-    public function verify(string $token): TrustedContact
+    /**
+     * Decline a trusted contact request
+     */
+    public function decline(int $userId, int $contactId): void
     {
-        $contacts = TrustedContact::where('status', self::STATUS_PENDING)
-            ->where('token_expires_at', '>', now())
-            ->get();
-
-        foreach ($contacts as $contact) {
-            if (Hash::check($token, $contact->token_hash)) {
-                $contact->update([
-                    'status' => self::STATUS_VERIFIED,
-                    'token_hash' => null,
-                    'token_expires_at' => null,
-                    'verified_at' => now(),
-                ]);
-
-                event(new TrustedContactVerified($contact));
-                return $contact;
-            }
-        }
-
-        throw new \Exception('Invalid or expired verification token.');
-    }
-
-    public function resend(User $user, int $id): TrustedContact
-    {
-        $contact = $this->findForUser($user, $id);
-        $maxResends = config('kin.trusted_contacts.max_resends', 3);
-
-        if ($contact->resend_count >= $maxResends) {
-            throw new \Exception("Maximum resends ({$maxResends}) reached. Please re-add this contact.");
-        }
-
-        $token = Str::random(40);
-        $expiryHours = config('kin.trusted_contacts.token_expiry_hours', 168);
-
-        $contact->update([
-            'status' => self::STATUS_PENDING,
-            'token_hash' => Hash::make($token),
-            'token_expires_at' => now()->addHours($expiryHours),
-            'resend_count' => $contact->resend_count + 1,
-        ]);
-
-        event(new VerificationSent($contact));
-        return $contact;
-    }
-
-    public function update(User $user, int $id, array $data): TrustedContact
-    {
-        $contact = $this->findForUser($user, $id);
-
-        if (isset($data['phone']) && $data['phone'] !== $contact->phone) {
-            $data['status'] = self::STATUS_PENDING;
-            $data['verified_at'] = null;
-        }
-
-        $contact->update($data);
-        return $contact;
-    }
-
-    public function revoke(User $user, int $id): TrustedContact
-    {
-        $contact = $this->findForUser($user, $id);
-
-        $contact->update([
-            'status' => self::STATUS_REVOKED,
-            'revoked_at' => now(),
-        ]);
-
-        event(new TrustedContactRevoked($contact));
-        return $contact;
-    }
-
-    public function delete(User $user, int $id): void
-    {
-        $contact = $this->findForUser($user, $id);
-        $contact->delete();
-    }
-
-    public function findForUser(User $user, int $id): TrustedContact
-    {
-        return TrustedContact::forUser($user)->findOrFail($id);
-    }
-
-    private function validateLimit(User $user): void
-    {
-        $limit = config('kin.trusted_contacts.free_limit', 1);
-        if ($user->trustedContacts()->count() >= $limit) {
-            throw new \Exception("Contact limit ({$limit}) reached.");
-        }
-    }
-
-    public function approveFromDashboard(User $user, int $id): TrustedContact
-    {
-        $contact = $this->findForUser($user, $id);
-
-        if ($contact->status !== self::STATUS_PENDING) {
-            throw new \Exception('Only pending contacts can be approved.');
-        }
-
-        $contact->update([
-            'status' => self::STATUS_VERIFIED,
-            'token_hash' => null,
-            'token_expires_at' => null,
-            'verified_at' => now(),
-        ]);
-
-        event(new TrustedContactVerified($contact));
-        return $contact;
-    }
-
-    public function rejectFromDashboard(User $user, int $id): void
-    {
-        $contact = $this->findForUser($user, $id);
+        $contact = $this->findForUser($userId, $contactId);
 
         if ($contact->status !== self::STATUS_PENDING) {
             throw new \Exception('Only pending contacts can be rejected.');
         }
 
         $contact->delete();
+    }
+
+    /**
+     * Remove a trusted contact
+     */
+    public function remove(int $userId, int $contactId): void
+    {
+        $contact = $this->findForUser($userId, $contactId);
+        $contact->update(['status' => self::STATUS_REMOVED]);
+    }
+
+    /**
+     * Find a contact for a user
+     */
+    public function findForUser(int $userId, int $contactId): TrustedContact
+    {
+        return TrustedContact::where('user_id', $userId)
+            ->where('id', $contactId)
+            ->firstOrFail();
+    }
+
+    /**
+     * Get all contacts for a user
+     */
+    public function getForUser(int $userId)
+    {
+        return TrustedContact::where('user_id', $userId)->get();
+    }
+
+    /**
+     * Check if a contact already exists for the user
+     */
+    public function isAlreadyTrustedContact(int $userId, string $contactPhone): bool
+    {
+        return TrustedContact::where('user_id', $userId)
+            ->where('phone', $contactPhone)
+            ->exists();
     }
 }

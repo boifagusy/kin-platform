@@ -3,12 +3,14 @@
 namespace App\Actions\Auth;
 
 use App\Models\TrustedContact;
+use App\Models\User;
+use App\Models\IncidentNotification;
 use App\Events\TrustedContact\TrustedContactRequestDeclined;
 use Illuminate\Support\Facades\Log;
 
 class DeclineTrustedContactAction
 {
-    public function execute(int $userId, int $contactId): array
+    public function execute(int $recipientUserId, int $contactId): array
     {
         $contact = TrustedContact::find($contactId);
 
@@ -16,24 +18,30 @@ class DeclineTrustedContactAction
             return ['success' => false, 'error' => 'Contact not found'];
         }
 
-        if ($contact->user_id !== $userId) {
+        $recipient = User::find($recipientUserId);
+        if (!$recipient || $recipient->phone !== $contact->phone) {
             return ['success' => false, 'error' => 'Unauthorized'];
         }
 
-        if (!in_array($contact->status, ['pending_request', 'pending_invitation'])) {
+        if ($contact->status !== 'pending_request') {
             return ['success' => false, 'error' => 'Contact is not pending'];
         }
 
         try {
             $contact->update(['status' => 'declined']);
 
+            IncidentNotification::where('user_id', $recipientUserId)
+                ->where('category', 'trusted_contact')
+                ->where('metadata->contact_id', $contact->id)
+                ->whereNull('resolved_at')
+                ->update(['resolved_at' => now()]);
+
             Log::info('DeclineTrustedContactAction: Contact declined', [
-                'user_id' => $userId,
+                'recipient_id' => $recipientUserId,
                 'contact_id' => $contactId,
             ]);
 
-            // Dispatch event for notification
-            event(new TrustedContactRequestDeclined($contact, $userId));
+            event(new TrustedContactRequestDeclined($contact, $contact->user_id));
 
             return [
                 'success' => true,
@@ -42,12 +50,12 @@ class DeclineTrustedContactAction
             ];
         } catch (\Exception $e) {
             Log::error('DeclineTrustedContactAction: Failed', [
-                'user_id' => $userId,
+                'recipient_id' => $recipientUserId,
                 'contact_id' => $contactId,
                 'error' => $e->getMessage(),
             ]);
 
-            return ['success' => false, 'error' => 'Failed to decline contact: ' . $e->getMessage()];
+            return ['success' => false, 'error' => 'Failed to decline contact'];
         }
     }
 }

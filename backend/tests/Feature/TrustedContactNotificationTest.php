@@ -28,11 +28,11 @@ class TrustedContactNotificationTest extends TestCase
         $this->user = User::factory()->create(['phone' => '+234 801 1122233']);
         $this->registeredUser = User::factory()->create(['phone' => '+234 802 3334444']);
 
-        $this->saveAction = new SaveTrustedContactAction();
-        $this->acceptAction = new AcceptTrustedContactAction();
-        $this->declineAction = new DeclineTrustedContactAction();
-        $this->removeAction = new RemoveTrustedContactAction();
-        $this->verifyAction = new VerifyInvitationAction();
+        $this->saveAction = app(SaveTrustedContactAction::class);
+        $this->acceptAction = app(AcceptTrustedContactAction::class);
+        $this->declineAction = app(DeclineTrustedContactAction::class);
+        $this->removeAction = app(RemoveTrustedContactAction::class);
+        $this->verifyAction = app(VerifyInvitationAction::class);
     }
 
     /**
