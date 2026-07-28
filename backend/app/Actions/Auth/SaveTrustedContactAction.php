@@ -4,84 +4,106 @@ namespace App\Actions\Auth;
 
 use App\Models\User;
 use App\Models\TrustedContact;
+use App\Services\TokenSecurityService;
+use App\Events\TrustedContact\TrustedContactRequestCreated;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 class SaveTrustedContactAction
 {
-    /**
-     * Save a trusted contact for a user.
-     *
-     * @param string $userPhone The phone number of the user adding the contact
-     * @param string $contactName The display name of the trusted contact
-     * @param string $contactPhone The phone number of the trusted contact
-     * @param bool $inviteSent Whether an invite was sent
-     * @return array
-     */
     public function execute(
         int $userId,
         string $contactName,
         string $contactPhone,
         bool $inviteSent = false
     ): array {
-        // Find the user by ID (authenticated)
-        $user = User::find($userId);
+        if (!$contactName || strlen(trim($contactName)) < 2) {
+            return ['success' => false, 'error' => 'Contact name must be at least 2 characters.'];
+        }
 
+        if (!$contactPhone || strlen(preg_replace('/[^0-9]/', '', $contactPhone)) < 10) {
+            return ['success' => false, 'error' => 'Phone number must be at least 10 digits.'];
+        }
+
+        $user = User::find($userId);
         if (!$user) {
             Log::warning('SaveTrustedContactAction: User not found', ['user_id' => $userId]);
-            return [
-                'success' => false,
-                'error' => 'User not found',
-            ];
+            return ['success' => false, 'error' => 'User not found'];
         }
 
-        // Prevent self-contact
-        $cleanUserPhone = preg_replace('/[^0-9]/', '', $user->phone);
+        $existingCount = TrustedContact::where('user_id', $user->id)
+            ->whereNotIn('status', ['removed', 'declined', 'cancelled', 'expired'])
+            ->count();
+
+        if ($existingCount >= 1) {
+            return ['success' => false, 'error' => 'Free tier limited to 1 trusted contact. Upgrade to add more.'];
+        }
+
+        $cleanUserPhone = preg_replace('/[^0-9]/', '', $user->phone ?? '');
         $cleanContactPhone = preg_replace('/[^0-9]/', '', $contactPhone);
-        if ($cleanUserPhone === $cleanContactPhone) {
-            return [
-                'success' => false,
-                'error' => 'You cannot add your own phone number as a trusted contact.',
-            ];
+
+        if ($cleanUserPhone && $cleanUserPhone === $cleanContactPhone) {
+            return ['success' => false, 'error' => 'You cannot add your own phone number as a trusted contact.'];
         }
 
-        // Check if this trusted contact already exists
-        $existing = TrustedContact::where('user_id', $user->id)            ->where('phone', $contactPhone)
+        $existing = TrustedContact::where('user_id', $user->id)
+            ->where('phone', $contactPhone)
             ->first();
 
         if ($existing) {
             Log::info('SaveTrustedContactAction: Contact already exists', [
                 'user_id' => $user->id,
-                'contact_phone' => $contactPhone
+                'contact_phone' => $contactPhone,
+                'status' => $existing->status
             ]);
             return [
                 'success' => true,
                 'message' => 'Trusted contact already exists',
-                'data' => $existing
+                'data' => $existing,
+                'existing' => true
             ];
         }
 
-        // Create the trusted contact
+        $registeredUser = User::where('phone', $contactPhone)->first();
+        $status = $registeredUser ? 'pending_request' : 'pending_invitation';
+        $requiresVerification = !$registeredUser;
+
         try {
+            $tokenData = null;
+            $verificationToken = null;
+
+            if ($requiresVerification) {
+                $tokenData = TokenSecurityService::generateInvitationToken();
+                $verificationToken = $tokenData['raw_token'];
+            }
+
             $trustedContact = TrustedContact::create([
                 'user_id' => $user->id,
-                'name' => $contactName,
+                'name' => trim($contactName),
                 'phone' => $contactPhone,
-                'verified' => $inviteSent ? false : true, // If invite sent, not verified yet
-                'verification_token' => $inviteSent ? Str::random(40) : null,
+                'status' => $status,
+                'token_hash' => $tokenData['token_hash'] ?? null,
+                'token_expires_at' => $tokenData['expires_at'] ?? null,
                 'active' => true,
             ]);
 
-            Log::info('SaveTrustedContactAction: Trusted contact saved', [
+            Log::info('SaveTrustedContactAction: Trusted contact created', [
                 'user_id' => $user->id,
                 'contact_id' => $trustedContact->id,
-                'contact_phone' => $contactPhone
+                'status' => $status,
             ]);
+
+            // Dispatch event for notification
+            if ($status === 'pending_request' && $registeredUser) {
+                event(new TrustedContactRequestCreated($trustedContact, $user->id));
+            }
 
             return [
                 'success' => true,
                 'message' => 'Trusted contact saved successfully',
-                'data' => $trustedContact
+                'data' => $trustedContact,
+                'status' => $status,
+                'verification_required' => $requiresVerification,
+                'verification_token' => $verificationToken,
             ];
 
         } catch (\Exception $e) {
@@ -90,9 +112,7 @@ class SaveTrustedContactAction
                 'error' => $e->getMessage()
             ]);
 
-            return [
-                'success' => false,
-                'error' => 'Failed to save trusted contact: ' . $e->getMessage(),
-            ];
+            return ['success' => false, 'error' => 'Failed to save trusted contact: ' . $e->getMessage()];
         }
-    }}
+    }
+}
