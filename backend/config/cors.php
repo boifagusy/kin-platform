@@ -12,7 +12,12 @@ return [
         'http://10.49.170.3:5174',
         '*',
     ],
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        '#^http://localhost:\d+$#',
+        '#^http://127\.0\.0\.1:\d+$#',
+        '#^http://10\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+$#',
+        '#^http://100\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+$#',
+    ],
     'allowed_headers' => ['*'],
     'exposed_headers' => [],
     'max_age' => 0,

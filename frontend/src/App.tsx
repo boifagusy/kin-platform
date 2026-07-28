@@ -17,6 +17,8 @@ import WelcomeScreenV2 from "./screens/ui-polish/WelcomeScreenV2";
 import WelcomeScreenV3 from "./screens/ui-polish/WelcomeScreenV3";
 import SplashScreenV2 from "./screens/ui-polish/SplashScreenV2";
 import LoadingScreen from "./components/ui/LoadingScreen";
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import GuestOnlyRoute from './components/auth/GuestOnlyRoute';
 import DuressPinSetupScreenV2 from "./screens/ui-polish/DuressPinSetupScreenV2";
 import NetworkScreenV2 from "./screens/ui-polish/NetworkScreenV2";
 import AlertsScreen from "./screens/alerts/AlertsScreen";
@@ -33,21 +35,24 @@ export default function App() {
       <Routes>
         <Route path="/continue-setup" element={<ContinueSetupScreen />} />
         <Route path="/" element={<WelcomeScreenV3 />} />
-        <Route path="/login" element={<PhoneEntryScreenV2 />} />
+        <Route path="/login" element={<GuestOnlyRoute><PhoneEntryScreenV2 /></GuestOnlyRoute>} />
+        {/* ADR-001F: transition route (guest -> authenticated) — must NOT use GuestOnlyRoute */}
         <Route path="/login-pin" element={<LoginPinScreenV2 />} />
+        {/* ADR-001F: transition route (guest -> authenticated) — must NOT use GuestOnlyRoute */}
         <Route path="/create-pin" element={<CreatePinScreenV2 />} />
-        <Route path="/user-details" element={<UserDetailsScreenV2 />} />
-        <Route path="/checkin-settings" element={<CheckInSettingsScreen />} />
-        <Route path="/dashboard" element={<DashboardScreenV2 />} />
+        <Route path="/user-details" element={<ProtectedRoute><UserDetailsScreenV2 /></ProtectedRoute>} />
+        <Route path="/checkin-settings" element={<ProtectedRoute><CheckInSettingsScreen /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardScreenV2 /></ProtectedRoute>} />
         <Route path="/tailwind-test" element={<TailwindTest />} />
-        <Route path="/settings/checkin" element={<CheckInSettingsScreen />} />
-        <Route path="/settings/duress-pin" element={<DuressPinSetupScreenV2 />} />
-        <Route path="/settings/safe-zones" element={<SafeZonesScreen />} />
-        <Route path="/network" element={<NetworkScreenV2 />} />
-        <Route path="/alerts" element={<AlertsScreenV2 />} />
-        <Route path="/forgot-pin" element={<ForgotPinScreenV3 />} />
-        <Route path="/profile" element={<ProfileScreen />} />
-        <Route path="/map" element={<MapScreen />} />
+        <Route path="/settings/checkin" element={<ProtectedRoute><CheckInSettingsScreen /></ProtectedRoute>} />
+        <Route path="/settings/duress-pin" element={<ProtectedRoute><DuressPinSetupScreenV2 /></ProtectedRoute>} />
+        <Route path="/settings/safe-zones" element={<ProtectedRoute><SafeZonesScreen /></ProtectedRoute>} />
+        <Route path="/network" element={<ProtectedRoute><NetworkScreenV2 /></ProtectedRoute>} />
+        <Route path="/alerts" element={<ProtectedRoute><AlertsScreenV2 /></ProtectedRoute>} />
+        <Route path="/forgot-pin" element={<GuestOnlyRoute><ForgotPinScreenV3 /></GuestOnlyRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><ProfileScreen /></ProtectedRoute>} />
+        <Route path="/map" element={<ProtectedRoute><MapScreen /></ProtectedRoute>} />
+        {/* @dev-only - Test/comparison routes, excluded from production */}
         <Route path="/ui-lab/welcome-v2" element={<WelcomeScreenV2 />} />
         <Route path="/ui-lab/splash-v2" element={<SplashScreenV2 />} />
         <Route path="/ui-lab/loading-v2" element={<LoadingScreen message="default" />} />
@@ -59,7 +64,7 @@ export default function App() {
         <Route path="/ui-lab/duress-pin-v2" element={<DuressPinSetupScreenV2 />} />
         <Route path="/ui-lab/dashboard-v2" element={<DashboardScreenV2 />} />
         <Route path="/ui-lab/network-v2" element={<NetworkScreenV2 />} />
-        <Route path="/alert-detail" element={<AlertDetailScreenV2 />} />
+        <Route path="/alert-detail" element={<ProtectedRoute><AlertDetailScreenV2 /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,0 +1,79 @@
+# KIN Platform — Session Log 2026-07-27
+
+## Brick Completed
+SEC-ROUTER-001C Part 1 — Authentication State Bootstrap
+STATUS: ✅ CERTIFIED (5/5 runtime tests passed)
+
+## Key Accomplishments
+
+1. ✅ AuthContext bootstrap logic
+   - Reads persisted token from localStorage on app startup
+   - Validates token against GET /api/v1/users/me
+   - Restores full auth state on success
+   - Clears auth on 401 (expired/invalid token)
+
+2. ✅ AppWithAuth wrapper
+   - Wraps entire app with AuthProvider
+   - main.jsx (live entry point) imports AppWithAuth
+
+3. ✅ ProtectedRoute enhancement
+   - Waits for bootstrap completion (bootstrapping=false)
+   - Shows loading screen while restoring session
+   - Blocks unauthenticated access
+
+4. ✅ Onboarding token sync
+   - CreatePinScreenV2 calls setTokenWithUserFetch after PIN creation
+   - LoginPinScreenV2 calls setTokenWithUserFetch after PIN login
+   - Both fetch user data immediately, enabling ProtectedRoute access
+
+5. ✅ Backend support
+   - GET /api/v1/users/me endpoint added to AuthController
+   - Returns 401 Unauthenticated for invalid tokens
+   - Returns 200 + user data for valid tokens
+
+## Critical Issues Found & Fixed
+
+1. Duplicated API path: /api/v1/api/v1/users/me
+   - Root cause: AuthContext calling ${API_BASE}/api/v1/users/me
+   - Fix: Changed to ${API_BASE}/users/me (since API_BASE already includes /api/v1)
+
+2. Entry point not wrapped
+   - Root cause: index.html loads main.jsx, not main.tsx
+   - main.jsx still imported App directly (no AuthProvider)
+   - Fix: Updated main.jsx to import AppWithAuth
+
+3. Missing backend endpoint
+   - Root cause: /api/v1/users/me route didn't exist
+   - Fix: Added me() method to AuthController + route registration
+
+## Runtime Verification Results
+
+✅ RT-001: App opens without crashing
+✅ RT-002: Login/Create PIN works
+✅ RT-003: Refresh keeps session alive
+✅ RT-004: Invalid token redirects to login
+✅ RT-005: No redirect loops
+
+## Files Modified
+
+Frontend:
+- src/context/AuthContext.jsx — Bootstrap + setTokenWithUserFetch
+- src/AppWithAuth.tsx — New wrapper component
+- src/main.jsx — Entry point update
+- src/screens/ui-polish/CreatePinScreenV2.jsx — Token sync
+- src/screens/ui-polish/LoginPinScreenV2.jsx — Token sync
+- src/components/auth/ProtectedRoute.jsx — Bootstrap awareness
+
+Backend:
+- app/Http/Controllers/Api/V1/AuthController.php — me() method
+- routes/api.php — GET /users/me route
+
+## Build Status
+370 modules, passing, no errors
+
+## Next: SEC-ROUTER-001C Part 2
+
+Ready to begin applying ProtectedRoute across all 11 protected routes.
+
+Execution plan saved to: SEC-ROUTER-001C-PART2-PLAN.md
+Estimated time: ~1 hour

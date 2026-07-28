@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from '../../context/AuthContext';
+import { clearDraft } from '../../services/onboardingDraftService';
 
 const API_BASE = import.meta.env.VITE_API_URL;
 
 function LoginPinScreenV2() {
   const navigate = useNavigate();
+  const { setTokenWithUserFetch } = useAuth();
   const location = useLocation();
   const phone = location.state?.phone || localStorage.getItem("kin_phone") || "";
 
@@ -55,9 +58,13 @@ function LoginPinScreenV2() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Invalid PIN");
       localStorage.setItem("kin_phone", phone);
-      if (data.token) localStorage.setItem("kin_token", data.token);
-      if (data.onboarding_completed) navigate("/dashboard", { state: { phone }, replace: true });
-      else navigate("/user-details", { state: { phone } });
+      if (data.token) {
+        localStorage.setItem("kin_token", data.token);
+        // Sync token with AuthContext and fetch user
+        await setTokenWithUserFetch(data.token);
+      }
+      clearDraft();
+      navigate("/dashboard", { state: { phone }, replace: true });
     } catch (err) {
       setError(err.message);
       setPin("");

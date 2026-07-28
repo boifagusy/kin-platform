@@ -55,7 +55,7 @@ function ContinueSetupScreen() {
             await saveToServer(localDraft);
           } else {
             // No draft, go to welcome
-            navigate('/');
+            
             return;
           }
         }
@@ -67,7 +67,7 @@ function ContinueSetupScreen() {
         if (localDraft) {
           setDraft(localDraft);
         } else {
-          navigate('/');
+          
           return;
         }
       } finally {
@@ -102,7 +102,7 @@ function ContinueSetupScreen() {
     } catch (error) {
       console.error('Error clearing server draft:', error);
     }
-    navigate('/');
+    
   };
 
   if (loading) {

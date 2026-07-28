@@ -5,23 +5,62 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [bootstrapping, setBootstrapping] = useState(true);  // App startup restoration
+    const [loading, setLoading] = useState(false);             // General async operations (login, etc.)
 
-    // Load user from localStorage on mount
+    // Bootstrap authentication on app startup
     useEffect(() => {
-        const storedUser = localStorage.getItem('kin_user');
-        const storedToken = localStorage.getItem('kin_token');
-        
-        if (storedUser && storedToken) {
+        const bootstrapAuth = async () => {
             try {
-                setUser(JSON.parse(storedUser));
-                setToken(storedToken);
-            } catch (e) {
-                localStorage.removeItem('kin_user');
-                localStorage.removeItem('kin_token');
+                const storedToken = localStorage.getItem('kin_token');
+                const storedUser = localStorage.getItem('kin_user');
+
+                if (!storedToken) {
+                    // No persisted auth — anonymous state
+                    setBootstrapping(false);
+                    return;
+                }
+
+                // Token exists — validate and restore user
+                try {
+                    // Try to validate token by fetching current user
+                    const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8001/api/v1';
+                    const response = await fetch(`${API_BASE}/users/me`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${storedToken}`,
+                            'Accept': 'application/json',
+                        },
+                    });
+
+                    if (response.ok) {
+                        const userData = await response.json();
+                        // Token is valid, restore auth state
+                        setToken(storedToken);
+                        setUser(userData.data || userData);
+                    } else if (response.status === 401) {
+                        // Token is invalid or expired
+                        localStorage.removeItem('kin_token');
+                        localStorage.removeItem('kin_user');
+                        setToken(null);
+                        setUser(null);
+                    } else {
+                        throw new Error(`Unexpected response: ${response.status}`);
+                    }
+                } catch (error) {
+                    // Validation failed — clear auth
+                    console.warn('Token validation failed:', error);
+                    localStorage.removeItem('kin_token');
+                    localStorage.removeItem('kin_user');
+                    setToken(null);
+                    setUser(null);
+                }
+            } finally {
+                setBootstrapping(false);
             }
-        }
-        setLoading(false);
+        };
+
+        bootstrapAuth();
     }, []);
 
     const login = (userData, authToken) => {
@@ -29,6 +68,33 @@ export const AuthProvider = ({ children }) => {
         setToken(authToken);
         localStorage.setItem('kin_user', JSON.stringify(userData));
         localStorage.setItem('kin_token', authToken);
+    };
+
+
+    // Smart setToken that also fetches user data if token is new
+    const setTokenWithUserFetch = async (newToken) => {
+        setToken(newToken);
+        localStorage.setItem('kin_token', newToken);
+        
+        try {
+            // Fetch current user with the new token
+            const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8001/api/v1';
+            const response = await fetch(`${API_BASE}/users/me`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${newToken}`,
+                    'Accept': 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                const userData = await response.json();
+                setUser(userData.data || userData);
+                localStorage.setItem('kin_user', JSON.stringify(userData.data || userData));
+            }
+        } catch (error) {
+            console.warn('Failed to fetch user after token set:', error);
+        }
     };
 
     const logout = () => {
@@ -43,15 +109,18 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ 
-            user, 
-            setUser, 
-            token, 
-            setToken, 
+        <AuthContext.Provider value={{
+            user,
+            setUser,
+            token,
+            setToken,
+            setTokenWithUserFetch,
+            bootstrapping,
             loading,
-            login, 
-            logout, 
-            isAuthenticated 
+            setLoading,
+            login,
+            logout,
+            isAuthenticated
         }}>
             {children}
         </AuthContext.Provider>

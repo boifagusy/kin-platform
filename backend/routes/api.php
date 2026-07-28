@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\V1\IncidentController;
 use App\Http\Controllers\Api\V1\OnboardingDraftController;
 
 Route::prefix('v1')->group(function () {
+    Route::get('/users/me', [AuthController::class, 'me'])->middleware('auth:sanctum');
     Route::get('/location', [LocationController::class, 'show']);
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:otp');
     Route::post('/auth/confirm-phone', [AuthController::class, 'confirmPhone']);

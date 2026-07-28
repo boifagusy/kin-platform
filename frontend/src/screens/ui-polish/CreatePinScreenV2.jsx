@@ -1,12 +1,14 @@
 import { updateStep, STEPS, getPhone } from "../../services/onboardingDraftService";
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import LoadingScreen from "../../components/ui/LoadingScreen";
 
 const API_BASE = import.meta.env.VITE_API_URL;
 
 function CreatePinScreenV2() {
   const navigate = useNavigate();
+  const { setTokenWithUserFetch } = useAuth();
   const location = useLocation();
   const phone = location.state?.phone || getPhone() || "";
 
@@ -107,6 +109,8 @@ function CreatePinScreenV2() {
       }
 
       localStorage.setItem("kin_token", data.token);
+      // Sync token with AuthContext and fetch user
+      await setTokenWithUserFetch(data.token);
       // Only advance the draft step once the token is confirmed saved
       updateStep(STEPS.USER_DETAILS);
       navigate("/user-details", { state: { phone } });

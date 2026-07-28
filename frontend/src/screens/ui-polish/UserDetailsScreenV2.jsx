@@ -1,7 +1,8 @@
-import { updateProfile, updateStep, STEPS, getPhone } from "../../services/onboardingDraftService";
+import { updateProfile, clearDraft, getPhone } from "../../services/onboardingDraftService";
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import LoadingScreen from "../../components/ui/LoadingScreen";
+import { useAuthHeaders } from "../../hooks/useAuthHeaders";
 
 const API_BASE = import.meta.env.VITE_API_URL;
 
@@ -9,6 +10,7 @@ function UserDetailsScreenV2() {
   const navigate = useNavigate();
   const location = useLocation();
   const phone = location.state?.phone || getPhone() || "";
+  const authHeaders = useAuthHeaders();
 
   useEffect(() => {
     if (!phone) navigate("/login", { replace: true });
@@ -36,9 +38,7 @@ function UserDetailsScreenV2() {
 
     const response = await fetch(`${API_BASE}/auth/user-details`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: authHeaders,
         body: JSON.stringify({
           phone,
           full_name: fullName.trim(),
@@ -66,9 +66,9 @@ function UserDetailsScreenV2() {
       }
 
       updateProfile({ name: fullName, email: email });
-      updateStep(STEPS.CHECKIN);
+      clearDraft();
 
-      navigate("/checkin-settings", {
+      navigate("/dashboard", {
         state: { phone, full_name: fullName.trim() },
       });
     } catch (error) {

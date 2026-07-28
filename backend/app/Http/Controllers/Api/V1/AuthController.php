@@ -253,4 +253,23 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get current authenticated user
+     */
+    public function me(Request $request)
+    {
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json([
+                'message' => 'Unauthenticated'
+            ], 401);
+        }
+        
+        return response()->json([
+            'data' => $user,
+        ]);
+    }
+
 }
