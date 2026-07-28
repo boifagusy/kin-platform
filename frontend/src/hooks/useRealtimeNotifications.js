@@ -69,6 +69,81 @@ export default function useRealtimeNotifications({
             if (onReadSync) onReadSync(event);
         });
 
+        // TC1: Trusted Contact Request Created
+        channel.listen('.TrustedContactRequestCreated', (event) => {
+            if (dedupeSet.current.has(event.event_id)) return;
+            dedupeSet.current.add(event.event_id);
+
+            if (onNewNotification) onNewNotification(event);
+            if (onToast) {
+                onToast({
+                    title: 'Trusted Contact Request',
+                    body: event.message,
+                    type: 'info',
+                });
+            }
+        });
+
+        // TC2: Trusted Contact Request Accepted
+        channel.listen('.TrustedContactRequestAccepted', (event) => {
+            if (dedupeSet.current.has(event.event_id)) return;
+            dedupeSet.current.add(event.event_id);
+
+            if (onNewNotification) onNewNotification(event);
+            if (onToast) {
+                onToast({
+                    title: 'Request Accepted',
+                    body: event.message,
+                    type: 'success',
+                });
+            }
+        });
+
+        // TC3: Trusted Contact Request Declined
+        channel.listen('.TrustedContactRequestDeclined', (event) => {
+            if (dedupeSet.current.has(event.event_id)) return;
+            dedupeSet.current.add(event.event_id);
+
+            if (onNewNotification) onNewNotification(event);
+            if (onToast) {
+                onToast({
+                    title: 'Request Declined',
+                    body: event.message,
+                    type: 'warning',
+                });
+            }
+        });
+
+        // TC4: Trusted Contact Invitation Accepted
+        channel.listen('.TrustedContactInvitationAccepted', (event) => {
+            if (dedupeSet.current.has(event.event_id)) return;
+            dedupeSet.current.add(event.event_id);
+
+            if (onNewNotification) onNewNotification(event);
+            if (onToast) {
+                onToast({
+                    title: 'Invitation Accepted',
+                    body: event.message,
+                    type: 'success',
+                });
+            }
+        });
+
+        // TC5: Trusted Contact Removed
+        channel.listen('.TrustedContactRemoved', (event) => {
+            if (dedupeSet.current.has(event.event_id)) return;
+            dedupeSet.current.add(event.event_id);
+
+            if (onNewNotification) onNewNotification(event);
+            if (onToast) {
+                onToast({
+                    title: 'Trusted Contact Removed',
+                    body: event.message,
+                    type: 'warning',
+                });
+            }
+        });
+
         echo.connector.socket.on('connected', () => { stopPolling(); catchUp(); });
         echo.connector.socket.on('disconnected', () => startPolling());
 
