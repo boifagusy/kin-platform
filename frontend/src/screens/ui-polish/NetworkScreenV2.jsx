@@ -228,6 +228,15 @@ https://kin.app`;
     }
   };
 
+  const handleSharePendingContact = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: "KIN Trusted Contact Invite",
+        text: inviteMessage,
+      }).catch(err => console.error("Share failed:", err));
+    }
+  };
+
   const fallbackCopy = (link) => {
     navigator.clipboard.writeText(link).then(() => {
       setShareMessage("✅ Invite link copied! Share it with your contact.");
@@ -319,6 +328,16 @@ https://kin.app`;
             )}
             {shareError && (
               <p className="text-red-500 text-sm text-center mb-3">{shareError}</p>
+            )}
+
+            {contact?.status === "pending_invitation" && !contact?.verified && (
+              <button
+                onClick={handleSharePendingContact}
+                className="w-full h-12 rounded-xl bg-[#1A5632] text-white font-semibold text-base flex items-center justify-center gap-3 hover:bg-[#0f3820] active:scale-95 transition-all mb-3"
+              >
+                <FaShareAlt />
+                Share Invite
+              </button>
             )}
 
             <button
