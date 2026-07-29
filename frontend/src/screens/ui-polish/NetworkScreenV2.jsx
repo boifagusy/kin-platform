@@ -250,7 +250,7 @@ https://kin.app`;
   }
 
   const hasContact = contact !== null;
-  const isVerified = contact?.status === 'verified';
+  const isVerified = contact?.verified;
 
   return (
     <div className="min-h-screen bg-[#F0F7F2] pb-20">
