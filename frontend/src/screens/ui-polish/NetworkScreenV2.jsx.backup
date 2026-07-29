@@ -89,18 +89,24 @@ https://kin.app`;
 
   const fetchContact = async () => {
     try {
-      const response = await fetch(`${API_BASE}/trusted-contacts`, {
+      const response = await fetch(`${API_BASE}/trusted-contacts?phone=${encodeURIComponent(phone)}`, {
         headers: getAuthHeaders(),
       });
       const data = await response.json();
 
       if (data.success) {
-        const contactData = data.data ?? null;
+        const contacts = data?.data?.contacts ?? [];
+        const contactData = contacts.length > 0 ? contacts[0] : null;
         setContact(contactData);
-        setUsed(contactData ? 1 : 0);
-        setCanAdd(!contactData);
-        setCanRemove(true);
-        setDaysUntilRemoval(0);
+        setLimit(data.data.limit);
+        setUsed(data.data.used);
+        setCanAdd(data.data.can_add);
+        setRemovalCooldownDays(data.data.removal_cooldown_days || 30);
+        
+        if (contactData) {
+          setCanRemove(contactData.can_remove !== false);
+          setDaysUntilRemoval(contactData.days_until_removal || 0);
+        }
       }
     } catch (error) {
       console.error("Error fetching contact:", error);
@@ -108,6 +114,7 @@ https://kin.app`;
       setLoading(false);
     }
   };
+
   const validatePhoneNumber = (phoneNumber) => {
     const cleaned = phoneNumber.replace(/\D/g, '');
     if (cleaned.length === 10 || cleaned.length === 11) {
@@ -164,7 +171,7 @@ https://kin.app`;
         setNewContactName(formData.name);
         setNewContactPhone(payload.contact_phone);
         setInviteSent(false);
-        if (navigator.share) { navigator.share({ title: "KIN Trusted Contact Invite", text: inviteMessage }).catch(err => console.error("Share failed:", err)); } else { setShowInviteModal(true); }
+        setShowInviteModal(true);
         setFormData({ name: "", contact_phone: "" });
         setFormError("");
       } else if (result.state === "QUEUED") {
